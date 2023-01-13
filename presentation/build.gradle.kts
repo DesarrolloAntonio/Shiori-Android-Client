@@ -59,7 +59,8 @@ dependencies {
 
     implementation (libs.compose.ui.ui)
     implementation (libs.compose.ui.tooling.preview)
-    implementation (libs.compose.material.material)
+    debugImplementation (libs.compose.ui.tooling)
+    implementation (libs.compose.material3.material3)
     implementation (libs.compose.runtime.livedata)
 
     implementation (libs.bundles.koin)
