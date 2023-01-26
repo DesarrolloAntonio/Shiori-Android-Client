@@ -51,20 +51,28 @@ android {
 
 dependencies {
 
+    implementation(project(":data"))
+    implementation(project(":domain"))
+
     implementation (libs.androidx.core)
     implementation (libs.androidx.lifecycle.runtime )
     implementation (libs.androidx.activity.compose)
     implementation (libs.androidx.navigation.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.preference)
 
     implementation (libs.compose.ui.ui)
     implementation (libs.compose.ui.tooling.preview)
     debugImplementation (libs.compose.ui.tooling)
     implementation (libs.compose.material3.material3)
+    implementation (libs.compose.material.iconsext)
     implementation (libs.compose.runtime.livedata)
 
-    implementation (libs.bundles.koin)
+//    implementation (libs.bundles.koin)
     implementation (libs.bundles.retrofit)
     implementation (libs.accompanist.permissions)
+
+    implementation ("io.insert-koin:koin-androidx-compose:3.2.0")
+
 
 }
