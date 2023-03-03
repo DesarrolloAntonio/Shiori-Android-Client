@@ -1,9 +1,9 @@
 package com.shiori.androidclient.ui.login
 
 import android.content.res.Configuration
+import android.util.Log
 import android.webkit.URLUtil
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,31 +19,42 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import com.shiori.androidclient.R
 import com.shiori.androidclient.ui.components.ConfirmDialog
-import com.shiori.androidclient.ui.components.SimpleDialog
+import com.shiori.androidclient.ui.components.InfiniteProgressDialog
 import com.shiori.androidclient.ui.theme.ShioriTheme
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel,
     onRegister: () -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val loginUiState: LoginUiState by loginViewModel.uiState.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
         val context = LocalContext.current
         LoginContent(
+            loginUiState = loginUiState,
             checked = loginViewModel.rememberSession,
             onRegister = onRegister,
+            userErrorState = loginViewModel.userNameError,
+            passwordErrorState = loginViewModel.passwordError,
+            urlErrorState = loginViewModel.urlError,
             onClickLoginButton = {
-
+                coroutineScope.launch {
+                    loginViewModel.sendLogin()
+                }
             },
             onClickRegisterButton = {
                 loginViewModel.loginError.value = true
@@ -82,7 +93,7 @@ fun ProgressDialog(
     showDialog: MutableState<Boolean>
 ) {
     if (showDialog.value) {
-        //InfiniteProgressDialog(onDismissRequest = {})
+        InfiniteProgressDialog(onDismissRequest = {})
     }
 }
 
@@ -93,15 +104,31 @@ fun LoginContent(
     password: MutableState<TextFieldValue>,
     serverUrl: MutableState<TextFieldValue>,
     checked: MutableState<Boolean>,
+    urlErrorState: MutableState<Boolean>,
+    userErrorState: MutableState<Boolean>,
+    passwordErrorState: MutableState<Boolean>,
     onRegister: () -> Unit,
     onRememberPassword: () -> Unit,
     onClickLoginButton: () -> Unit,
     onClickRegisterButton: () -> Unit,
-    onCheckedRememberSessionChange: ((Boolean) -> Unit),
+    onCheckedRememberSessionChange: (Boolean) -> Unit,
+    loginUiState: LoginUiState,
 ) {
-    val serverErrorState = remember { mutableStateOf(false) }
-    val userErrorState = remember { mutableStateOf(false) }
-    val passwordErrorState = remember { mutableStateOf(false) }
+    when(loginUiState){
+        LoginUiState.Error -> {
+            Log.v("loginUiState", "Error")
+        }
+        LoginUiState.Loading -> {
+            Log.v("loginUiState", "Loading")
+
+        }
+        is LoginUiState.Success -> {
+            Log.v("loginUiState", "Success")
+        }
+        LoginUiState.Idle -> {
+            Log.v("loginUiState", "Idle")
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.curved_wave_top),
@@ -130,7 +157,7 @@ fun LoginContent(
                 .align(Alignment.Center),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            ServerUrlTextField(serverUrl, serverErrorState)
+            ServerUrlTextField(serverUrl, urlErrorState)
             Spacer(modifier = Modifier.height(10.dp))
             UserTextField(user, userErrorState)
             Spacer(modifier = Modifier.height(10.dp))
@@ -303,7 +330,6 @@ private fun ServerUrlTextField(
 
 }
 
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
 @Composable
@@ -314,11 +340,15 @@ fun DefaultPreview() {
             password = remember { mutableStateOf(TextFieldValue("Pass")) },
             serverUrl = remember { mutableStateOf(TextFieldValue("ServerUrl")) },
             checked = remember { mutableStateOf(true) },
+            urlErrorState = remember { mutableStateOf(true) },
+            userErrorState = remember { mutableStateOf(true) },
+            passwordErrorState = remember { mutableStateOf(true) },
             onRegister = {},
-            onCheckedRememberSessionChange = {},
             onRememberPassword = {},
             onClickLoginButton = {},
-            onClickRegisterButton = {}
+            onClickRegisterButton = {},
+            onCheckedRememberSessionChange = {},
+            loginUiState = LoginUiState.Loading
         )
     }
 }

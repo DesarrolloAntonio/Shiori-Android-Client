@@ -1,17 +1,24 @@
 package com.shiori.androidclient.ui.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.shiori.androidclient.R
 
 
 // https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#alertdialog
@@ -93,6 +100,51 @@ fun ConfirmDialog(
         openDialog = openDialog
     )
 }
+
+@Composable
+fun InfiniteProgressDialog(
+    title: String? = null,
+    properties: DialogProperties = DialogProperties(),
+    onDismissRequest: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = properties
+    ) {
+        Column(
+            horizontalAlignment = CenterHorizontally
+        ) {
+            Surface(
+                modifier = Modifier.clip(CircleShape),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(dimensionResource(id = R.dimen.progressDialog_margin))
+                ) {
+                    CircularProgressIndicator(
+                        strokeWidth = dimensionResource(id = R.dimen.progressDialog_stroke),
+                        modifier = Modifier
+                            .height(dimensionResource(id = R.dimen.progressDialog_size))
+                            .width(dimensionResource(id = R.dimen.progressDialog_size))
+                    )
+
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            if (title != null){
+                Surface(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20)),
+                ) {
+                    Text(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 15.dp),
+                        text = title)
+                }
+            }
+        }
+    }
+}
+
 
 
 

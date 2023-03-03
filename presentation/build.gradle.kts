@@ -53,12 +53,15 @@ dependencies {
 
     implementation(project(":data"))
     implementation(project(":domain"))
+    implementation(project(":model"))
+    implementation(project(":network"))
 
     implementation (libs.androidx.core)
     implementation (libs.androidx.lifecycle.runtime )
     implementation (libs.androidx.activity.compose)
     implementation (libs.androidx.navigation.compose)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
 
     implementation (libs.compose.ui.ui)
@@ -68,11 +71,15 @@ dependencies {
     implementation (libs.compose.material.iconsext)
     implementation (libs.compose.runtime.livedata)
 
-//    implementation (libs.bundles.koin)
+   // implementation (libs.bundles.koin)
     implementation (libs.bundles.retrofit)
     implementation (libs.accompanist.permissions)
 
-    implementation ("io.insert-koin:koin-androidx-compose:3.2.0")
+    implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
+
+//    implementation ("io.insert-koin:koin-android:3.3.2")
+//    implementation ("io.insert-koin:koin-core:3.3.2")
 
 
 }

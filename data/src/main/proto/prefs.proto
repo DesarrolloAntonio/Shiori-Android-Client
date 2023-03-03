@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "com.shiori.data";
+option java_multiple_files = true;
+
+message UserPreferences {
+
+  uint32 id = 1;
+  string username = 2;
+  bool owner = 3;
+  string password = 4;
+  string session = 5;
+  string url = 6;
+
+}
+

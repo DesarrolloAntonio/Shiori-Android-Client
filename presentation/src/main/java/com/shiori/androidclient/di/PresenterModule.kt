@@ -8,8 +8,9 @@ fun presenterModule() = module {
 
     viewModel {
         LoginViewModel(
-            mainRepository = get(),
-            useCase = get()
+//            getBookmarksUseCase = get(),
+            loginUseCase = get(),
+            userRepository = get()
         )
     }
 

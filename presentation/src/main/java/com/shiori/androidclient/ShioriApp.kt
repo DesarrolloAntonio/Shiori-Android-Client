@@ -2,9 +2,9 @@ package com.shiori.androidclient
 
 import android.app.Application
 import com.shiori.androidclient.di.presenterModule
-import com.shiori.data.di.appModule
-import com.shiori.data.di.networkingModule
+import com.shiori.androidclient.di.appModule
 import com.shiori.data.di.preferencesModule
+import com.shiori.network.di.networkingModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -15,9 +15,9 @@ class ShioriApplication : Application() {
             androidContext(this@ShioriApplication)
             modules(
                 listOf(
-                    presenterModule(),
-                    appModule(),
                     networkingModule(),
+                    appModule(),
+                    presenterModule(),
                     preferencesModule()
                 )
             )

@@ -16,3 +16,5 @@ rootProject.name = "Shiori"
 include ':presentation'
 include ':data'
 include ':domain'
+include ':network'
+include ':model'

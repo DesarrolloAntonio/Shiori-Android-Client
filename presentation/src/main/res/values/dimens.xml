@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    // Progress Dialog
+    <dimen name="progressDialog_size">70dp</dimen>
+    <dimen name="progressDialog_margin">20dp</dimen>
+    <dimen name="progressDialog_stroke">6dp</dimen>
+
+</resources>
