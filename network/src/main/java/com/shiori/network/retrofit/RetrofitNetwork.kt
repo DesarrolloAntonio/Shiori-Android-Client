@@ -1,114 +1,84 @@
 package com.shiori.network.retrofit
 
+import com.shiori.network.model.AccountDTO
 import com.shiori.network.model.BookmarkDTO
+import com.shiori.network.model.BookmarksDTO
 import com.shiori.network.model.SessionDTO
+import com.shiori.network.model.TagDTO
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Url
+import retrofit2.http.*
 
 interface RetrofitNetwork {
 
-    @GET("posts")
-    fun getBookmarks(
+    @GET()
+    suspend fun getBookmarks(
+        @Header("X-Session-Id") xSessionId: String,
         @Url url: String
-    ): Response<List<BookmarkDTO>>
+    ): Response<BookmarksDTO>
 
     @POST()
     suspend fun sendLogin(
         @Url url: String,
         @Body jsonData: String
     ): Response<SessionDTO>
-}
 
-//
-///**
-// * Retrofit API declaration for NIA Network API
-// */
-//private interface RetrofitNiaNetworkApi {
-//    @GET(value = "topics")
-//    suspend fun getTopics(
-//        @Query("id") ids: List<String>?,
-//    ): NetworkResponse<List<NetworkTopic>>
-//
-//    @GET(value = "authors")
-//    suspend fun getAuthors(
-//        @Query("id") ids: List<String>?,
-//    ): NetworkResponse<List<NetworkAuthor>>
-//
-//    @GET(value = "newsresources")
-//    suspend fun getNewsResources(
-//        @Query("id") ids: List<String>?,
-//    ): NetworkResponse<List<NetworkNewsResource>>
-//
-//    @GET(value = "changelists/topics")
-//    suspend fun getTopicChangeList(
-//        @Query("after") after: Int?,
-//    ): List<NetworkChangeList>
-//
-//    @GET(value = "changelists/authors")
-//    suspend fun getAuthorsChangeList(
-//        @Query("after") after: Int?,
-//    ): List<NetworkChangeList>
-//
-//    @GET(value = "changelists/newsresources")
-//    suspend fun getNewsResourcesChangeList(
-//        @Query("after") after: Int?,
-//    ): List<NetworkChangeList>
-//}
-//
-//private const val NiaBaseUrl = BuildConfig.BACKEND_URL
-//
-///**
-// * Wrapper for data provided from the [NiaBaseUrl]
-// */
-//@Serializable
-//private data class NetworkResponse<T>(
-//    val data: T
-//)
-//
-///**
-// * [Retrofit] backed [NiaNetworkDataSource]
-// */
-//class RetrofitNiaNetwork(
-//    networkJson: Json
-//) : NiaNetworkDataSource {
-//
-//    private val networkApi = Retrofit.Builder()
-//        .baseUrl(NiaBaseUrl)
-//        .client(
-//            OkHttpClient.Builder()
-//                .addInterceptor(
-//                    // TODO: Decide logging logic
-//                    HttpLoggingInterceptor().apply {
-//                        setLevel(HttpLoggingInterceptor.Level.BODY)
-//                    }
-//                )
-//                .build()
-//        )
-//        .addConverterFactory(
-//            @OptIn(ExperimentalSerializationApi::class)
-//            networkJson.asConverterFactory("application/json".toMediaType())
-//        )
-//        .build()
-//        .create(RetrofitNiaNetworkApi::class.java)
-//
-//    override suspend fun getTopics(ids: List<String>?): List<NetworkTopic> =
-//        networkApi.getTopics(ids = ids).data
-//
-//    override suspend fun getAuthors(ids: List<String>?): List<NetworkAuthor> =
-//        networkApi.getAuthors(ids = ids).data
-//
-//    override suspend fun getNewsResources(ids: List<String>?): List<NetworkNewsResource> =
-//        networkApi.getNewsResources(ids = ids).data
-//
-//    override suspend fun getTopicChangeList(after: Int?): List<NetworkChangeList> =
-//        networkApi.getTopicChangeList(after = after)
-//
-//    override suspend fun getAuthorChangeList(after: Int?): List<NetworkChangeList> =
-//        networkApi.getAuthorsChangeList(after = after)
-//
-//    override suspend fun getNewsResourceChangeList(after: Int?): List<NetworkChangeList> =
-//        networkApi.getNewsResourcesChangeList(after = after)
-//}
+    @POST()
+    suspend fun sendLogout(
+        @Url url: String,
+        @Header("X-Session-Id") xSessionId: String,
+    ): Response<String>
+
+    @HTTP(method = "DELETE", path = "/api/bookmarks", hasBody = true)
+    suspend fun deleteBookmarks(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body bookmarkIds: List<Int>
+    ): Response<Unit>
+
+    // Add Bookmark
+    @POST("/api/bookmarks")
+    suspend fun addBookmark(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body body: String
+    ): Response<BookmarkDTO>
+
+    // Get tags
+    @GET("/api/tags")
+    suspend fun getTags(
+        @Header("X-Session-Id") xSessionId: String
+    ): Response<List<TagDTO>>
+
+    // Rename tag
+    @PUT("/api/tags")
+    suspend fun renameTag(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body tag: TagDTO
+    ): Response<TagDTO>
+
+    // List accounts
+    @GET("/api/accounts")
+    suspend fun listAccounts(
+        @Header("X-Session-Id") xSessionId: String
+    ): Response<List<AccountDTO>>
+
+    // Create account
+    @POST("/api/accounts")
+    suspend fun createAccount(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body account: AccountDTO
+    ): Response<AccountDTO>
+
+    // Edit account
+    @PUT("/api/accounts")
+    suspend fun editAccount(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body account: AccountDTO
+    ): Response<AccountDTO>
+
+    // Delete accounts
+    @HTTP(method = "DELETE", path = "/api/accounts", hasBody = true)
+    suspend fun deleteAccounts(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body accountNames: List<String>
+    ): Response<Unit>
+
+}

@@ -46,7 +46,7 @@ dependencies {
 
     implementation(project(":network"))
     implementation(project(":model"))
-
+    implementation(project(":common"))
 
     implementation (libs.bundles.retrofit)
 
@@ -69,9 +69,8 @@ dependencies {
     implementation ("androidx.datastore:datastore-core:1.0.0")
 //    implementation ("com.google.protobuf:protobuf-javalite:3.18.0")
     implementation(libs.protobuf.kotlin.lite)
-
-
-
+    implementation(libs.androidx.room)
+    kapt(libs.androidx.room.compiler)
 
 }
 

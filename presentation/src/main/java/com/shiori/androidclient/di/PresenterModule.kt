@@ -1,6 +1,9 @@
 package com.shiori.androidclient.di
 
+import com.shiori.androidclient.ui.feed.FeedViewModel
 import com.shiori.androidclient.ui.login.LoginViewModel
+import com.shiori.androidclient.ui.savein.BookmarkViewModel
+import com.shiori.androidclient.ui.settings.SettingsViewModel
 import org.koin.dsl.module
 import org.koin.androidx.viewmodel.dsl.viewModel
 
@@ -8,9 +11,31 @@ fun presenterModule() = module {
 
     viewModel {
         LoginViewModel(
-//            getBookmarksUseCase = get(),
             loginUseCase = get(),
-            userRepository = get()
+            settingsPreferenceDataSource = get(),
+        )
+    }
+
+    viewModel {
+        FeedViewModel(
+            settingsPreferenceDataSource = get(),
+            getBookmarksUseCase = get(),
+            deleteBookmarkUseCase = get(),
+        )
+    }
+
+    viewModel {
+        SettingsViewModel(
+            settingsPreferenceDataSource = get(),
+            sendLogoutUseCase = get()
+        )
+    }
+
+    viewModel {
+        BookmarkViewModel(
+            bookmarkDatabase = get(),
+            bookmarkAdditionUseCase = get(),
+            userPreferences = get(),
         )
     }
 

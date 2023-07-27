@@ -15,11 +15,11 @@ fun networkingModule() = module {
         OkHttpClient.Builder()
             .readTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
-            .addInterceptor { chain ->
-                val newRequest = chain.request().newBuilder()
-                    .build()
-                chain.proceed(newRequest)
-            }
+//            .addInterceptor { chain ->
+//                val newRequest = chain.request().newBuilder()
+//                    .build()
+//                chain.proceed(newRequest)
+//            }
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })

@@ -40,7 +40,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.1.1"
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
     packagingOptions {
         resources {
@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":model"))
     implementation(project(":network"))
+    implementation(project(":common"))
 
     implementation (libs.androidx.core)
     implementation (libs.androidx.lifecycle.runtime )
@@ -77,6 +78,7 @@ dependencies {
 
     implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
+    implementation ("io.coil-kt:coil-compose:2.4.0")
 
 //    implementation ("io.insert-koin:koin-android:3.3.2")
 //    implementation ("io.insert-koin:koin-core:3.3.2")

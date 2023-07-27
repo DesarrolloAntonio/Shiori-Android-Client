@@ -49,7 +49,8 @@ android {
 //}
 
 dependencies {
-
+    //implementation(project(":domain"))
+    implementation(project(":common"))
     implementation (libs.bundles.retrofit)
     implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
 

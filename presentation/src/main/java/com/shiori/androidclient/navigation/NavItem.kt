@@ -9,8 +9,11 @@ sealed class NavItem(
 ) {
     object SplashNavItem : NavItem("splash")
     object LoginNavItem : NavItem("login")
-    object RegisterNavItem : NavItem("register")
     object HomeNavItem : NavItem("home")
+    object RegisterNavItem : NavItem("register")
+    object SettingsNavItem : NavItem("settings")
+
+    object FeedNavItem : NavItem("feed")
 
         val route = run {
         val argValues = navArgs.map { "{${it.key}}" }

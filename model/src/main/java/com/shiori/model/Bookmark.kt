@@ -13,4 +13,22 @@ data class Bookmark (
     val hasArchive: Boolean,
     val tags: List<Tag>,
     val createArchive: Boolean
-)
+){
+    constructor(
+        url: String,
+        tags: List<Tag>
+    ) : this(
+        id = -1,
+        url= url,
+        title = "",
+        excerpt = "",
+        author = "",
+        public = 1,
+        modified = "",
+        imageURL = "",
+        hasContent = false,
+        hasArchive = false,
+        tags = tags,
+        createArchive = false
+    )
+}

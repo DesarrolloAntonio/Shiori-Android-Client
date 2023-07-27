@@ -1,55 +1,31 @@
 package com.shiori.data.mapper
 
 import com.shiori.data.UserPreferences
-import com.shiori.model.Account
-import com.shiori.model.Bookmark
-import com.shiori.model.Tag
-import com.shiori.model.User
+import com.shiori.data.local.room.entity.BookmarkEntity
+import com.shiori.model.*
 import com.shiori.network.model.*
 
 fun SessionDTO.toDomainModel() = User(
     session = session?:"",
-    account = account?.toDomainModel()?:com.shiori.model.Account(
-        id = -1,
-        userName = "",
-        password = "",
-        owner = false
-    )
+    account = account?.toDomainModel()?:Account()
 )
 
-fun AccountDTO.toDomainModel() = com.shiori.model.Account(
-    id = id?:-1,
+fun AccountDTO.toDomainModel() = Account(
+    id = -1,
     userName = userName?:"",
     password = password?:"",
-    owner = owner?:false
+    owner = isOwner?:false,
+    serverUrl = ""
 )
 
-fun SessionDTO.toProtoEntityWith(newPassword: String) = UserPreferences.newBuilder()
+fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
     .setSession(session?:"")
     .setUsername(account?.userName?:"")
-    .setPassword(newPassword)
     .setId(account?.id?:-1)
-    .setOwner(account?.owner?:false)
+    .setOwner(account?.isOwner?:false)
     .build()
 
-fun SessionDTO.toDomainModelWith(newPassword: String) = User(
-    session = session?:"",
-    account = account?.toDomainModelWith(newPassword)?:Account(
-        id = -1,
-        userName = "",
-        password = "",
-        owner = false
-    )
-)
-
-fun AccountDTO.toDomainModelWith(newPassword: String) = Account(
-    id = id?:-1,
-    userName = userName?:"",
-    password = newPassword,
-    owner = false
-)
-
-fun BookmarkDTO.toDomainModel() = Bookmark(
+fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
     id = id?:0,
     url = url?:"",
     title = title?:"",
@@ -57,16 +33,24 @@ fun BookmarkDTO.toDomainModel() = Bookmark(
     author = author?:"",
     public = public?:0,
     modified = modified?:"",
-    imageURL = imageURL?:"",
+    imageURL = "$serverUrl$imageURL",
     hasContent = hasContent?:false,
     hasArchive = hasArchive?:false,
     tags = tags?.map { it.toDomainModel() }?: emptyList(),
     createArchive = createArchive?:false
 )
 
+fun BookmarksDTO.toDomainModel(serverUrl: String) = Bookmarks(
+    error = "",
+    page = page?:0,
+    maxPage = maxPage?:0,
+    bookmarks = bookmarks?.map { it.toDomainModel(serverUrl) }?: emptyList()
+)
+
 fun TagDTO.toDomainModel() = Tag(
     id = id?:0,
-    name = name?:""
+    name = name?:"",
+    selected = false
 )
 
 fun Account.toRequestBody() =
@@ -74,6 +58,38 @@ fun Account.toRequestBody() =
         username = userName,
         password = password
     )
+
+fun BookmarkDTO.toEntityModel() = BookmarkEntity(
+    id = id?:0,
+    url = url?:"",
+    title = title?:"",
+    excerpt = excerpt?:"",
+    author = author?:"",
+    isPublic = public?:0,
+    modified = modified?:"",
+    imageURL = imageURL?:"",
+    hasContent = hasContent?:false,
+    hasArchive = hasArchive?:false,
+    tags = tags?.map { it.toDomainModel() } ?: emptyList(),
+    createArchive = createArchive?:false
+)
+
+fun BookmarkEntity.toDomainModel() = Bookmark(
+    id = id,
+    url = url,
+    title = title,
+    excerpt = excerpt,
+    author = author,
+    public = isPublic,
+    modified = modified,
+    imageURL = imageURL,
+    hasContent = hasContent,
+    hasArchive = hasArchive,
+    tags = tags,
+    createArchive = createArchive
+)
+
+
 
 
 

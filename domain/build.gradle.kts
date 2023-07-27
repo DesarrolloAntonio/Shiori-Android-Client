@@ -41,11 +41,12 @@ dependencies {
 
     implementation(project(":data"))
     implementation(project(":model"))
+    implementation(project(":common"))
 
 
     // coroutines
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
-    implementation ("javax.inject:javax.inject:1")
+//    implementation ("javax.inject:javax.inject:1")
 }

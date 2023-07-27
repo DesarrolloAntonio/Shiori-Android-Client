@@ -1,6 +1,11 @@
 package com.shiori.model
 
+
 data class Tag (
     val id: Int,
-    val name: String
-)
+    val name: String,
+    var selected: Boolean,
+){
+    constructor(name: String) : this(-1, name, false)
+
+}

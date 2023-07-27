@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
@@ -27,10 +27,13 @@ import com.shiori.androidclient.R
 fun SimpleDialog(
     title: String = "",
     content: String = "",
-    icon: ImageVector,
+    icon: ImageVector? = null,
     confirmButtonText: String = "",
     dismissButtonText: String = "",
     openDialog: MutableState<Boolean>,
+    onConfirm: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
+    properties: DialogProperties = DialogProperties(),
 ) {
     if (openDialog.value) {
         AlertDialog(
@@ -40,7 +43,7 @@ fun SimpleDialog(
                 // onDismissRequest.
                 openDialog.value = false
             },
-            icon = { Icon(imageVector = icon, contentDescription = null) },
+            icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
             title = {
                 if (title.isNotEmpty()){
                     Text(text = title)
@@ -63,6 +66,7 @@ fun SimpleDialog(
                     TextButton(
                         onClick = {
                             openDialog.value = false
+                            onConfirm?.invoke()
                         }
                     ) {
                         Text(confirmButtonText)
@@ -74,12 +78,14 @@ fun SimpleDialog(
                     TextButton(
                         onClick = {
                             openDialog.value = false
+                            onDismiss?.invoke()
                         }
                     ) {
                         Text("Dismiss")
                     }
                 }
-            }
+            },
+            properties = properties
         )
     }
 }
@@ -88,16 +94,21 @@ fun SimpleDialog(
 fun ConfirmDialog(
     title: String = "",
     content: String = "",
-    confirmButton: String = "Confirm",
+    confirmButton: String = "Accept",
     dismissButton: String = "",
+    icon: ImageVector? = null,
+    onConfirm: (() -> Unit)? = null,
     openDialog: MutableState<Boolean>,
+    properties: DialogProperties = DialogProperties(),
     ){
     SimpleDialog(
         title = title,
         content = content,
-        icon = Icons.Filled.Info,
+        icon = icon,
+        onConfirm = onConfirm,
         confirmButtonText = confirmButton,
-        openDialog = openDialog
+        openDialog = openDialog,
+        properties = properties
     )
 }
 
@@ -143,6 +154,23 @@ fun InfiniteProgressDialog(
             }
         }
     }
+}
+
+@Composable
+fun ErrorDialog(
+    title: String = "",
+    content: String = "",
+    openDialog: MutableState<Boolean>,
+    onConfirm: (() -> Unit)? = null,
+){
+    SimpleDialog(
+        title = title,
+        content = content,
+        icon = Icons.Default.Error,
+        confirmButtonText = "Accept",
+        openDialog = openDialog,
+        onConfirm = onConfirm,
+        )
 }
 
 

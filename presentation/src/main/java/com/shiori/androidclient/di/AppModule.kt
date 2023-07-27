@@ -1,28 +1,52 @@
 package com.shiori.androidclient.di
 
-import com.shiori.data.repository.MainRepository
-import com.shiori.data.repository.MainRepositoryImpl
+import com.shiori.data.repository.BookmarksRepository
+import com.shiori.data.repository.BookmarksRepositoryImpl
+import com.shiori.domain.usecase.AddBookmarkUseCase
+import com.shiori.domain.usecase.DeleteBookmarkUseCase
 import com.shiori.domain.usecase.GetBookmarksUseCase
 import com.shiori.domain.usecase.SendLoginUseCase
+import com.shiori.domain.usecase.SendLogoutUseCase
 import org.koin.dsl.module
-import retrofit2.Retrofit
 
 fun appModule() = module {
 
+
     single {
-        MainRepositoryImpl(
+        BookmarksRepositoryImpl(
             apiService = get(),
-            userPreferenceDataSource = get()
-        ) as MainRepository
+            bookmarksDao = get(),
+            errorHandler = get(),
+        ) as BookmarksRepository
     }
+
     single {
         GetBookmarksUseCase(
-            mainRepository = get()
+            bookmarksRepository = get()
         )
     }
+
+    single {
+        DeleteBookmarkUseCase(
+            bookmarksRepository = get()
+        )
+    }
+
     single {
         SendLoginUseCase(
-            mainRepository = get()
+            authRepository = get()
+        )
+    }
+
+    single {
+        SendLogoutUseCase(
+            authRepository = get()
+        )
+    }
+
+    single {
+        AddBookmarkUseCase(
+            bookmarksRepository = get()
         )
     }
 
