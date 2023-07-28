@@ -40,8 +40,7 @@ fun BookmarkEditorView(
     newTag: MutableState<String>,
     assignedTags: MutableState<List<Tag>>,
     availableTags: State<List<Tag>>,
-    saveBookmark: (String) -> Unit,
-    url: String
+    saveBookmark: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -95,10 +94,10 @@ fun BookmarkEditorView(
         Button(
             modifier = Modifier.align(CenterHorizontally),
             onClick = {
-                saveBookmark(url)
+                saveBookmark()
             }
         ) {
-            Text("Save")
+            Text("Save Bookmark")
         }
     }
 }
@@ -145,7 +144,6 @@ fun BookmarkEditorPreview() {
 
     BookmarkEditorView(
         assignedTags = assignedTags,
-        url = "https://www.google.com",
         saveBookmark = {},
         availableTags = assignedTags,
         newTag = newTag,

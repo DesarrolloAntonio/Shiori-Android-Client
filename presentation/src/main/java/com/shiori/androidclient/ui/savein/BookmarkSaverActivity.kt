@@ -19,8 +19,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class BookmarkSaverActivity : ComponentActivity() {
 
-    private val viewModel: BookmarkViewModel by viewModel()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var sharedUrl =  ""
@@ -43,9 +41,6 @@ class BookmarkSaverActivity : ComponentActivity() {
                     BookmarkEditorScreen(
                         sharedUrl = sharedUrl,
                         assignedTags = assignedTags ,
-                        saveBookmark = {
-                            viewModel.saveBookmark(sharedUrl, assignedTags.value)
-                        },
                         onFinishActivity = { finish() }
                     )
                 }

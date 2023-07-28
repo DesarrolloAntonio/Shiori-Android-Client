@@ -48,6 +48,8 @@ fun FeedScreen(
         feedViewModel.getBookmarks()
     }
     val showBottomSheet = remember { mutableStateOf(false)}
+    val uniqueCategories = remember { mutableStateOf(emptyList<Tag>()) }
+
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
         goToLogin = {
@@ -62,7 +64,8 @@ fun FeedScreen(
         onPullToRefresh = {
             feedViewModel.refreshFeed()
         },
-        onClickEdit = {
+        onClickEdit = { bookmark ->
+            uniqueCategories.value = bookmark.tags
             showBottomSheet.value = true
         },
         onclickDelete = {
@@ -76,13 +79,13 @@ fun FeedScreen(
         }
     )
     if (showBottomSheet.value) {
-        BottomSheetDialogMaterial3()
+        BottomSheetDialog(uniqueCategories)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetDialogMaterial3(
+fun BottomSheetDialog(
     uniqueCategories: MutableState<List<Tag>> = remember {mutableStateOf(emptyList()) },
     ){
     val scope = rememberCoroutineScope()
@@ -94,7 +97,7 @@ fun BottomSheetDialogMaterial3(
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = 128.dp,
+        //sheetPeekHeight = 128.dp,
         sheetContent = {
             Column(
                 Modifier
@@ -103,7 +106,6 @@ fun BottomSheetDialogMaterial3(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 BookmarkEditorView(
-                    url = "uniqueCategories",
                     assignedTags = uniqueCategories,
                     saveBookmark = {},
                     availableTags = remember { mutableStateOf(emptyList())},

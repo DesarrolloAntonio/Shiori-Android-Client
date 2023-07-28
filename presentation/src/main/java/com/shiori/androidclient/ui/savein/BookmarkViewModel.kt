@@ -1,5 +1,6 @@
 package com.shiori.androidclient.ui.savein
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shiori.androidclient.ui.components.UiState
@@ -59,16 +60,18 @@ class BookmarkViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            _bookmarkUiState.error(
-                                errorMessage = result.error?.throwable?.message ?: ""
-                            )
+                            Log.v("BookmarkViewModel", "Error")
+                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "" )
                         }
 
+
                         is Result.Loading -> {
+                            Log.v("BookmarkViewModel", "Loading")
                             _bookmarkUiState.isLoading(true)
                         }
 
                         is Result.Success -> {
+                            Log.v("BookmarkViewModel", "Success")
                             _bookmarkUiState.success(result.data)
                         }
                     }

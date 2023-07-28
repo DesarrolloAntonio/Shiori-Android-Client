@@ -18,51 +18,44 @@ import org.koin.androidx.compose.get
 fun BookmarkEditorScreen(
     assignedTags: MutableState<List<Tag>>,
     sharedUrl: String,
-    saveBookmark: (String) -> Unit,
     onFinishActivity: () -> Unit,
 ) {
     val viewModel = get<BookmarkViewModel>()
     val newTag = remember { mutableStateOf("") }
     val availableTags = viewModel.availableTags.collectAsState()
+    val bookmarkUiState = viewModel.bookmarkUiState.collectAsState().value
 
-//    BookmarkEditorView(
-//        newTag = newTag,
-//        assignedTags = assignedTags,
-//        availableTags = availableTags,
-//        saveBookmark = saveBookmark,
-//        url = sharedUrl
-//    )
-
-    val bookmarkUiState = viewModel.bookmarkUiState.collectAsState()
-
-    if (bookmarkUiState.value.isLoading) {
+    if (bookmarkUiState.isLoading) {
+        Log.v("BookmarkEditorScreen", "isLoading")
         InfiniteProgressDialog(onDismissRequest = {})
     }
-
-    if (!bookmarkUiState.value.error.isNullOrEmpty()) {
+    if (!bookmarkUiState.error.isNullOrEmpty()) {
+        Log.v("BookmarkEditorScreen", "Error")
         ConfirmDialog(
             icon = Icons.Default.Error,
             title = "Error",
-            content = bookmarkUiState.value.error?:"",
+            content = bookmarkUiState.error?:"",
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
                 //viewModel.clearError()
             }
         )
-        Log.v("bookmarkUiState", "Error")
     }
 
-    if (bookmarkUiState.value.data == null && !bookmarkUiState.value.idle) {
+
+    //if (bookmarkUiState.value.data == null && !bookmarkUiState.value.idle) {
         BookmarkEditorView(
             newTag = newTag,
             assignedTags = assignedTags,
             availableTags = availableTags,
-            saveBookmark = saveBookmark,
-            url = sharedUrl
+            saveBookmark = {
+                viewModel.saveBookmark(sharedUrl, assignedTags.value)
+                           },
         )
-    }
+    //}
 
-    if (bookmarkUiState.value.data != null) {
+    if (bookmarkUiState.data != null) {
+        Log.v("BookmarkEditorScreen", "Success")
         SimpleDialog(
             title = "Success",
             content = "Bookmark successfully saved!",
@@ -72,4 +65,5 @@ fun BookmarkEditorScreen(
         )
     }
 }
+
 
