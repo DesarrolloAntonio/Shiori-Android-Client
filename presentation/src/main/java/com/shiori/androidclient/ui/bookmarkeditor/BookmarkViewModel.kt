@@ -1,4 +1,4 @@
-package com.shiori.androidclient.ui.savein
+package com.shiori.androidclient.ui.bookmarkeditor
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -11,6 +11,7 @@ import com.shiori.common.result.Result
 import com.shiori.data.local.preferences.SettingsPreferenceDataSource
 import com.shiori.data.local.room.dao.BookmarksDao
 import com.shiori.domain.usecase.AddBookmarkUseCase
+import com.shiori.domain.usecase.EditBookmarkUseCase
 import com.shiori.model.Bookmark
 import com.shiori.model.Tag
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.launch
 class BookmarkViewModel(
     bookmarkDatabase: BookmarksDao,
     private val bookmarkAdditionUseCase: AddBookmarkUseCase,
+    private val editBookmarkUseCase: EditBookmarkUseCase,
     private val userPreferences: SettingsPreferenceDataSource,
 
     ) : ViewModel() {
@@ -60,18 +62,45 @@ class BookmarkViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v("BookmarkViewModel", "Error")
+                            Log.v("Add BookmarkViewModel", "Error")
                             _bookmarkUiState.error(errorMessage = result.error?.message ?: "" )
                         }
 
-
                         is Result.Loading -> {
-                            Log.v("BookmarkViewModel", "Loading")
+                            Log.v("Add BookmarkViewModel", "Loading")
                             _bookmarkUiState.isLoading(true)
                         }
 
                         is Result.Success -> {
-                            Log.v("BookmarkViewModel", "Success")
+                            Log.v("Add BookmarkViewModel", "Success")
+                            _bookmarkUiState.success(result.data)
+                        }
+                    }
+                }
+        }
+    }
+
+    fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
+        viewModelScope.launch {
+            editBookmarkUseCase.invoke(
+                serverUrl = backendUrl,
+                xSession = userPreferences.getSession(),
+                bookmark = bookmark
+            )
+                .collect { result ->
+                    when (result) {
+                        is Result.Error -> {
+                            Log.v("Edit BookmarkViewModel", "Error")
+                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "" )
+                        }
+
+                        is Result.Loading -> {
+                            Log.v("Edit BookmarkViewModel", "Loading")
+                            _bookmarkUiState.isLoading(true)
+                        }
+
+                        is Result.Success -> {
+                            Log.v("Edit BookmarkViewModel", "Success")
                             _bookmarkUiState.success(result.data)
                         }
                     }

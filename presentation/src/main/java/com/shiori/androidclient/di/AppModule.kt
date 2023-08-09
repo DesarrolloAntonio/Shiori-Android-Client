@@ -4,6 +4,7 @@ import com.shiori.data.repository.BookmarksRepository
 import com.shiori.data.repository.BookmarksRepositoryImpl
 import com.shiori.domain.usecase.AddBookmarkUseCase
 import com.shiori.domain.usecase.DeleteBookmarkUseCase
+import com.shiori.domain.usecase.EditBookmarkUseCase
 import com.shiori.domain.usecase.GetBookmarksUseCase
 import com.shiori.domain.usecase.SendLoginUseCase
 import com.shiori.domain.usecase.SendLogoutUseCase
@@ -46,6 +47,12 @@ fun appModule() = module {
 
     single {
         AddBookmarkUseCase(
+            bookmarksRepository = get()
+        )
+    }
+
+    single {
+        EditBookmarkUseCase(
             bookmarksRepository = get()
         )
     }

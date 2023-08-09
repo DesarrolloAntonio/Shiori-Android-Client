@@ -1,4 +1,4 @@
-package com.shiori.androidclient.ui.savein
+package com.shiori.androidclient.ui.bookmarkeditor
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,10 +14,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.shiori.androidclient.ui.theme.ShioriTheme
+import com.shiori.model.Bookmark
 import com.shiori.model.Tag
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class BookmarkSaverActivity : ComponentActivity() {
+class BookmarkEditorActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,9 +39,13 @@ class BookmarkSaverActivity : ComponentActivity() {
                 ){
                     val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(emptyList()) }
                     BookmarkEditorScreen(
-                        sharedUrl = sharedUrl,
-                        assignedTags = assignedTags ,
-                        onFinishActivity = { finish() }
+                        title  = "Add",
+                        bookmarkEditorType = BookmarkEditorType.ADD,
+                        bookmark = Bookmark(sharedUrl, emptyList()),
+//                        sharedUrl = sharedUrl,
+//                        assignedTags = assignedTags ,
+                        onBackClick = { finish() },
+                        updateBookmark = {  }
                     )
                 }
             }

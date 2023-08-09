@@ -79,6 +79,13 @@ class FeedViewModel(
         getBookmarks()
     }
 
+    fun updateBookmark(newBookmark: Bookmark) {
+        _bookmarksUiState.value = _bookmarksUiState.value.copy(data = _bookmarksUiState.value.data?.map {
+            if (it.url == newBookmark.url) newBookmark else it }
+        )
+    }
+
+
     fun resetData() {
         _bookmarksUiState.idle(true)
         hasLoadedFeed = false

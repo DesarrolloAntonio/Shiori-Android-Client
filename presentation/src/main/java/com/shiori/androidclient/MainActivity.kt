@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.inverseOnSurface)
                 ){
                     Navigation(
                         onFinish = {

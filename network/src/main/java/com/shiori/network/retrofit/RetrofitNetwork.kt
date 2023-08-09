@@ -41,6 +41,12 @@ interface RetrofitNetwork {
         @Body body: String
     ): Response<BookmarkDTO>
 
+    @PUT("/api/bookmarks")
+    suspend fun editBookmark(
+        @Header("X-Session-Id") xSessionId: String,
+        @Body body: String
+    ): Response<BookmarkDTO>
+
     // Get tags
     @GET("/api/tags")
     suspend fun getTags(

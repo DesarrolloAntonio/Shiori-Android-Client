@@ -1,4 +1,4 @@
-package com.shiori.androidclient.ui.savein
+package com.shiori.androidclient.ui.bookmarkeditor
 
 import android.util.Log
 import androidx.compose.material.icons.Icons
@@ -11,14 +11,17 @@ import androidx.compose.runtime.remember
 import com.shiori.androidclient.ui.components.ConfirmDialog
 import com.shiori.androidclient.ui.components.InfiniteProgressDialog
 import com.shiori.androidclient.ui.components.SimpleDialog
+import com.shiori.model.Bookmark
 import com.shiori.model.Tag
 import org.koin.androidx.compose.get
 
 @Composable
 fun BookmarkEditorScreen(
-    assignedTags: MutableState<List<Tag>>,
-    sharedUrl: String,
-    onFinishActivity: () -> Unit,
+    title: String,
+    bookmarkEditorType: BookmarkEditorType,
+    bookmark: Bookmark,
+    onBackClick: () -> Unit,
+    updateBookmark: (Bookmark) -> Unit
 ) {
     val viewModel = get<BookmarkViewModel>()
     val newTag = remember { mutableStateOf("") }
@@ -44,13 +47,25 @@ fun BookmarkEditorScreen(
 
 
     //if (bookmarkUiState.value.data == null && !bookmarkUiState.value.idle) {
-        BookmarkEditorView(
+    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags ?: emptyList()) }
+
+    BookmarkEditorView(
+            title = title,
+            bookmarkEditorType = bookmarkEditorType,
             newTag = newTag,
             assignedTags = assignedTags,
             availableTags = availableTags,
             saveBookmark = {
-                viewModel.saveBookmark(sharedUrl, assignedTags.value)
-                           },
+                when (bookmarkEditorType) {
+                    BookmarkEditorType.ADD -> {
+                        viewModel.saveBookmark(bookmark.url, assignedTags.value)
+                    }
+                    BookmarkEditorType.EDIT -> {
+                        viewModel.editBookmark(bookmark.copy (tags = assignedTags.value))
+                    }
+                }
+            },
+            onBackClick = onBackClick,
         )
     //}
 
@@ -61,7 +76,7 @@ fun BookmarkEditorScreen(
             content = "Bookmark successfully saved!",
             confirmButtonText = "Ok",
             openDialog = remember { mutableStateOf(true) },
-            onConfirm = onFinishActivity
+            onConfirm = { updateBookmark(bookmarkUiState.data) }
         )
     }
 }

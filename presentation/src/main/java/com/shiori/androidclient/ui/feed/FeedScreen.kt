@@ -9,18 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -30,13 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.shiori.androidclient.extensions.openInBrowser
 import com.shiori.androidclient.extensions.shareText
+import com.shiori.androidclient.ui.bookmarkeditor.BookmarkEditorScreen
+import com.shiori.androidclient.ui.bookmarkeditor.BookmarkEditorType
 import com.shiori.androidclient.ui.components.ConfirmDialog
 import com.shiori.androidclient.ui.components.InfiniteProgressDialog
 import com.shiori.androidclient.ui.components.UiState
-import com.shiori.androidclient.ui.savein.BookmarkEditorView
 import com.shiori.model.Bookmark
 import com.shiori.model.Tag
-import kotlinx.coroutines.launch
 
 @Composable
 fun FeedScreen(
@@ -47,8 +41,9 @@ fun FeedScreen(
     LaunchedEffect(Unit) {
         feedViewModel.getBookmarks()
     }
-    val showBottomSheet = remember { mutableStateOf(false)}
+    val showBookmarkEditorScreen = remember { mutableStateOf(false)}
     val uniqueCategories = remember { mutableStateOf(emptyList<Tag>()) }
+    val bookmarkSelected: MutableState<Bookmark?> = remember { mutableStateOf(null) }
 
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
@@ -65,8 +60,9 @@ fun FeedScreen(
             feedViewModel.refreshFeed()
         },
         onClickEdit = { bookmark ->
+            bookmarkSelected.value = bookmark
             uniqueCategories.value = bookmark.tags
-            showBottomSheet.value = true
+            showBookmarkEditorScreen.value = true
         },
         onclickDelete = {
             feedViewModel.deleteBookmark(it)
@@ -78,54 +74,23 @@ fun FeedScreen(
             feedViewModel.resetData()
         }
     )
-    if (showBottomSheet.value) {
-        BottomSheetDialog(uniqueCategories)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomSheetDialog(
-    uniqueCategories: MutableState<List<Tag>> = remember {mutableStateOf(emptyList()) },
-    ){
-    val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
-    LaunchedEffect(key1 = scaffoldState) {
-        scaffoldState.bottomSheetState.expand()
-    }
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        //sheetPeekHeight = 128.dp,
-        sheetContent = {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                BookmarkEditorView(
-                    assignedTags = uniqueCategories,
-                    saveBookmark = {},
-                    availableTags = remember { mutableStateOf(emptyList())},
-                    newTag = remember { mutableStateOf("") }
-                )
-                Button(
-                    onClick = {
-                        scope.launch { scaffoldState.bottomSheetState.expand() }
-                    }
-                ) {
-                    Text("Click to collapse sheet")
+    if (showBookmarkEditorScreen.value && bookmarkSelected.value != null) {
+        bookmarkSelected.value?.let {
+            BookmarkEditorScreen(
+                title  = "Edit",
+                bookmarkEditorType = BookmarkEditorType.EDIT,
+                bookmark = it,
+                onBackClick = {
+                    showBookmarkEditorScreen.value = false
+                },
+                updateBookmark = { bookMark ->
+                    showBookmarkEditorScreen.value = false
+                    feedViewModel.updateBookmark(bookMark)
                 }
-            }
-        }) { innerPadding ->
-//        Box(Modifier.padding(innerPadding)) {
-//            //Text("Scaffold Content")
-//        }
+            )
+        }
     }
 }
-
 
 @Composable
 private fun FeedContent(

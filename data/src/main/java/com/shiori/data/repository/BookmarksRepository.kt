@@ -24,4 +24,10 @@ interface BookmarksRepository {
     serverUrl: String,
     bookmarkId: Int
   ): Flow<Result<Unit>>
+
+  fun editBookmark(
+    xSession: String,
+    serverUrl: String,
+    bookmark: Bookmark
+  ): Flow<Result<Bookmark>>
 }

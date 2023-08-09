@@ -30,7 +30,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".ui.savein.BookmarkSaverActivity"
+        <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
             android:label="Save in Shiori"
             android:exported="true">
             <intent-filter>

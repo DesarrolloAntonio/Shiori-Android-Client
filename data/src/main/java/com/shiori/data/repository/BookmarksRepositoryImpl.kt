@@ -1,6 +1,7 @@
 package com.shiori.data.repository
 
 import com.shiori.common.result.ErrorHandler
+import com.shiori.common.result.Result
 import com.shiori.data.extensions.toBodyJson
 import com.shiori.data.helpers.toJson
 import com.shiori.data.local.room.dao.BookmarksDao
@@ -83,5 +84,23 @@ class BookmarksRepositoryImpl(
             override fun fetchResult(data: Unit): Flow<Unit> =
                 flow { emit(Unit) }
         }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun editBookmark(
+        xSession: String,
+        serverUrl: String,
+        bookmark: Bookmark
+    ) = object :
+        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
+        override suspend fun fetchFromRemote() = apiService.editBookmark(
+            xSessionId = xSession,
+            body = bookmark.toBodyJson()
+        )
+
+        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
+            return flow {
+                emit(data.toDomainModel())
+            }
+        }
+    }.asFlow().flowOn(Dispatchers.IO)
 }
 
