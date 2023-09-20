@@ -17,4 +17,6 @@ interface SettingsPreferenceDataSource {
 
     suspend fun getSession(): String
     suspend fun resetUser()
+    fun setTheme(isDark: Boolean)
+    fun isDarkTheme(): Boolean
 }

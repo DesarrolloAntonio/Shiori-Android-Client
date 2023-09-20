@@ -1,6 +1,7 @@
 package com.shiori.androidclient.ui.bookmarkeditor
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
@@ -27,7 +28,9 @@ fun BookmarkEditorScreen(
     val newTag = remember { mutableStateOf("") }
     val availableTags = viewModel.availableTags.collectAsState()
     val bookmarkUiState = viewModel.bookmarkUiState.collectAsState().value
-
+    BackHandler {
+        onBackClick()
+    }
     if (bookmarkUiState.isLoading) {
         Log.v("BookmarkEditorScreen", "isLoading")
         InfiniteProgressDialog(onDismissRequest = {})
@@ -43,10 +46,11 @@ fun BookmarkEditorScreen(
                 //viewModel.clearError()
             }
         )
+    } else {
+        Log.v("BookmarkEditorScreen", "Success")
     }
 
 
-    //if (bookmarkUiState.value.data == null && !bookmarkUiState.value.idle) {
     val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags ?: emptyList()) }
 
     BookmarkEditorView(

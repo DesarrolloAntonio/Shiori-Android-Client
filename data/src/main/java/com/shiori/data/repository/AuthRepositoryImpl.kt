@@ -20,36 +20,6 @@ class AuthRepositoryImpl(
     private val errorHandler: ErrorHandler
 ) : AuthRepository {
 
-//    override fun sendLogin(
-//        username: String,
-//        password: String,
-//        serverUrl: String
-//    ): Flow<User?> {
-//        return flow {
-//            try {
-//                val account =
-//                    Account(id = -1, userName = username, password = password, owner = false)
-//                Log.v("account**", account.toJson())
-//                val result = apiService.sendLogin("$serverUrl/api/login", account.toRequestBody().toJson())
-//                val sessionDTO = result.body()
-//                if (result.isSuccessful && sessionDTO != null && sessionDTO.session?.isNotEmpty() == true) {
-//                    settingsPreferenceDataSource.saveUser(
-//                        password = password,
-//                        session = sessionDTO.toProtoEntity(),
-//                        serverUrl = serverUrl
-//                    )
-//                    emit(sessionDTO.toDomainModel())
-//                } else {
-//                    emit(User(error = "Session is empty"))
-//                }
-//            } catch (exception: Exception) {
-//                Log.v("Error!!", exception.message ?: "")
-//                emit(User(error = exception.message ?: ""))
-//            }
-//        }.flowOn(Dispatchers.IO)
-//    }
-
-
     override fun sendLogin(
         username: String,
         password: String,
@@ -72,12 +42,6 @@ class AuthRepositoryImpl(
                 username = username,
                 password = password
             ).toJson()
-//            Account(
-//                id = -1,
-//                userName = username,
-//                password = password,
-//                owner = false
-//            ).toRequestBody().toJson()
         )
 
         override fun shouldFetch(data: User?) = true

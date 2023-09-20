@@ -27,7 +27,8 @@ fun presenterModule() = module {
     viewModel {
         SettingsViewModel(
             settingsPreferenceDataSource = get(),
-            sendLogoutUseCase = get()
+            sendLogoutUseCase = get(),
+            themeManager = get(),
         )
     }
 

@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Divider
@@ -42,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.shiori.androidclient.ui.components.ErrorDialog
 import com.shiori.androidclient.ui.components.InfiniteProgressDialog
 import com.shiori.androidclient.ui.components.UiState
-import com.shiori.model.User
 
 @Composable
 fun SettingsScreen(
@@ -53,10 +51,12 @@ fun SettingsScreen(
 
     SettingsContent(
         settingsUiState = settingsUiState,
-        onLogout = {
-            settingsViewModel.logout()
-        },
-        goToLogin = goToLogin
+        onLogout = { settingsViewModel.logout() },
+        goToLogin = goToLogin,
+        isDarkTheme = settingsViewModel.isDarkTheme(),
+        onThemeChanged = {
+            settingsViewModel.setTheme()
+        }
     )
 }
 
@@ -64,6 +64,8 @@ fun SettingsScreen(
 fun SettingsContent(
     settingsUiState: UiState<String>,
     onLogout: () -> Unit,
+    onThemeChanged: () -> Unit,
+    isDarkTheme: Boolean,
     goToLogin: () -> Unit
 ) {
     if (settingsUiState.isLoading) {
@@ -87,14 +89,6 @@ fun SettingsContent(
         }
     }
 
-    val items = listOf(
-        Item("Push notifications", Icons.Filled.Notifications) { /* Handle click for Push notifications */ },
-        Item("Theme", Icons.Filled.Palette) { /* Handle click for Theme */ },
-        Item("Change password", Icons.Filled.Lock) { /* Handle click for Change password */ },
-        Item("Terms of Use", Icons.Filled.Gavel) { /* Handle click for Terms of Use */ },
-        Item("Privacy policy", Icons.Filled.Security) { /* Handle click for Privacy policy */ },
-        Item("Logout", Icons.Filled.Logout, onClick = onLogout)
-    )
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -104,15 +98,14 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(8.dp))
             Divider(Modifier.fillMaxWidth(), color = Color.Black, thickness = 1.dp)
         }
-        items(items) { item ->
-            when (item.title) {
-                "Push notifications" -> SwitchOption(item)
-                "Theme" -> ThemeOption(item)
-                "Change password", "Terms of Use", "Privacy policy" -> ClickableOption(item)
-                "Logout" -> ClickableOption(item, color = Color.Red)
-            }
-        }
-
+        //item { SwitchOption(Item("Push notifications", Icons.Filled.Notifications) { /* Handle click for Push notifications */ }) }
+        item { ThemeOption(Item("Theme", Icons.Filled.Palette, onClick = {
+            onThemeChanged()
+        }), darkTheme = isDarkTheme) }
+        //item { ClickableOption(Item("Change password", Icons.Filled.Lock) { /* Handle click for Change password */ }) }
+        item { ClickableOption(Item("Terms of Use", Icons.Filled.Gavel) { /* Handle click for Terms of Use */ }) }
+        item { ClickableOption(Item("Privacy policy", Icons.Filled.Security) { /* Handle click for Privacy policy */ }) }
+        item { ClickableOption(Item("Logout", Icons.Filled.Logout, onClick = onLogout), color = Color.Red) }
     }
 }
 
@@ -126,27 +119,33 @@ fun SwitchOption(item: Item) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Icon(item.icon, contentDescription = item.title)
+        Icon(item.icon, contentDescription = "Notifications switch")
         Spacer(modifier = Modifier.width(12.dp)) // Padding to the left
-        Text(text = item.title, modifier = Modifier.weight(1f))
+        Text(text = item.title, modifier = Modifier.weight(1f).padding(vertical = 10.dp))
         Switch(checked = switchState, onCheckedChange = { switchState = it })
     }
 }
 
 
 @Composable
-fun ThemeOption(item: Item) {
-    var isDarkTheme by remember { mutableStateOf(false) }
+fun ThemeOption(
+    item: Item,
+    darkTheme: Boolean,
+) {
+    var isDarkTheme by remember { mutableStateOf(darkTheme) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { isDarkTheme = !isDarkTheme },
+            .clickable {
+                isDarkTheme = !isDarkTheme
+                item.onClick()
+                       },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Icon(item.icon, contentDescription = item.title)
+        Icon(item.icon, contentDescription = "Change theme")
         Spacer(modifier = Modifier.width(12.dp)) // Padding to the left
-        Text(text = item.title, modifier = Modifier.weight(1f))
+        Text(text = item.title, modifier = Modifier.weight(1f).padding(vertical = 10.dp))
         Icon(if (isDarkTheme) Icons.Filled.DarkMode else Icons.Filled.LightMode, contentDescription = "Change theme")
     }
 }
@@ -163,15 +162,10 @@ fun ClickableOption(item: Item, color: Color = Color.Black) {
         horizontalArrangement = Arrangement.Start
     ) {
         Icon(item.icon, contentDescription = item.title)
-//        TextButton(
-//            onClick = { },
-//            colors = ButtonDefaults.textButtonColors(contentColor = color)
-//        ) {
             Text(
                 modifier = Modifier.padding(10.dp),
                 text = item.title
             )
-        //}
     }
 }
 
@@ -181,5 +175,5 @@ data class Item(val title: String, val icon: ImageVector, val onClick: () -> Uni
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsContent( onLogout = {}, goToLogin = {}, settingsUiState = UiState<String>(isLoading = false))
+    SettingsContent( onLogout = {}, goToLogin = {}, onThemeChanged = {}, settingsUiState = UiState<String>(isLoading = false), isDarkTheme = false)
 }

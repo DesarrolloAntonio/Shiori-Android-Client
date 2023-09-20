@@ -8,4 +8,6 @@ interface SettingsRepository {
     suspend fun getUserName(): Flow<String>
 
     val userDataStream: Flow<User>
+    suspend fun setTheme(isDark: Boolean)
+    fun isDarkTheme(): Boolean
 }

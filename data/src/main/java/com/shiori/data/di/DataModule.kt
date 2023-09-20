@@ -19,11 +19,15 @@ import com.shiori.data.repository.ErrorHandlerImpl
 import com.shiori.data.repository.SettingsRepository
 import com.shiori.data.repository.SettingsRepositoryImpl
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 fun dataModule() = module {
 
-    single {
+    val preferencesDataStoreQualifier = named("preferencesDataStore")
+    val protoDataStoreQualifier = named("protoDataStore")
+
+    single(preferencesDataStoreQualifier) {
         PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler(
                 produceNewData = { emptyPreferences() }
@@ -32,17 +36,17 @@ fun dataModule() = module {
         )
     }
 
-    single {
+    single(protoDataStoreQualifier) {
         DataStoreFactory.create(
             serializer = UserPreferencesSerializer,
             produceFile = { androidContext().preferencesDataStoreFile("objects_data")},
             corruptionHandler = null,
-            )
+        )
     }
 
     single { SettingsPreferencesDataSourceImpl(
-        dataStore = get(),
-        protoDataStore = get()
+        dataStore = get(preferencesDataStoreQualifier),
+        protoDataStore = get(protoDataStoreQualifier)
     ) as SettingsPreferenceDataSource }
 
     single { AuthRepositoryImpl(

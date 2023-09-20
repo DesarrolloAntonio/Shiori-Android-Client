@@ -90,8 +90,9 @@ class BookmarkViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v("Edit BookmarkViewModel", "Error")
-                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "" )
+                            val errorMessage = result.error?.message ?: result.error?.throwable?.message?: "Unknown error"
+                            Log.v("Edit BookmarkViewModel", errorMessage)
+                            _bookmarkUiState.error(errorMessage = errorMessage)
                         }
 
                         is Result.Loading -> {

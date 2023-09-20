@@ -27,4 +27,11 @@ class SettingsRepositoryImpl(
 
     override val userDataStream: Flow<User> =
         settingsPreferenceDataSource.userDataStream
+
+    override suspend fun setTheme(isDark: Boolean) {
+       settingsPreferenceDataSource.setTheme(isDark)
+    }
+
+    override fun isDarkTheme() = settingsPreferenceDataSource.isDarkTheme()
+
 }

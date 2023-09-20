@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.shiori.androidclient.extensions.openInBrowser
+import com.shiori.androidclient.extensions.openUrlInBrowser
 import com.shiori.androidclient.extensions.shareText
 import com.shiori.androidclient.ui.bookmarkeditor.BookmarkEditorScreen
 import com.shiori.androidclient.ui.bookmarkeditor.BookmarkEditorType
@@ -36,9 +37,11 @@ import com.shiori.model.Tag
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
+    openUrlInBrowser: (String) -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+        feedViewModel.refreshUrl()
         feedViewModel.getBookmarks()
     }
     val showBookmarkEditorScreen = remember { mutableStateOf(false)}
@@ -51,11 +54,13 @@ fun FeedScreen(
             feedViewModel.resetData()
             goToLogin.invoke()
         },
-        onPostClick = {
+        onBookmarkClick = {
             Log.v("FeedContent", feedViewModel.getUrl(it))
-            feedViewModel.getUrl(it).openInBrowser(context)
+            openUrlInBrowser.invoke(feedViewModel.getUrl(it))
+            //context.openUrlInBrowser(feedViewModel.getUrl(it))
+            //feedViewModel.getUrl(it).openInBrowser(context)
         },
-        serverURL = feedViewModel.serverUrl.collectAsState().value,
+        serverURL = feedViewModel.getServerUrl(),
         onPullToRefresh = {
             feedViewModel.refreshFeed()
         },
@@ -95,7 +100,7 @@ fun FeedScreen(
 @Composable
 private fun FeedContent(
     goToLogin: () -> Unit,
-    onPostClick: (Bookmark) -> Unit,
+    onBookmarkClick: (Bookmark) -> Unit,
     onPullToRefresh: () -> Unit,
     onClickEdit: (Bookmark) -> Unit,
     onclickDelete: (Bookmark) -> Unit,
@@ -136,7 +141,7 @@ private fun FeedContent(
                     ) {
                         DockedSearchBarWithCategories(
                             onBookmarkClick = {
-                                onPostClick.invoke(it)
+                                onBookmarkClick.invoke(it)
                             },
                             bookmarks = bookmarksUiState.data,
                             serverURL = serverURL,

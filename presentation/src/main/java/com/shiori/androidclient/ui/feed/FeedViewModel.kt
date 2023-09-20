@@ -1,6 +1,7 @@
 package com.shiori.androidclient.ui.feed
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shiori.androidclient.ui.components.UiState
@@ -28,22 +29,16 @@ class FeedViewModel(
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private var hasLoadedFeed = false
-    val serverUrl = MutableStateFlow<String>("")
+    private var serverUrl = ""
 
-    init {
-        viewModelScope.launch {
-            serverUrl.emit(settingsPreferenceDataSource.getUrl())
-        }
-    }
-
-    fun getBookmarks() {
+     fun getBookmarks() {
         if (hasLoadedFeed) {
             return
         }
         viewModelScope.launch {
 
             getBookmarksUseCase.invoke(
-                serverUrl = serverUrl.value,
+                serverUrl = serverUrl,
                 xSession = settingsPreferenceDataSource.getSession()
             )
                 .collect { result ->
@@ -74,6 +69,12 @@ class FeedViewModel(
         }
     }
 
+    fun refreshUrl() {
+        viewModelScope.launch {
+            serverUrl = settingsPreferenceDataSource.getUrl()
+        }
+    }
+
     fun refreshFeed() {
         hasLoadedFeed = false
         getBookmarks()
@@ -98,14 +99,14 @@ class FeedViewModel(
         }
     }
 
-    fun getUrl(bookmark: Bookmark) = if (bookmark.public == 1) "${serverUrl.value}/bookmark/${bookmark.id}/content" else {
+    fun getUrl(bookmark: Bookmark) = if (bookmark.public == 1) "${serverUrl}/bookmark/${bookmark.id}/content" else {
         bookmark.url
     }
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
             deleteBookmarkUseCase.invoke(
-                serverUrl = serverUrl.value,
+                serverUrl = serverUrl,
                 xSession = settingsPreferenceDataSource.getSession(),
                 bookmark = bookmark
             )
@@ -129,4 +130,6 @@ class FeedViewModel(
                 }
         }
     }
+
+    fun getServerUrl() = serverUrl
 }

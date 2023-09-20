@@ -3,6 +3,7 @@ package com.shiori.androidclient.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shiori.androidclient.helpers.ThemeManager
 import com.shiori.androidclient.ui.components.UiState
 import com.shiori.androidclient.ui.components.error
 import com.shiori.androidclient.ui.components.isLoading
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val sendLogoutUseCase: SendLogoutUseCase,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
+    private val themeManager: ThemeManager
 ) : ViewModel() {
 
     private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
@@ -46,5 +48,11 @@ class SettingsViewModel(
             }
         }
     }
+    fun isDarkTheme() = themeManager.darkTheme.value
+    fun setTheme() {
+        settingsPreferenceDataSource.setTheme(!themeManager.darkTheme.value)
+        themeManager.darkTheme.value = !themeManager.darkTheme.value
+    }
+
 }
 

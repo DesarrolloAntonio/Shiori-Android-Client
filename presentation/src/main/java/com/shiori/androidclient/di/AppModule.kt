@@ -1,5 +1,7 @@
 package com.shiori.androidclient.di
 
+import com.shiori.androidclient.helpers.ThemeManager
+import com.shiori.androidclient.helpers.ThemeManagerImpl
 import com.shiori.data.repository.BookmarksRepository
 import com.shiori.data.repository.BookmarksRepositoryImpl
 import com.shiori.domain.usecase.AddBookmarkUseCase
@@ -56,5 +58,8 @@ fun appModule() = module {
             bookmarksRepository = get()
         )
     }
+
+    single { ThemeManagerImpl(get()) as ThemeManager }
+
 
 }

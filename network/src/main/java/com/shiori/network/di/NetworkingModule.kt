@@ -13,8 +13,8 @@ fun networkingModule() = module {
 
     single {
         OkHttpClient.Builder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
 //            .addInterceptor { chain ->
 //                val newRequest = chain.request().newBuilder()
 //                    .build()

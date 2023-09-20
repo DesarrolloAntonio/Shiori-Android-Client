@@ -19,6 +19,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun Navigation(
     onFinish: () -> Unit,
+    openUrlInBrowser: (String) -> Unit
     ) {
 
     val navController = rememberNavController()
@@ -43,12 +44,12 @@ fun Navigation(
             HomeScreen(
                 feedViewModel = feedViewModel,
                 goToLogin = {
-//                    feedViewModel.clearError()
                     navController.navigate(NavItem.LoginNavItem.route) {
                         popUpTo(NavItem.HomeNavItem.route) { inclusive = true }
                     }
                 },
-                onFinish = onFinish
+                onFinish = onFinish,
+                openUrlInBrowser = openUrlInBrowser
             )
         }
     }

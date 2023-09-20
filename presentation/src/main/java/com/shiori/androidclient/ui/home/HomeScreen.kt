@@ -33,6 +33,7 @@ fun HomeScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
     onFinish: () -> Unit,
+    openUrlInBrowser: (String) -> Unit,
 ) {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
@@ -90,6 +91,7 @@ fun HomeScreen(
                         FeedScreen(
                             feedViewModel = feedViewModel,
                             goToLogin = goToLogin,
+                            openUrlInBrowser = openUrlInBrowser
                         )
                     }
 
@@ -129,6 +131,7 @@ private fun PreviewHomeContent() {
             feedViewModel = get(),
             goToLogin = {},
             onFinish = {},
+            openUrlInBrowser = {},
         )
     }
 }

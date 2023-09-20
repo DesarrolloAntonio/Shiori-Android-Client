@@ -31,6 +31,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -152,9 +153,9 @@ private fun SearchBarWithFilters(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 8.dp),
-            colors = SearchBarDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.tertiary
-            ),
+//            colors = SearchBarDefaults.colors(
+//                containerColor = MaterialTheme.colorScheme.tertiary
+//            ),
             query = searchText.value,
             onQueryChange = { searchText.value = it },
             onSearch = { isActive.value = false },
