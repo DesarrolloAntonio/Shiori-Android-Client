@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.shiori.domain"
+    namespace = "com.desarrollodroide.pagekeeper"
     compileSdk = 33
 
     defaultConfig {

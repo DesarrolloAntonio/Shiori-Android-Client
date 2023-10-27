@@ -5,7 +5,7 @@ plugins {
 
 
 android {
-    namespace = "com.shiori.network"
+    namespace = "com.desarrollodroide.network"
     compileSdk = 33
 
     defaultConfig {

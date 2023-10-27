@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "com.shiori.data"
+    namespace = "com.desarrollodroide.data"
     compileSdk = 33
 
     defaultConfig {

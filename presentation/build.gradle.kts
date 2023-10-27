@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.shiori.androidclient"
+    namespace = "com.desarrollodroide.pagekeeper"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.shiori.androidclient"
+        applicationId = "com.desarrollodroide.pagekeeper"
         minSdk = 21
         targetSdk = 33
         versionCode = 1

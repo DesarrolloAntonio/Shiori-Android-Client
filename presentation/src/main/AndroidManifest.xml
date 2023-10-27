@@ -30,7 +30,7 @@
                 android:value="" />
         </activity>
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
-            android:label="Save in Shiori"
+            android:label="Save in PageKeeper"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
