@@ -68,13 +68,8 @@ fun BookmarkItem(
                     .data("$serverURL${bookmark.imageURL}")
                     .build(),
                 contentDescription = "ImageRequest example",
-                loading = {
-                    //CircularProgressIndicator(modifier = Modifier.size(30.dp).align(Alignment.Center), progress = 1f)
-                },
-                onError = {
-                          Log.v("SubcomposeAsyncImage", it.result.throwable.message?:"")
-                    // Show nothing if the image loading fails
-                },
+                loading = { },
+                onError = { },
             )
             Column(
                 modifier =
@@ -180,22 +175,33 @@ fun ClickableCategoriesView(
     }
 }
 
+
 @Preview
 @Composable
 fun PreviewPost() {
     MaterialTheme() {
-//        BookmarkItem(
-//            post = Bookmark(
-//                postId = "1",
-//                title = "Post title",
-//                createdBy = "User",
-//                body = "Post body",
-//                image = "",
-//                creationDate = "2021-09-01",
-//                comments = emptyList(),
-//                interactions = emptyList(),
-//                categories = emptyList()
-//            )
-//        )
+        val bookmark = Bookmark(
+            id = -1,
+            url= "url",
+            title = "Bookmark title",
+            excerpt = "Bookmark content",
+            author = "",
+            public = 1,
+            modified = "",
+            imageURL = "",
+            hasContent = true,
+            hasArchive = true,
+            createArchive = true,
+            tags = listOf(Tag("tag1"), Tag("tag2")),
+        )
+        BookmarkItem(
+            bookmark = bookmark,
+            serverURL = "",
+            onClickEdit = {},
+            onClickDelete = {},
+            onClickShare = {},
+            onClickCategory = {},
+            onClickBookmark = {}
+        )
     }
 }

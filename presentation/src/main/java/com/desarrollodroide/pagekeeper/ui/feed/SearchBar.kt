@@ -56,7 +56,6 @@ fun DockedSearchBarWithCategories(
     val searchTextState = rememberSaveable { mutableStateOf("") }
     val isActive = rememberSaveable { mutableStateOf(false) }
     val (isCategoriesVisible, setCategoriesVisible) = rememberSaveable { mutableStateOf(true) }
-    //val uniqueCategories = bookmarks.flatMap { it.tags }.distinct()
     val selectedTags = remember { mutableStateOf<List<Tag>>(listOf()) }
 
     val filteredBookmarks = if (selectedTags.value.isEmpty()) {
@@ -152,9 +151,6 @@ private fun SearchBarWithFilters(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 8.dp),
-//            colors = SearchBarDefaults.colors(
-//                containerColor = MaterialTheme.colorScheme.tertiary
-//            ),
             query = searchText.value,
             onQueryChange = { searchText.value = it },
             onSearch = { isActive.value = false },
@@ -228,13 +224,4 @@ private fun BookmarkSuggestions(
             )
         }
     }
-}
-
-@Preview
-@Composable
-fun PreviewSearchBar() {
-//        DockedSearchBar(
-//            posts = posts,
-//            onPostClick = {  },
-//        )
 }

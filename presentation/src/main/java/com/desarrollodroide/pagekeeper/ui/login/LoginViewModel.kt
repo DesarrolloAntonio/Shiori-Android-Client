@@ -22,13 +22,13 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-    var userName = mutableStateOf(TextFieldValue("Memnoch"))
-    var password = mutableStateOf(TextFieldValue("e%dPd3&eAV@#v7TKP%NvmZ5"))
-    var serverUrl = mutableStateOf(TextFieldValue("http://192.168.1.206:8580/"))
+//    var userName = mutableStateOf(TextFieldValue("Memnoch"))
+//    var password = mutableStateOf(TextFieldValue("e%dPd3&eAV@#v7TKP%NvmZ5"))
+//    var serverUrl = mutableStateOf(TextFieldValue("http://192.168.1.207:8580/"))
 
-//    var serverUrl = mutableStateOf(TextFieldValue(""))
-//    var userName = mutableStateOf(TextFieldValue(""))
-//    var password = mutableStateOf(TextFieldValue(""))
+    var serverUrl = mutableStateOf("")
+    var userName = mutableStateOf("")
+    var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
     val passwordError = mutableStateOf(false)
@@ -36,9 +36,6 @@ class LoginViewModel(
 
     private val _userUiState = MutableStateFlow(UiState<User>(idle = true))
     val userUiState = _userUiState.asStateFlow()
-
-    private val _rememberUserUiState = MutableStateFlow(UiState<Account>(idle = true))
-    val rememberUserUiState = _rememberUserUiState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -50,16 +47,16 @@ class LoginViewModel(
     fun sendLogin() {
         viewModelScope.launch {
             loginUseCase.invoke(
-                username = userName.value.text,
-                password = password.value.text,
-                serverUrl = serverUrl.value.text
+                username = userName.value,
+                password = password.value,
+                serverUrl = serverUrl.value
             )
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            settingsPreferenceDataSource.resetUser()
+                            val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
                             _userUiState.error(
-                                errorMessage = result.error?.throwable?.message ?: ""
+                                errorMessage = error
                             )
                         }
 
@@ -71,13 +68,14 @@ class LoginViewModel(
                             if (result.data != null && result.data?.hasSession() == true) {
                                 if (rememberSession.value) {
                                     settingsPreferenceDataSource.saveRememberUser(
-                                        url = serverUrl.value.text,
-                                        userName = userName.value.text,
-                                        password = password.value.text
+                                        url = serverUrl.value,
+                                        userName = userName.value,
+                                        password = password.value
                                         )
                                 } else {
-                                    userName.value = TextFieldValue("")
-                                    password.value = TextFieldValue("")
+                                    userName.value = ""
+                                    password.value = ""
+                                    serverUrl.value = ""
                                     settingsPreferenceDataSource.resetRememberUser()
                                 }
                                 _userUiState.success(result.data)
@@ -95,7 +93,6 @@ class LoginViewModel(
     }
 
     private suspend fun getUser() {
-        //clearError()
         val user = settingsPreferenceDataSource.getUser().first()
         if (user.hasSession()) {
             _userUiState.success(user)
@@ -107,9 +104,9 @@ class LoginViewModel(
     private suspend fun getRememberUser() {
         val rememberUser = settingsPreferenceDataSource.getRememberUser().first()
         if (rememberUser.userName.isNotEmpty() && rememberUser.password.isNotEmpty()) {
-            serverUrl.value = TextFieldValue(rememberUser.serverUrl)
-            userName.value = TextFieldValue(rememberUser.userName)
-            password.value = TextFieldValue(rememberUser.password)
+            serverUrl.value = rememberUser.serverUrl
+            userName.value = rememberUser.userName
+            password.value = rememberUser.password
             rememberSession.value = true
         }
     }

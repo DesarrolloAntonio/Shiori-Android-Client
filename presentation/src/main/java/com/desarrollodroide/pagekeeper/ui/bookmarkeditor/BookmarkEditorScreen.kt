@@ -43,9 +43,7 @@ fun BookmarkEditorScreen(
             title = "Error",
             content = bookmarkUiState.error?:"",
             openDialog = remember { mutableStateOf(true) },
-            onConfirm = {
-                //viewModel.clearError()
-            }
+            onConfirm = { }
         )
     }
 
@@ -70,7 +68,6 @@ fun BookmarkEditorScreen(
             },
             onBackClick = onBackClick,
         )
-    //}
 
     if (bookmarkUiState.data != null) {
         Log.v("BookmarkEditorScreen", "Success")

@@ -26,9 +26,9 @@ data class Bookmark (
         public = 1,
         modified = "",
         imageURL = "",
-        hasContent = false,
-        hasArchive = false,
+        hasContent = true,
+        hasArchive = true,
         tags = tags,
-        createArchive = false
+        createArchive = true
     )
 }

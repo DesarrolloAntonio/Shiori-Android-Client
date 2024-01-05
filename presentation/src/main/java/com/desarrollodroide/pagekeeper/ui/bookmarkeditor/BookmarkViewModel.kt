@@ -53,9 +53,6 @@ class BookmarkViewModel(
 
 
     fun saveBookmark(url: String, tags: List<Tag>) = viewModelScope.launch {
-        Log.v("saveBookmark", "url $url")
-        Log.v("saveBookmark", "url ${tags.size}")
-        Log.v("saveBookmark", "backendurl $backendUrl")
         viewModelScope.launch {
             bookmarkAdditionUseCase.invoke(
                 serverUrl = backendUrl,

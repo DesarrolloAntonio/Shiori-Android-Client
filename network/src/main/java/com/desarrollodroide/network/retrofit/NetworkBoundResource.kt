@@ -35,26 +35,21 @@ abstract class NetworkBoundResource<RequestType, ResultType>(
                 if (apiResponse.isSuccessful && remoteResponse != null) {
                     saveRemoteData(remoteResponse)
 
-                    // Collects all the values from the given flow and emits them to the collector
                     // Always fetch from local (Source of truth)
                     emitAll(fetchFromLocal().map { Result.Success(it) })
                 } else {
-                    emitAll(fetchFromLocal().map {
-                        val message = apiResponse.errorBody()?.string()
-                        Result.Error(errorHandler.getApiError(
+                    emit(Result.Error(errorHandler.getApiError(
                             statusCode = apiResponse.code(),
                             throwable = null,
-                            message = message), it )
-                    })
+                            message = apiResponse.errorBody()?.string())))
                 }
             } else {
                 emit(Result.Success(cachedData))
             }
         } catch (e: Exception) {
-            //Error: StandaloneCoroutine was cancelled
             if (e !is CancellationException) {
                 Log.v("NetworkBoundResource", "Error: ${e.message}")
-                emitAll(fetchFromLocal().map { Result.Error(errorHandler.getError(e), it) })
+                emit(Result.Error(errorHandler.getError(e)))
             }
         }
     }

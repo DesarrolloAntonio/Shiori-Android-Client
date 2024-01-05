@@ -167,7 +167,7 @@ private fun FeedContent(
                             onBookmarkClick = {
                                 onBookmarkClick.invoke(it)
                             },
-                            bookmarks = bookmarksUiState.data,
+                            bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
                             onRefresh = onRefresh,

@@ -1,7 +1,7 @@
 package com.desarrollodroide.data.repository
 
 import com.desarrollodroide.common.result.ErrorHandler
-import com.desarrollodroide.data.helpers.toJson
+import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.User

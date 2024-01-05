@@ -101,8 +101,6 @@ fun HomeScreen(
                             goToLogin = goToLogin
                         )
                     }
-
-
                 }
             }
         }
@@ -111,7 +109,7 @@ fun HomeScreen(
 
 val bottomNavItems = listOf(
     BottomNavItem(
-        name = "News",
+        name = "Bookmarks",
         navItem = NavItem.HomeNavItem,
         icon = Icons.Rounded.Newspaper,
     ),
@@ -122,16 +120,3 @@ val bottomNavItems = listOf(
         icon = Icons.Rounded.Settings,
     )
 )
-
-@Preview
-@Composable
-private fun PreviewHomeContent() {
-    MaterialTheme {
-        HomeScreen(
-            feedViewModel = get(),
-            goToLogin = {},
-            onFinish = {},
-            openUrlInBrowser = {},
-        )
-    }
-}

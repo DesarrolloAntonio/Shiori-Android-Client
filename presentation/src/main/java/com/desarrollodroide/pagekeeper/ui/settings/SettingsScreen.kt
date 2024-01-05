@@ -35,7 +35,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -88,6 +90,9 @@ fun SettingsContent(
             goToLogin()
         }
     }
+    val privacyPolicyUrl = "https://www.dropbox.com/scl/fi/lsukil03brxd28edmpiyi/Pagekeeper-Privacy-Policy.md?rlkey=5qfuu6drer4nbnt18fq0mbsxx&dl=0"
+    val termsOfUseUrl = "https://www.dropbox.com/scl/fi/w425yshv0a5wp167zcbie/TOS-Pagekeeper.md?rlkey=hxi7kdm4opzyhplcykfpwvs1r&dl=0"
+    val context = LocalContext.current
 
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 32.dp),
@@ -98,34 +103,14 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(8.dp))
             Divider(Modifier.fillMaxWidth(), color = Color.Black, thickness = 1.dp)
         }
-        //item { SwitchOption(Item("Push notifications", Icons.Filled.Notifications) { /* Handle click for Push notifications */ }) }
         item { ThemeOption(Item("Theme", Icons.Filled.Palette, onClick = {
             onThemeChanged()
         }), darkTheme = isDarkTheme) }
-        //item { ClickableOption(Item("Change password", Icons.Filled.Lock) { /* Handle click for Change password */ }) }
-        item { ClickableOption(Item("Terms of Use", Icons.Filled.Gavel) { /* Handle click for Terms of Use */ }) }
-        item { ClickableOption(Item("Privacy policy", Icons.Filled.Security) { /* Handle click for Privacy policy */ }) }
+        item { ClickableOption(Item("Terms of Use", Icons.Filled.Gavel) { context.openUrlInBrowser(termsOfUseUrl) }) }
+        item { ClickableOption(Item("Privacy policy", Icons.Filled.Security) { context.openUrlInBrowser(privacyPolicyUrl) }) }
         item { ClickableOption(Item("Logout", Icons.Filled.Logout, onClick = onLogout), color = Color.Red) }
     }
 }
-
-@Composable
-fun SwitchOption(item: Item) {
-    var switchState by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { item.onClick() },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Icon(item.icon, contentDescription = "Notifications switch")
-        Spacer(modifier = Modifier.width(12.dp)) // Padding to the left
-        Text(text = item.title, modifier = Modifier.weight(1f).padding(vertical = 10.dp))
-        Switch(checked = switchState, onCheckedChange = { switchState = it })
-    }
-}
-
 
 @Composable
 fun ThemeOption(
@@ -144,13 +129,11 @@ fun ThemeOption(
         horizontalArrangement = Arrangement.Start
     ) {
         Icon(item.icon, contentDescription = "Change theme")
-        Spacer(modifier = Modifier.width(12.dp)) // Padding to the left
+        Spacer(modifier = Modifier.width(12.dp))
         Text(text = item.title, modifier = Modifier.weight(1f).padding(vertical = 10.dp))
         Icon(if (isDarkTheme) Icons.Filled.DarkMode else Icons.Filled.LightMode, contentDescription = "Change theme")
     }
 }
-
-
 
 @Composable
 fun ClickableOption(item: Item, color: Color = Color.Black) {

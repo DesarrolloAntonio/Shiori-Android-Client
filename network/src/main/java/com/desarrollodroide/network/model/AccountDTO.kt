@@ -16,9 +16,9 @@ data class AccountDTO(
     @SerializedName("owner")
     val isOwner: Boolean? = null,
 
-    @SerializedName("oldPassword") // For account edit API
+    @SerializedName("oldPassword")
     val oldPassword: String? = null,
 
-    @SerializedName("newPassword") // For account edit API
+    @SerializedName("newPassword")
     val newPassword: String? = null
 )

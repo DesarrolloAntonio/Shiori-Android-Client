@@ -32,7 +32,6 @@ fun Navigation(
         composable(NavItem.LoginNavItem) { backStackEntry ->
             LoginScreen(
                 loginViewModel = loginViewModel,
-                onRegister = {},
                 onSuccess = {
                     navController.navigate(NavItem.HomeNavItem.route)
                 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.desarrollodroide.pagekeeper"
+    namespace = "com.desarrollodroide.domain"
     compileSdk = 33
 
     defaultConfig {

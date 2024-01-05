@@ -1,5 +1,4 @@
 package com.desarrollodroide.common.result
-
 sealed class Result<out T>(
     val data: T? = null,
     val error: ErrorType? = null

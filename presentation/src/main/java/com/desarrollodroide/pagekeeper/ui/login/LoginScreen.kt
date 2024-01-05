@@ -29,14 +29,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     loginViewModel: LoginViewModel,
-    onRegister: () -> Unit,
     onSuccess: (User) -> Unit,
     ) {
-    val coroutineScope = rememberCoroutineScope()
     val loginUiState: UiState<User> by loginViewModel.userUiState.collectAsStateWithLifecycle()
 
     Box(
@@ -47,21 +46,14 @@ fun LoginScreen(
         LoginContent(
             loginUiState = loginUiState,
             checked = loginViewModel.rememberSession,
-            onRegister = onRegister,
             userErrorState = loginViewModel.userNameError,
             passwordErrorState = loginViewModel.passwordError,
             urlErrorState = loginViewModel.urlError,
             onClickLoginButton = {
-                //coroutineScope.launch {
-                    loginViewModel.sendLogin()
-                //}
+                loginViewModel.sendLogin()
             },
-            onClickRegisterButton = {},
             onCheckedRememberSessionChange = {
                 loginViewModel.rememberSession.value = it
-            },
-            onRememberPassword = {
-
             },
             onSuccess = {
                 loginViewModel.clearError()
@@ -75,44 +67,21 @@ fun LoginScreen(
             },
         )
     }
-
-//    ErrorDialog(
-//        message = stringResource(R.string.wrongUserOrPassword),
-//        showDialog = loginViewModel.loginError
-//    )
-//    ErrorDialog(
-//        message = stringResource(R.string.networkError),
-//        showDialog = loginViewModel.netWorkError
-//    )
-//    ProgressDialog(
-//        showDialog = loginViewModel.loading
-//    )
 }
-//
-//@Composable
-//private fun ProgressDialog(
-//    showDialog: MutableState<Boolean>
-//) {
-//    if (showDialog.value) {
-//        InfiniteProgressDialog {}
-//    }
-//}
+
 
 @Composable
 fun LoginContent(
-    user: MutableState<TextFieldValue>,
-    password: MutableState<TextFieldValue>,
-    serverUrl: MutableState<TextFieldValue>,
+    user: MutableState<String>,
+    password: MutableState<String>,
+    serverUrl: MutableState<String>,
     checked: MutableState<Boolean>,
     urlErrorState: MutableState<Boolean>,
     userErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
-    onRegister: () -> Unit,
     onSuccess: (User) -> Unit,
-    onRememberPassword: () -> Unit,
     onClickLoginButton: () -> Unit,
-    onClickRegisterButton: () -> Unit,
-    onClearError: () -> Unit ,
+    onClearError: () -> Unit,
     onCheckedRememberSessionChange: (Boolean) -> Unit,
     loginUiState: UiState<User>,
 ) {
@@ -132,77 +101,34 @@ fun LoginContent(
         Log.v("loginUiState", "Error")
     } else if (loginUiState.data == null && !loginUiState.idle) {
         ContentViews(
-            serverUrl,
-            urlErrorState,
-            user,
-            userErrorState,
-            password,
-            passwordErrorState,
-            onClickLoginButton,
-            checked,
-            onCheckedRememberSessionChange,
-            onClickRegisterButton
+            serverUrl = serverUrl,
+            urlErrorState = urlErrorState,
+            user =user,
+            userErrorState = userErrorState,
+            password = password,
+            passwordErrorState = passwordErrorState,
+            onClickLoginButton = onClickLoginButton,
+            checked = checked,
+            onCheckedRememberSessionChange = onCheckedRememberSessionChange,
         )
     } else if (loginUiState.data != null){
         LaunchedEffect(Unit){
             onSuccess.invoke(loginUiState.data)
         }
     }
-//    when(loginUiState){
-//        is LoginUiState.Error -> {
-//            ConfirmDialog(
-//                icon = Icons.Default.Error,
-//                title = "Error",
-//                content = loginUiState.error,
-//                openDialog = remember { mutableStateOf(true) },
-//                onConfirm = {
-//                    onClearError.invoke()
-//                }
-//            )
-//            Log.v("loginUiState", "Error")
-//        }
-//        is LoginUiState.Loading -> {
-//            InfiniteProgressDialog(onDismissRequest = {})
-//            Log.v("loginUiState", "Loading")
-//        }
-//        is LoginUiState.Success -> {
-//            if (loginUiState.userSession == null || !loginUiState.userSession.hasSession() ){
-//                ContentViews(
-//                    serverUrl,
-//                    urlErrorState,
-//                    user,
-//                    userErrorState,
-//                    password,
-//                    passwordErrorState,
-//                    onClickLoginButton,
-//                    checked,
-//                    onCheckedRememberSessionChange,
-//                    onClickRegisterButton
-//                )
-//            } else {
-//                LaunchedEffect(Unit){
-//                    onSuccess.invoke(loginUiState.userSession)
-//                }
-//            }
-//        }
-//        is LoginUiState.Idle -> { }
-
-   // }
-
 }
 
 @Composable
 private fun ContentViews(
-    serverUrl: MutableState<TextFieldValue>,
+    serverUrl: MutableState<String>,
     urlErrorState: MutableState<Boolean>,
-    user: MutableState<TextFieldValue>,
+    user: MutableState<String>,
     userErrorState: MutableState<Boolean>,
-    password: MutableState<TextFieldValue>,
+    password: MutableState<String>,
     passwordErrorState: MutableState<Boolean>,
     onClickLoginButton: () -> Unit,
     checked: MutableState<Boolean>,
     onCheckedRememberSessionChange: (Boolean) -> Unit,
-    onClickRegisterButton: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -213,6 +139,15 @@ private fun ContentViews(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.ic_logo),
+            contentDescription = null,
+            contentScale = ContentScale.FillHeight,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
         )
         Image(
             painter = painterResource(id = R.drawable.curved_wave_bottom),
@@ -243,10 +178,6 @@ private fun ContentViews(
                 checked = checked,
                 onCheckedChange = onCheckedRememberSessionChange
             )
-//            Spacer(Modifier.size(10.dp))
-//            Divider(modifier = Modifier.fillMaxWidth())
-//            Spacer(Modifier.size(10.dp))
-//            RegisterButton(onClickRegisterButton)
         }
     }
 }
@@ -264,21 +195,21 @@ private fun RegisterButton(onClickRegisterButton: () -> Unit) {
 
 @Composable
 private fun LoginButton(
-    user: MutableState<TextFieldValue>,
+    user: MutableState<String>,
     userErrorState: MutableState<Boolean>,
-    password: MutableState<TextFieldValue>,
+    password: MutableState<String>,
     passwordErrorState: MutableState<Boolean>,
     onClickLoginButton: () -> Unit
 ) {
     Button(
         onClick = {
-            if (user.value.text.isEmpty()) {
+            if (user.value.isEmpty()) {
                 userErrorState.value = true
             }
-            if (password.value.text.isEmpty()) {
+            if (password.value.isEmpty()) {
                 passwordErrorState.value = true
             }
-            if (user.value.text.isNotEmpty() && password.value.text.isNotEmpty()) {
+            if (user.value.isNotEmpty() && password.value.isNotEmpty()) {
                 passwordErrorState.value = false
                 userErrorState.value = false
                 onClickLoginButton.invoke()
@@ -292,9 +223,8 @@ private fun LoginButton(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 private fun PasswordTextField(
-    password: MutableState<TextFieldValue>,
+    password: MutableState<String>,
     passwordErrorState: MutableState<Boolean>
 ) {
     Column() {
@@ -341,7 +271,7 @@ private fun PasswordTextField(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun UserTextField(
-    user: MutableState<TextFieldValue>,
+    user: MutableState<String>,
     userErrorState: MutableState<Boolean>
 ) {
     Column {
@@ -375,7 +305,7 @@ private fun UserTextField(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun ServerUrlTextField(
-    serverUrl: MutableState<TextFieldValue>,
+    serverUrl: MutableState<String>,
     serverErrorState: MutableState<Boolean>
 ) {
     Column() {
@@ -385,7 +315,7 @@ private fun ServerUrlTextField(
                 Icon(imageVector = Icons.Filled.Link, contentDescription = null)
             },
             onValueChange = {
-                serverErrorState.value = !URLUtil.isValidUrl(it.text)
+                serverErrorState.value = !URLUtil.isValidUrl(it)
                 serverUrl.value = it
             },
             isError = serverErrorState.value,
@@ -411,18 +341,15 @@ private fun ServerUrlTextField(
 fun DefaultPreview() {
     ShioriTheme() {
         LoginContent(
-            user = remember { mutableStateOf(TextFieldValue("User")) },
-            password = remember { mutableStateOf(TextFieldValue("Pass")) },
-            serverUrl = remember { mutableStateOf(TextFieldValue("ServerUrl")) },
+            user = remember { mutableStateOf("User") },
+            password = remember { mutableStateOf("Pass") },
+            serverUrl = remember { mutableStateOf("ServerUrl") },
             checked = remember { mutableStateOf(true) },
             urlErrorState = remember { mutableStateOf(true) },
             userErrorState = remember { mutableStateOf(true) },
             passwordErrorState = remember { mutableStateOf(true) },
-            onRegister = {},
             onSuccess = {},
-            onRememberPassword = {},
             onClickLoginButton = {},
-            onClickRegisterButton = {},
             onCheckedRememberSessionChange = {},
             onClearError = {},
             loginUiState = UiState(false)

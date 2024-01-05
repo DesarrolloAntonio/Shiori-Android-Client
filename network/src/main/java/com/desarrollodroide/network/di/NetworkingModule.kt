@@ -15,11 +15,6 @@ fun networkingModule() = module {
         OkHttpClient.Builder()
             .readTimeout(30, TimeUnit.SECONDS)
             .connectTimeout(30, TimeUnit.SECONDS)
-//            .addInterceptor { chain ->
-//                val newRequest = chain.request().newBuilder()
-//                    .build()
-//                chain.proceed(newRequest)
-//            }
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -30,7 +25,7 @@ fun networkingModule() = module {
         Retrofit.Builder()
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://google.com")
+            .baseUrl("https://google.com") //generic url
             .client(get())
             .build()
     } // retrofit

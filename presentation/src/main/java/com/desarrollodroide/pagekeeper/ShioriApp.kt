@@ -26,5 +26,4 @@ class ShioriApplication : Application() {
         }
     }
 }
-// TODO
-// Que refresque la lista al editar tags
+

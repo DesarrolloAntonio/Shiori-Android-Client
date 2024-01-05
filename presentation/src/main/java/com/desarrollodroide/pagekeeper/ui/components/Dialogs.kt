@@ -20,8 +20,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.desarrollodroide.pagekeeper.R
 
-// https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary#alertdialog
-
 @Composable
 fun SimpleDialog(
     title: String = "",
