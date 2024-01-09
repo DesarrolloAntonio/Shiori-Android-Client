@@ -2,7 +2,6 @@ package com.desarrollodroide.pagekeeper.ui.login
 
 import android.content.res.Configuration
 import android.util.Log
-import android.webkit.URLUtil
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,14 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.pagekeeper.R
@@ -29,7 +23,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -42,7 +35,6 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val context = LocalContext.current
         LoginContent(
             loginUiState = loginUiState,
             checked = loginViewModel.rememberSession,
@@ -68,7 +60,6 @@ fun LoginScreen(
         )
     }
 }
-
 
 @Composable
 fun LoginContent(
@@ -167,172 +158,31 @@ private fun ContentViews(
                 .align(Alignment.Center),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            ServerUrlTextField(serverUrl, urlErrorState)
+            ServerUrlTextField(
+                serverUrl = serverUrl,
+                serverErrorState = urlErrorState)
             Spacer(modifier = Modifier.height(10.dp))
-            UserTextField(user, userErrorState)
+            UserTextField(
+                user = user,
+                userErrorState = userErrorState)
             Spacer(modifier = Modifier.height(10.dp))
-            PasswordTextField(password, passwordErrorState)
+            PasswordTextField(
+                password = password,
+                passwordErrorState = passwordErrorState)
             Spacer(Modifier.size(14.dp))
-            LoginButton(user, userErrorState, password, passwordErrorState, onClickLoginButton)
+            LoginButton(
+                user = user,
+                userErrorState = userErrorState,
+                password = password,
+                passwordErrorState = passwordErrorState,
+                onClickLoginButton = onClickLoginButton,
+                serverErrorState = urlErrorState)
             RememberSessionSection(
                 checked = checked,
                 onCheckedChange = onCheckedRememberSessionChange
             )
         }
     }
-}
-
-@Composable
-private fun RegisterButton(onClickRegisterButton: () -> Unit) {
-    Button(
-        onClick = onClickRegisterButton,
-        modifier = Modifier.fillMaxWidth(),
-        content = {
-            Text("Register")
-        },
-    )
-}
-
-@Composable
-private fun LoginButton(
-    user: MutableState<String>,
-    userErrorState: MutableState<Boolean>,
-    password: MutableState<String>,
-    passwordErrorState: MutableState<Boolean>,
-    onClickLoginButton: () -> Unit
-) {
-    Button(
-        onClick = {
-            if (user.value.isEmpty()) {
-                userErrorState.value = true
-            }
-            if (password.value.isEmpty()) {
-                passwordErrorState.value = true
-            }
-            if (user.value.isNotEmpty() && password.value.isNotEmpty()) {
-                passwordErrorState.value = false
-                userErrorState.value = false
-                onClickLoginButton.invoke()
-            }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        content = {
-            Text("Login")
-        },
-    )
-}
-
-@Composable
-private fun PasswordTextField(
-    password: MutableState<String>,
-    passwordErrorState: MutableState<Boolean>
-) {
-    Column() {
-        val passwordVisibility = remember { mutableStateOf(true) }
-        OutlinedTextField(
-            value = password.value,
-            leadingIcon = {
-                Icon(imageVector = Icons.Filled.Lock, contentDescription = null)
-            },
-            onValueChange = {
-                if (passwordErrorState.value) {
-                    passwordErrorState.value = false
-                }
-                password.value = it
-            },
-            isError = passwordErrorState.value,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(text = "Password")
-            },
-            trailingIcon = {
-                IconButton(onClick = {
-                    passwordVisibility.value = !passwordVisibility.value
-                }) {
-                    Icon(
-                        imageVector = if (passwordVisibility.value) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "visibility",
-                        tint = Color.Gray
-                    )
-                }
-            },
-            visualTransformation = if (passwordVisibility.value) PasswordVisualTransformation() else VisualTransformation.None
-        )
-        if (passwordErrorState.value) {
-            Text(
-                text = "Required",
-                color = Color.Red,
-                modifier = Modifier.Companion.align(Alignment.End)
-            )
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun UserTextField(
-    user: MutableState<String>,
-    userErrorState: MutableState<Boolean>
-) {
-    Column {
-    OutlinedTextField(
-        value = user.value,
-        leadingIcon = {
-            Icon(imageVector = Icons.Filled.Person, contentDescription = null)
-        },
-        onValueChange = {
-            if (userErrorState.value) {
-                userErrorState.value = false
-            }
-            user.value = it
-        },
-        isError = userErrorState.value,
-        modifier = Modifier.fillMaxWidth(),
-        label = {
-            Text(text = "UserName")
-        },
-    )
-    if (userErrorState.value) {
-        Text(
-            modifier = Modifier.Companion.align(Alignment.End),
-            color = Color.Red,
-            text = "Invalid username"
-        )
-    }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun ServerUrlTextField(
-    serverUrl: MutableState<String>,
-    serverErrorState: MutableState<Boolean>
-) {
-    Column() {
-        OutlinedTextField(
-            value = serverUrl.value,
-            leadingIcon = {
-                Icon(imageVector = Icons.Filled.Link, contentDescription = null)
-            },
-            onValueChange = {
-                serverErrorState.value = !URLUtil.isValidUrl(it)
-                serverUrl.value = it
-            },
-            isError = serverErrorState.value,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(text = "Server url")
-            },
-        )
-        if (serverErrorState.value) {
-            Text(
-                modifier = Modifier.Companion.align(Alignment.End),
-                color = Color.Red,
-                text = "Invalid url"
-            )
-        }
-    }
-
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
