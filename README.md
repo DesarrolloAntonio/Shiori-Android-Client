@@ -3,9 +3,9 @@
 ## Introduction
 PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust Shiori platform, PageKeeper offers a seamless experience across all devices.
 
-## Screenshots
-![Screenshot 1](screenshoots/Screenshot_1.png)
-![Screenshot 2](screenshoots/Screenshot_2.png)
+|                                               |                                               |                                               |
+|:---------------------------------------------:|:---------------------------------------------:|:---------------------------------------------:|
+| ![Screenshot 1](screenshots/Screenshot_1.png) | ![Screenshot 2](screenshots/Screenshot_2.png) | ![Screenshot 3](screenshots/Screenshot_3.png) |
 
 ## Features
 - **Save Pages Easily**: Instantly capture and access web pages at any time, even offline.
@@ -27,7 +27,12 @@ PageKeeper is built using a variety of modern and robust technologies to ensure 
 Tests are an essential part of software development for ensuring reliability and stability. Currently, the test suite for PageKeeper is under development and pending completion. Contributions in this area are highly appreciated.
 
 ## Available on Google Play
-PageKeeper is available for download on Google Play. Get the app [here](https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper&hl=es_419&gl=US).
+PageKeeper is available for download on Google Play. 
+
+<a href="https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper">
+  <img alt="Get Pagekeeper on Google Play" vspace="20"
+       src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height="60" />
+</a>
 
 ## License
 This project is licensed under the Apache License - see the [LICENSE](LICENSE) file for details.
