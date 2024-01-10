@@ -29,4 +29,6 @@ interface BookmarksRepository {
     serverUrl: String,
     bookmark: Bookmark
   ): Flow<Result<Bookmark>>
+
+  suspend fun deleteAllLocalBookmarks()
 }

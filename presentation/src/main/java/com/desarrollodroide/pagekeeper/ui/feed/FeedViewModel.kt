@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.model.Bookmark
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 class FeedViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
@@ -29,19 +31,19 @@ class FeedViewModel(
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private var hasLoadedFeed = false
     private var serverUrl = ""
+    private var bookmarksJob: Job? = null
 
-     fun getBookmarks() {
+    fun getBookmarks() {
+        bookmarksJob?.cancel()
         if (hasLoadedFeed) {
             return
         }
-        viewModelScope.launch {
-
+        bookmarksJob = viewModelScope.launch {
             getBookmarksUseCase.invoke(
                 serverUrl = serverUrl,
                 xSession = settingsPreferenceDataSource.getSession()
             )
                 .collect { result ->
-                    hasLoadedFeed = true
                     when (result) {
                         is Result.Error -> {
                             Log.v("FeedViewModel", "Error: ${result.error?.message}")
@@ -56,12 +58,17 @@ class FeedViewModel(
 
                         is Result.Loading -> {
                             Log.v("FeedViewModel", "Loading: ${result.data}")
-                            _bookmarksUiState.isLoading(true)
+                            if (result.data?.isNotEmpty() == true) {
+                                _bookmarksUiState.success(result.data)
+                            }
                         }
 
                         is Result.Success -> {
                             Log.v("FeedViewModel", "Success: ${result.data}")
-                            _bookmarksUiState.success(result.data)
+                            if (result.data?.isNotEmpty() == true) {
+                                _bookmarksUiState.success(result.data)
+                                hasLoadedFeed = true
+                            }
                         }
                     }
                 }
@@ -84,7 +91,6 @@ class FeedViewModel(
             if (it.url == newBookmark.url) newBookmark else it }
         )
     }
-
 
     fun resetData() {
         _bookmarksUiState.idle(true)

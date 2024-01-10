@@ -41,6 +41,7 @@ fun Navigation(
             HomeScreen(
                 feedViewModel = feedViewModel,
                 goToLogin = {
+                    loginViewModel.clearState()
                     navController.navigate(NavItem.LoginNavItem.route) {
                         popUpTo(NavItem.HomeNavItem.route) { inclusive = true }
                     }

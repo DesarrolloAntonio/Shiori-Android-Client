@@ -34,9 +34,10 @@ abstract class NetworkBoundResource<RequestType, ResultType>(
 
                 if (apiResponse.isSuccessful && remoteResponse != null) {
                     saveRemoteData(remoteResponse)
-
                     // Always fetch from local (Source of truth)
-                    emitAll(fetchFromLocal().map { Result.Success(it) })
+                    emitAll(fetchFromLocal().map {
+                        Result.Success(it)
+                    })
                 } else {
                     emit(Result.Error(errorHandler.getApiError(
                             statusCode = apiResponse.code(),

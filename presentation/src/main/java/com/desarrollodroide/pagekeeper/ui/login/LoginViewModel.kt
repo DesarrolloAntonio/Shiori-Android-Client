@@ -1,7 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -14,7 +13,6 @@ import com.desarrollodroide.model.User
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
-import com.desarrollodroide.model.Account
 
 class LoginViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
@@ -22,9 +20,9 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-//    var userName = mutableStateOf(TextFieldValue("Memnoch"))
-//    var password = mutableStateOf(TextFieldValue("e%dPd3&eAV@#v7TKP%NvmZ5"))
-//    var serverUrl = mutableStateOf(TextFieldValue("http://192.168.1.207:8580/"))
+//    var userName = mutableStateOf("Memnoch")
+//    var password = mutableStateOf("e%dPd3&eAV@#v7TKP%NvmZ5")
+//    var serverUrl = mutableStateOf("http://192.168.1.27:8580/")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")
@@ -88,7 +86,7 @@ class LoginViewModel(
         }
     }
 
-    fun clearError() {
+    fun clearState() {
         _userUiState.success(null)
     }
 

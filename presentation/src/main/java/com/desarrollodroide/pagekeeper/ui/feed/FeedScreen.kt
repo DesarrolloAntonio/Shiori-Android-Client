@@ -150,10 +150,10 @@ private fun FeedContent(
                 dismissOnBackPress = false
             ),
         )
-        Log.v("loginUiState", "Error")
+        Log.v("bookmarksUiState", "Error")
     } else
         if (bookmarksUiState.data != null) {
-            Log.v("loginUiState", "Success")
+            Log.v("bookmarksUiState", "Success")
             if (bookmarksUiState.data.isNotEmpty()) {
                 Column {
                     Box(

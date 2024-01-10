@@ -103,5 +103,7 @@ class BookmarksRepositoryImpl(
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
+
+    override suspend fun deleteAllLocalBookmarks()  { bookmarksDao.deleteAll() }
 }
 

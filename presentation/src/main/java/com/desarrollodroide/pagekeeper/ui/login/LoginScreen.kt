@@ -48,14 +48,14 @@ fun LoginScreen(
                 loginViewModel.rememberSession.value = it
             },
             onSuccess = {
-                loginViewModel.clearError()
+                loginViewModel.clearState()
                 onSuccess.invoke(it)
                         },
             user = loginViewModel.userName,
             password = loginViewModel.password,
             serverUrl = loginViewModel.serverUrl,
             onClearError = {
-                loginViewModel.clearError()
+                loginViewModel.clearState()
             },
         )
     }

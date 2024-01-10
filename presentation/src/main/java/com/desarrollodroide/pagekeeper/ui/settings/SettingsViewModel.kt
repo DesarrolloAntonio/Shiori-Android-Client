@@ -10,6 +10,7 @@ import com.desarrollodroide.pagekeeper.ui.components.isLoading
 import com.desarrollodroide.pagekeeper.ui.components.success
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
+import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val sendLogoutUseCase: SendLogoutUseCase,
+    private val bookmarksRepository: BookmarksRepository,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val themeManager: ThemeManager
 ) : ViewModel() {
@@ -34,6 +36,7 @@ class SettingsViewModel(
                     is Result.Error -> {
                         Log.v("SettingsViewModel", "Error: ${result.error?.throwable?.message}")
                         _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
+                        settingsPreferenceDataSource.resetUser()
                     }
                     is Result.Loading -> {
                         Log.v("SettingsViewModel", "Loading: ${result.data}")
@@ -41,8 +44,9 @@ class SettingsViewModel(
                     }
                     is Result.Success -> {
                         Log.v("SettingsViewModel", "Success: ${result.data}")
-                        _settingsUiState.success(result.data)
                         settingsPreferenceDataSource.resetUser()
+                        bookmarksRepository.deleteAllLocalBookmarks()
+                        _settingsUiState.success(result.data)
                     }
                 }
             }
