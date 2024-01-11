@@ -1,7 +1,7 @@
 # PageKeeper
 
 ## Introduction
-PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust Shiori platform, PageKeeper offers a seamless experience across all devices.
+PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), PageKeeper offers a seamless experience across all devices.
 
 |                                               |                                               |                                               |
 |:---------------------------------------------:|:---------------------------------------------:|:---------------------------------------------:|
@@ -12,7 +12,6 @@ PageKeeper is an innovative bookmark management application that revolutionizes 
 - **Superior Organization**: Custom labels, descriptions, and thumbnails for efficient bookmark sorting.
 - **Cloud Synchronization**: Sync your bookmarks across all devices.
 - **Intuitive Interface**: User-friendly navigation for a seamless experience.
-- **Share and Discover**: Share bookmarks with the community and discover new pages.
 
 ## Technologies Used
 PageKeeper is built using a variety of modern and robust technologies to ensure scalability, maintainability, and performance:
@@ -24,7 +23,7 @@ PageKeeper is built using a variety of modern and robust technologies to ensure 
 - **Protobuf (Proto)**: For efficient data serialization.
 
 ## Tests
-Tests are an essential part of software development for ensuring reliability and stability. Currently, the test suite for PageKeeper is under development and pending completion. Contributions in this area are highly appreciated.
+Tests are a crucial aspect of software development. The test suite for PageKeeper is currently in the planning stages, with implementation scheduled for a future date.
 
 ## Available on Google Play
 PageKeeper is available for download on Google Play. 
