@@ -108,6 +108,8 @@ class FeedViewModel(
         bookmark.url
     }
 
+    fun getEpubUrl(bookmark: Bookmark) =  "${serverUrl}/bookmark/${bookmark.id}/ebook"
+
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
             deleteBookmarkUseCase.invoke(

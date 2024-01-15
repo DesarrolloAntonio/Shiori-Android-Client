@@ -31,6 +31,7 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 
 @Composable
 fun FeedScreen(
@@ -54,27 +55,30 @@ fun FeedScreen(
             feedViewModel.resetData()
             goToLogin.invoke()
         },
-        onBookmarkClick = {
+        onBookmarkSelect = {
             Log.v("FeedContent", feedViewModel.getUrl(it))
             openUrlInBrowser.invoke(feedViewModel.getUrl(it))
         },
         serverURL = feedViewModel.getServerUrl(),
-        onRefresh = {
+        onRefreshFeed = {
             feedViewModel.refreshFeed()
         },
-        onClickEdit = { bookmark ->
+        onEditBookmark = { bookmark ->
             bookmarkSelected.value = bookmark
             showBookmarkEditorScreen.value = true
         },
-        onclickDelete = {
+        onDeleteBookmark = {
             bookmarkToDelete.value = it
             showDeleteConfirmationDialog.value = true
         },
-        onClickShare = {
+        onShareBookmark = {
             context.shareText(it.url)
         },
         onClearError = {
             feedViewModel.resetData()
+        },
+        onBookmarkEpub = {
+            openUrlInBrowser.invoke(feedViewModel.getEpubUrl(it))
         }
     )
     if (showBookmarkEditorScreen.value && bookmarkSelected.value != null) {
@@ -123,11 +127,12 @@ fun FeedScreen(
 @Composable
 private fun FeedContent(
     goToLogin: () -> Unit,
-    onBookmarkClick: (Bookmark) -> Unit,
-    onRefresh: () -> Unit,
-    onClickEdit: (Bookmark) -> Unit,
-    onclickDelete: (Bookmark) -> Unit,
-    onClickShare: (Bookmark) -> Unit,
+    onBookmarkSelect: (Bookmark) -> Unit,
+    onRefreshFeed: () -> Unit,
+    onEditBookmark: (Bookmark) -> Unit,
+    onDeleteBookmark: (Bookmark) -> Unit,
+    onBookmarkEpub: (Bookmark) -> Unit,
+    onShareBookmark: (Bookmark) -> Unit,
     onClearError: () -> Unit,
     serverURL: String,
     bookmarksUiState: UiState<List<Bookmark>>
@@ -164,16 +169,17 @@ private fun FeedContent(
                     ) {
                         val uniqueCategories = remember { mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct()) }
                         DockedSearchBarWithCategories(
-                            onBookmarkClick = {
-                                onBookmarkClick.invoke(it)
+                            onBookmarkSelect = {
+                                onBookmarkSelect.invoke(it)
                             },
                             bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
-                            onRefresh = onRefresh,
-                            onDeleteClick = onclickDelete,
-                            onEditClick = onClickEdit,
-                            onShareClick = onClickShare
+                            onRefreshFeed = onRefreshFeed,
+                            onDeleteBookmark = onDeleteBookmark,
+                            onEditBookmark = onEditBookmark,
+                            onShareBookmark = onShareBookmark,
+                            onBookmarkEpub = onBookmarkEpub
                         )
                     }
                 }
@@ -185,7 +191,7 @@ private fun FeedContent(
                         modifier = Modifier
                             .padding(top = 100.dp)
                             .align(Alignment.Center),
-                        onRefresh = onRefresh
+                        onRefresh = onRefreshFeed
                     )
                 }
             }

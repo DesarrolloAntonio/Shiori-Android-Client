@@ -23,6 +23,8 @@ data class BookmarkEntity(
     val hasContent: Boolean,
     @ColumnInfo(name = "has_archive")
     val hasArchive: Boolean,
+    @ColumnInfo(name = "has_ebook")
+    val hasEbook: Boolean,
     val tags: List<Tag>,
     @ColumnInfo(name = "create_archive")
     val createArchive: Boolean

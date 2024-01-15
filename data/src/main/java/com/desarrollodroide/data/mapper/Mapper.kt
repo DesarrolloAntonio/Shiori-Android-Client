@@ -36,6 +36,7 @@ fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
     imageURL = "$serverUrl$imageURL",
     hasContent = hasContent?:false,
     hasArchive = hasArchive?:false,
+    hasEbook = hasEbook?:false,
     tags = tags?.map { it.toDomainModel() }?: emptyList(),
     createArchive = createArchive?:false
 )
@@ -70,6 +71,7 @@ fun BookmarkDTO.toEntityModel() = BookmarkEntity(
     imageURL = imageURL?:"",
     hasContent = hasContent?:false,
     hasArchive = hasArchive?:false,
+    hasEbook = hasEbook?:false,
     tags = tags?.map { it.toDomainModel() } ?: emptyList(),
     createArchive = createArchive?:false
 )
@@ -85,6 +87,7 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     imageURL = imageURL,
     hasContent = hasContent,
     hasArchive = hasArchive,
+    hasEbook = hasEbook,
     tags = tags,
     createArchive = createArchive
 )

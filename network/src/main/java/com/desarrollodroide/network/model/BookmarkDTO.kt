@@ -11,6 +11,7 @@ data class BookmarkDTO (
     val imageURL: String?,
     val hasContent: Boolean?,
     val hasArchive: Boolean?,
+    val hasEbook: Boolean?,
     val tags: List<TagDTO>?,
     val createArchive: Boolean?
 )

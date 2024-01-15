@@ -11,6 +11,7 @@ data class Bookmark (
     val imageURL: String,
     val hasContent: Boolean,
     val hasArchive: Boolean,
+    val hasEbook: Boolean,
     val tags: List<Tag>,
     val createArchive: Boolean
 ){
@@ -26,8 +27,9 @@ data class Bookmark (
         public = 1,
         modified = "",
         imageURL = "",
-        hasContent = true,
-        hasArchive = true,
+        hasContent = false,
+        hasArchive = false,
+        hasEbook = false,
         tags = tags,
         createArchive = true
     )

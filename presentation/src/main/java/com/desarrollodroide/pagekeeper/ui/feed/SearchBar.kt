@@ -45,11 +45,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun DockedSearchBarWithCategories(
     bookmarks: List<Bookmark>,
-    onBookmarkClick: (Bookmark) -> Unit,
-    onRefresh: () -> Unit,
-    onEditClick: (Bookmark) -> Unit,
-    onDeleteClick: (Bookmark) -> Unit,
-    onShareClick: (Bookmark) -> Unit,
+    onBookmarkSelect: (Bookmark) -> Unit,
+    onRefreshFeed: () -> Unit,
+    onEditBookmark: (Bookmark) -> Unit,
+    onDeleteBookmark: (Bookmark) -> Unit,
+    onBookmarkEpub: (Bookmark) -> Unit,
+    onShareBookmark: (Bookmark) -> Unit,
     serverURL: String,
     uniqueCategories: MutableState<List<Tag>>,
 ) {
@@ -68,7 +69,7 @@ fun DockedSearchBarWithCategories(
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
     fun refreshBookmarks() = refreshCoroutineScope.launch {
-        onRefresh.invoke()
+        onRefreshFeed.invoke()
         isRefreshing = true
         delay(1500)
         isRefreshing = false
@@ -90,8 +91,8 @@ fun DockedSearchBarWithCategories(
                     setCategoriesVisible = setCategoriesVisible,
                     isCategoriesVisible = isCategoriesVisible,
                     bookmarks = bookmarks,
-                    onBookmarkClick = onBookmarkClick,
-                    onRefresh = onRefresh
+                    onBookmarkClick = onBookmarkSelect,
+                    onRefresh = onRefreshFeed
                 )
             }
             item {
@@ -105,10 +106,11 @@ fun DockedSearchBarWithCategories(
                 BookmarkItem(
                     bookmark = it,
                     serverURL = serverURL,
-                    onClickEdit = onEditClick,
-                    onClickDelete = onDeleteClick,
-                    onClickShare = onShareClick,
-                    onClickBookmark = onBookmarkClick,
+                    onClickEdit = onEditBookmark,
+                    onClickDelete = onDeleteBookmark,
+                    onClickShare = onShareBookmark,
+                    onClickBookmark = onBookmarkSelect,
+                    onClickEpub = onBookmarkEpub,
                     onClickCategory = { category ->
                         setCategoriesVisible(true)
                         it.tags.firstOrNull() { it.name == category.name }?.apply {

@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.pagekeeper.R
 
 @Composable
 fun BookmarkItem(
@@ -47,7 +49,8 @@ fun BookmarkItem(
     onClickDelete: (Bookmark) -> Unit,
     onClickShare: (Bookmark) -> Unit,
     onClickCategory: (Tag) -> Unit,
-    onClickBookmark: (Bookmark) -> Unit
+    onClickBookmark: (Bookmark) -> Unit,
+    onClickEpub: (Bookmark) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -106,9 +109,11 @@ fun BookmarkItem(
                     onClickCategory = onClickCategory
                 )
                 ButtonsView(
+                    bookmark = bookmark,
                     onclickDelete = { onClickDelete(bookmark) },
                     onClickEdit = { onClickEdit(bookmark) },
                     onClickShare = { onClickShare(bookmark) },
+                    onClickEpub = { onClickEpub(bookmark) }
                 )
             }
         }
@@ -117,9 +122,11 @@ fun BookmarkItem(
 
 @Composable
 fun ButtonsView(
+    bookmark: Bookmark,
     onClickEdit: () -> Unit,
     onclickDelete: () -> Unit,
-    onClickShare: () -> Unit
+    onClickShare: () -> Unit,
+    onClickEpub: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -139,6 +146,15 @@ fun ButtonsView(
                 imageVector = Icons.Filled.Delete,
                 contentDescription = "Delete"
             )
+        }
+        if (bookmark.hasEbook){
+            IconButton(onClick = onClickEpub) {
+                Icon(
+                    tint = MaterialTheme.colorScheme.secondary,
+                    painter = painterResource(id = R.drawable.ic_book),
+                    contentDescription = "Epub"
+                )
+            }
         }
 
         IconButton(onClick = onClickShare) {
@@ -191,6 +207,7 @@ fun PreviewPost() {
             imageURL = "",
             hasContent = true,
             hasArchive = true,
+            hasEbook = false,
             createArchive = true,
             tags = listOf(Tag("tag1"), Tag("tag2")),
         )
@@ -201,7 +218,8 @@ fun PreviewPost() {
             onClickDelete = {},
             onClickShare = {},
             onClickCategory = {},
-            onClickBookmark = {}
+            onClickBookmark = {},
+            onClickEpub = {}
         )
     }
 }
