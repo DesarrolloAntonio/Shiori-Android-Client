@@ -6,5 +6,5 @@ import com.desarrollodroide.data.repository.SettingsRepository
 class ThemeManagerImpl(
     settingsRepository: SettingsRepository,
 ) : ThemeManager {
-    override var darkTheme = mutableStateOf(settingsRepository.isDarkTheme())
+      override var themeMode = mutableStateOf(settingsRepository.getThemeMode())
 }

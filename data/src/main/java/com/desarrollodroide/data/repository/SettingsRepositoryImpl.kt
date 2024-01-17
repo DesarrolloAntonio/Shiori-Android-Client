@@ -1,5 +1,6 @@
 package com.desarrollodroide.data.repository
 
+import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.model.Account
 import com.desarrollodroide.model.User
@@ -28,10 +29,9 @@ class SettingsRepositoryImpl(
     override val userDataStream: Flow<User> =
         settingsPreferenceDataSource.userDataStream
 
-    override suspend fun setTheme(isDark: Boolean) {
-       settingsPreferenceDataSource.setTheme(isDark)
+    override suspend fun setThemeMode(themeMode: ThemeMode) {
+       settingsPreferenceDataSource.setTheme(themeMode)
     }
-
-    override fun isDarkTheme() = settingsPreferenceDataSource.isDarkTheme()
+    override fun getThemeMode() = settingsPreferenceDataSource.getThemeMode()
 
 }

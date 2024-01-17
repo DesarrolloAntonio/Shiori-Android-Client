@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.desarrollodroide.data.RememberUserPreferences
+import com.desarrollodroide.data.helpers.ThemeMode
 import kotlinx.coroutines.runBlocking
 
 class SettingsPreferencesDataSourceImpl(
@@ -25,7 +26,7 @@ class SettingsPreferencesDataSourceImpl(
 
 ) : SettingsPreferenceDataSource {
 
-    val DARK_THEME_KEY = booleanPreferencesKey("dark_theme")
+    val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
 
     // Use with stateIn
     override val userDataStream = protoDataStore.data
@@ -139,18 +140,20 @@ class SettingsPreferencesDataSourceImpl(
         )
     }
 
-    override fun setTheme(isDark: Boolean) {
-        return runBlocking {
+    override fun setTheme(mode: ThemeMode) {
+        runBlocking {
             dataStore.edit { preferences ->
-                preferences[DARK_THEME_KEY] = isDark
+                preferences[THEME_MODE_KEY] = mode.name
             }
         }
     }
 
-    override fun isDarkTheme(): Boolean {
+    override fun getThemeMode(): ThemeMode {
         return runBlocking {
             val preferences = dataStore.data.first()
-            preferences[DARK_THEME_KEY] ?: false
+            val modeName = preferences[THEME_MODE_KEY] ?: ThemeMode.AUTO.name
+            ThemeMode.valueOf(modeName)
         }
     }
+
 }

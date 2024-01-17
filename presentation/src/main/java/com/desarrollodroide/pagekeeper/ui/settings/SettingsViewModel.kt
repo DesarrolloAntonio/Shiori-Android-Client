@@ -9,6 +9,7 @@ import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.isLoading
 import com.desarrollodroide.pagekeeper.ui.components.success
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
@@ -52,10 +53,10 @@ class SettingsViewModel(
             }
         }
     }
-    fun isDarkTheme() = themeManager.darkTheme.value
-    fun setTheme() {
-        settingsPreferenceDataSource.setTheme(!themeManager.darkTheme.value)
-        themeManager.darkTheme.value = !themeManager.darkTheme.value
+    fun getThemeMode() = themeManager.themeMode.value
+    fun setTheme(newMode: ThemeMode) {
+        settingsPreferenceDataSource.setTheme(newMode)
+        themeManager.themeMode.value = newMode
     }
 
 }

@@ -24,10 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.HdrAuto
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
@@ -53,9 +54,9 @@ fun SettingsScreen(
         settingsUiState = settingsUiState,
         onLogout = { settingsViewModel.logout() },
         goToLogin = goToLogin,
-        isDarkTheme = settingsViewModel.isDarkTheme(),
-        onThemeChanged = {
-            settingsViewModel.setTheme()
+        themeMode = settingsViewModel.getThemeMode(),
+        onThemeChanged = { newMode ->
+            settingsViewModel.setTheme(newMode)
         }
     )
 }
@@ -64,8 +65,8 @@ fun SettingsScreen(
 fun SettingsContent(
     settingsUiState: UiState<String>,
     onLogout: () -> Unit,
-    onThemeChanged: () -> Unit,
-    isDarkTheme: Boolean,
+    onThemeChanged: (ThemeMode) -> Unit,
+    themeMode: ThemeMode,
     goToLogin: () -> Unit
 ) {
     if (settingsUiState.isLoading) {
@@ -103,9 +104,19 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(8.dp))
             Divider(Modifier.fillMaxWidth(), color = Color.Black, thickness = 1.dp)
         }
-        item { ThemeOption(Item("Theme", Icons.Filled.Palette, onClick = {
-            onThemeChanged()
-        }), darkTheme = isDarkTheme) }
+        item {
+            ThemeOption(
+                item = Item("Theme", Icons.Filled.Palette, onClick = {
+                    val newMode = when (themeMode) {
+                        ThemeMode.DARK -> ThemeMode.LIGHT
+                        ThemeMode.LIGHT -> ThemeMode.AUTO
+                        ThemeMode.AUTO -> ThemeMode.DARK
+                    }
+                    onThemeChanged(newMode)
+                }),
+                initialThemeMode = themeMode
+            )
+        }
         item { ClickableOption(Item("Terms of Use", Icons.Filled.Gavel) { context.openUrlInBrowser(termsOfUseUrl) }) }
         item { ClickableOption(Item("Privacy policy", Icons.Filled.Security) { context.openUrlInBrowser(privacyPolicyUrl) }) }
         item { ClickableOption(Item("Logout", Icons.Filled.Logout, onClick = onLogout), color = Color.Red) }
@@ -115,25 +126,37 @@ fun SettingsContent(
 @Composable
 fun ThemeOption(
     item: Item,
-    darkTheme: Boolean,
+    initialThemeMode: ThemeMode,
 ) {
-    var isDarkTheme by remember { mutableStateOf(darkTheme) }
+    var themeMode by remember { mutableStateOf(initialThemeMode) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                isDarkTheme = !isDarkTheme
+                themeMode = when (themeMode) {
+                    ThemeMode.DARK -> ThemeMode.LIGHT
+                    ThemeMode.LIGHT -> ThemeMode.AUTO
+                    ThemeMode.AUTO -> ThemeMode.DARK
+                }
                 item.onClick()
-                       },
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
         Icon(item.icon, contentDescription = "Change theme")
         Spacer(modifier = Modifier.width(12.dp))
         Text(text = item.title, modifier = Modifier.weight(1f).padding(vertical = 10.dp))
-        Icon(if (isDarkTheme) Icons.Filled.DarkMode else Icons.Filled.LightMode, contentDescription = "Change theme")
+
+        val themeIcon = when (themeMode) {
+            ThemeMode.DARK -> Icons.Filled.DarkMode
+            ThemeMode.LIGHT -> Icons.Filled.LightMode
+            ThemeMode.AUTO -> Icons.Filled.HdrAuto
+        }
+        Icon(themeIcon, contentDescription = "Change theme")
     }
 }
+
 
 @Composable
 fun ClickableOption(item: Item, color: Color = Color.Black) {
@@ -158,5 +181,5 @@ data class Item(val title: String, val icon: ImageVector, val onClick: () -> Uni
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsContent( onLogout = {}, goToLogin = {}, onThemeChanged = {}, settingsUiState = UiState<String>(isLoading = false), isDarkTheme = false)
+    SettingsContent( onLogout = {}, goToLogin = {}, onThemeChanged = {}, settingsUiState = UiState<String>(isLoading = false), themeMode = ThemeMode.AUTO)
 }

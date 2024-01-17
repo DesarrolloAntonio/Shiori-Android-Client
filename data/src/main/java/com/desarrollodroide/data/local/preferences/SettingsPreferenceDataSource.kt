@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.local.preferences
 
 import com.desarrollodroide.data.UserPreferences
+import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Account
 import com.desarrollodroide.model.User
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +26,7 @@ interface SettingsPreferenceDataSource {
     suspend fun getUrl(): String
     suspend fun getSession(): String
     suspend fun resetUser()
-    fun setTheme(isDark: Boolean)
-    fun isDarkTheme(): Boolean
     suspend fun resetRememberUser()
+    fun setTheme(mode: ThemeMode)
+    fun getThemeMode(): ThemeMode
 }
