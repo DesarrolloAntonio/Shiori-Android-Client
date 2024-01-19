@@ -11,8 +11,8 @@ android {
         applicationId = "com.desarrollodroide.pagekeeper"
         minSdk = 21
         targetSdk = 33
-        versionCode = 4
-        versionName = "1.03"
+        versionCode = 5
+        versionName = "1.04"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

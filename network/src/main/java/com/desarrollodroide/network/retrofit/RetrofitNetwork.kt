@@ -3,7 +3,7 @@ package com.desarrollodroide.network.retrofit
 import com.desarrollodroide.network.model.AccountDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
-import com.desarrollodroide.network.model.SessionDTO
+import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.TagDTO
 import retrofit2.Response
 import retrofit2.http.*
@@ -20,7 +20,7 @@ interface RetrofitNetwork {
     suspend fun sendLogin(
         @Url url: String,
         @Body jsonData: String
-    ): Response<SessionDTO>
+    ): Response<LoginResponseDTO>
 
     @POST()
     suspend fun sendLogout(

@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.repository
 
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
@@ -41,7 +42,7 @@ class BookmarksRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.getBookmarks(
             xSessionId = xSession,
-            url = "$serverUrl/api/bookmarks"
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks"
         )
 
         override fun shouldFetch(data: List<Bookmark>?) = true
@@ -56,7 +57,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.addBookmark(
-            url = "$serverUrl/api/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
@@ -76,7 +77,7 @@ class BookmarksRepositoryImpl(
     ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
             override suspend fun fetchFromRemote()  =
                 apiService.deleteBookmarks(
-                    url = "$serverUrl/api/bookmarks",
+                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
                     xSessionId = xSession,
                     bookmarkIds = listOf(bookmarkId)
                 )
@@ -92,7 +93,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.editBookmark(
-            url = "$serverUrl/api/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )

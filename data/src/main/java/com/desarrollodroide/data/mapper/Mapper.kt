@@ -92,8 +92,14 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     createArchive = createArchive
 )
 
+fun LoginResponseDTO.toProtoEntity(userName: String): UserPreferences = UserPreferences.newBuilder()
+    .setSession(message?.session?:"")
+    .setUsername(userName)
+    .build()
 
-
-
-
+fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(
+    expires = expires?:0,
+    session = session?:"",
+    token = token?:""
+)
 
