@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.model.Bookmark
 import kotlinx.coroutines.Job
@@ -104,11 +105,11 @@ class FeedViewModel(
         }
     }
 
-    fun getUrl(bookmark: Bookmark) = if (bookmark.public == 1) "${serverUrl}/bookmark/${bookmark.id}/content" else {
+    fun getUrl(bookmark: Bookmark) = if (bookmark.public == 1) "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/content" else {
         bookmark.url
     }
 
-    fun getEpubUrl(bookmark: Bookmark) =  "${serverUrl}/bookmark/${bookmark.id}/ebook"
+    fun getEpubUrl(bookmark: Bookmark) =  "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/ebook"
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {

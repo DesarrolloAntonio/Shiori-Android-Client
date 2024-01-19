@@ -21,7 +21,7 @@ class LoginViewModel(
 
     var rememberSession = mutableStateOf(false)
 //    var userName = mutableStateOf("Memnoch")
-//    var password = mutableStateOf("e%dPd3&eAV@#v7TKP%NvmZ5")
+//    var password = mutableStateOf("")
 //    var serverUrl = mutableStateOf("http://192.168.1.27:8580/")
 
     var serverUrl = mutableStateOf("")

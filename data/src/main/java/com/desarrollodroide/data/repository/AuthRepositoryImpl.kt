@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.repository
 
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.*
@@ -36,7 +37,7 @@ class AuthRepositoryImpl(
         override fun fetchFromLocal() = settingsPreferenceDataSource.getUser()
 
         override suspend fun fetchFromRemote() = apiService.sendLogin(
-            "$serverUrl/api/login",
+            "${serverUrl.removeTrailingSlash()}/api/login",
             LoginBodyContent(
                 username = username,
                 password = password
@@ -62,7 +63,7 @@ class AuthRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.sendLogout(
             xSessionId = xSession,
-            url = "$serverUrl/api/logout")
+            url = "${serverUrl.removeTrailingSlash()}/api/logout")
 
         override fun shouldFetch(data: String?) = true
 
