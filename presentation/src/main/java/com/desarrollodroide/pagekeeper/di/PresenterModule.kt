@@ -21,6 +21,7 @@ fun presenterModule() = module {
             settingsPreferenceDataSource = get(),
             getBookmarksUseCase = get(),
             deleteBookmarkUseCase = get(),
+            updateBookmarkCacheUseCase = get(),
         )
     }
 

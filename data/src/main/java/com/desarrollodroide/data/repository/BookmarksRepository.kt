@@ -3,6 +3,8 @@ package com.desarrollodroide.data.repository
 import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.model.UpdateCachePayload
+import com.desarrollodroide.network.model.UpdateCachePayloadDTO
 
 interface BookmarksRepository {
 
@@ -31,4 +33,9 @@ interface BookmarksRepository {
   ): Flow<Result<Bookmark>>
 
   suspend fun deleteAllLocalBookmarks()
+  fun updateBookmarkCache(
+    xSession: String,
+    serverUrl: String,
+    updateCachePayload: UpdateCachePayload
+  ): Flow<Result<Bookmark>>
 }

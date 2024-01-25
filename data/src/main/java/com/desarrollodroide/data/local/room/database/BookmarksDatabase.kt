@@ -11,7 +11,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.converters.TagsConverter
 
-@Database(entities = [BookmarkEntity::class], version = 2)
+@Database(entities = [BookmarkEntity::class], version = 3)
 @TypeConverters(TagsConverter::class)
 abstract class BookmarksDatabase : RoomDatabase() {
 
@@ -26,16 +26,22 @@ abstract class BookmarksDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE bookmarks ADD COLUMN has_ebook INTEGER NOT NULL DEFAULT 0")
             }
         }
-        fun create(context: Context): BookmarksDatabase {
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                //TODO **********************************************************************************
+                //database.execSQL("ALTER TABLE bookmarks ADD COLUMN create_archive INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE bookmarks ADD COLUMN create_ebook INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
+        fun create(context: Context): BookmarksDatabase {
             return Room.databaseBuilder(
                 context,
                 BookmarksDatabase::class.java, "bookmarks_database"
             )
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
         }
     }
-
 }

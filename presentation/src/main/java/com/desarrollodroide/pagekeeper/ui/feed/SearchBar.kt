@@ -27,6 +27,9 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.MutableState
@@ -34,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.window.DialogProperties
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
@@ -51,7 +55,9 @@ fun DockedSearchBarWithCategories(
     onDeleteBookmark: (Bookmark) -> Unit,
     onBookmarkEpub: (Bookmark) -> Unit,
     onShareBookmark: (Bookmark) -> Unit,
+    onClickSync: (Bookmark) -> Unit,
     serverURL: String,
+    xSessionId: String,
     uniqueCategories: MutableState<List<Tag>>,
 ) {
     val searchTextState = rememberSaveable { mutableStateOf("") }
@@ -106,6 +112,7 @@ fun DockedSearchBarWithCategories(
                 BookmarkItem(
                     bookmark = it,
                     serverURL = serverURL,
+                    xSessionId = xSessionId,
                     onClickEdit = onEditBookmark,
                     onClickDelete = onDeleteBookmark,
                     onClickShare = onShareBookmark,
@@ -120,7 +127,8 @@ fun DockedSearchBarWithCategories(
                                 selectedTags.value = selectedTags.value + category
                             }
                         }
-                    }
+                    },
+                    onClickSync = onClickSync
                 )
             }
         }

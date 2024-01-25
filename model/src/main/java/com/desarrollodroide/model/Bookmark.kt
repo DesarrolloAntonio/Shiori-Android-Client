@@ -13,7 +13,8 @@ data class Bookmark (
     val hasArchive: Boolean,
     val hasEbook: Boolean,
     val tags: List<Tag>,
-    val createArchive: Boolean
+    val createArchive: Boolean,
+    val createEbook: Boolean,
 ){
     constructor(
         url: String,
@@ -31,6 +32,7 @@ data class Bookmark (
         hasArchive = false,
         hasEbook = false,
         tags = tags,
-        createArchive = true
+        createArchive = true,
+        createEbook = true,
     )
 }

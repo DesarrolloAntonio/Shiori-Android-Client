@@ -27,5 +27,7 @@ data class BookmarkEntity(
     val hasEbook: Boolean,
     val tags: List<Tag>,
     @ColumnInfo(name = "create_archive")
-    val createArchive: Boolean
+    val createArchive: Boolean,
+    @ColumnInfo(name = "create_ebook")
+    val createEbook: Boolean
 )

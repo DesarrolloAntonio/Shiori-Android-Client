@@ -13,5 +13,6 @@ data class BookmarkDTO (
     val hasArchive: Boolean?,
     val hasEbook: Boolean?,
     val tags: List<TagDTO>?,
-    val createArchive: Boolean?
+    val createArchive: Boolean?,
+    val createEbook: Boolean?,
 )

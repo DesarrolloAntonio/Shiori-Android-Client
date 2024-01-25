@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,7 +30,7 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
-import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
+import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
 
 @Composable
 fun FeedScreen(
@@ -41,13 +40,9 @@ fun FeedScreen(
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        feedViewModel.refreshUrl()
+        feedViewModel.refreshData()
         feedViewModel.getBookmarks()
     }
-    val showBookmarkEditorScreen = remember { mutableStateOf(false)}
-    val bookmarkSelected: MutableState<Bookmark?> = remember { mutableStateOf(null) }
-    val showDeleteConfirmationDialog = remember { mutableStateOf(false) }
-    val bookmarkToDelete: MutableState<Bookmark?> = remember { mutableStateOf(null) }
 
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
@@ -60,16 +55,17 @@ fun FeedScreen(
             openUrlInBrowser.invoke(feedViewModel.getUrl(it))
         },
         serverURL = feedViewModel.getServerUrl(),
+        xSessionId = feedViewModel.getSession(),
         onRefreshFeed = {
             feedViewModel.refreshFeed()
         },
         onEditBookmark = { bookmark ->
-            bookmarkSelected.value = bookmark
-            showBookmarkEditorScreen.value = true
+            feedViewModel.bookmarkSelected.value = bookmark
+            feedViewModel.showBookmarkEditorScreen.value = true
         },
         onDeleteBookmark = {
-            bookmarkToDelete.value = it
-            showDeleteConfirmationDialog.value = true
+            feedViewModel.bookmarkToDelete.value = it
+            feedViewModel.showDeleteConfirmationDialog.value = true
         },
         onShareBookmark = {
             context.shareText(it.url)
@@ -79,49 +75,68 @@ fun FeedScreen(
         },
         onBookmarkEpub = {
             openUrlInBrowser.invoke(feedViewModel.getEpubUrl(it))
+        },
+        onClickSync = {
+            feedViewModel.bookmarkToUpdateCache.value = it
+            feedViewModel.showSyncDialog.value = true
         }
     )
-    if (showBookmarkEditorScreen.value && bookmarkSelected.value != null) {
+    if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
-            modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-                detectTapGestures { }
-            }
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures { }
+                }
         ) {
-            bookmarkSelected.value?.let {
+            feedViewModel.bookmarkSelected.value?.let {
                 BookmarkEditorScreen(
                     title = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,
                     onBackClick = {
-                        showBookmarkEditorScreen.value = false
+                        feedViewModel.showBookmarkEditorScreen.value = false
                     },
                     updateBookmark = { bookMark ->
-                        showBookmarkEditorScreen.value = false
+                        feedViewModel.showBookmarkEditorScreen.value = false
                         feedViewModel.refreshFeed()
                     }
                 )
             }
         }
     }
-    if (showDeleteConfirmationDialog.value && bookmarkToDelete.value != null) {
+    if (feedViewModel.showDeleteConfirmationDialog.value && feedViewModel.bookmarkToDelete.value != null) {
         ConfirmDialog(
             title = "Confirmation",
             content = "Are you sure you want to delete this bookmark?",
             confirmButton = "Delete",
             dismissButton = "Cancel",
             onConfirm = {
-                bookmarkToDelete.value?.let {
+                feedViewModel.bookmarkToDelete.value?.let {
                     feedViewModel.deleteBookmark(it)
-                    showDeleteConfirmationDialog.value = false
+                    feedViewModel.showDeleteConfirmationDialog.value = false
                 }
             },
-            openDialog = showDeleteConfirmationDialog,
+            openDialog = feedViewModel.showDeleteConfirmationDialog,
             properties = DialogProperties(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true
             )
         )
     }
+        UpdateCacheDialog(
+            showDialog = feedViewModel.showSyncDialog,
+            defaultKeepOldTitle = true,
+            defaultUpdateArchive = false,
+            defaultUpdateEbook = true,
+            onConfirm = { keepOldTitle, updateArchive, updateEbook ->
+                feedViewModel.updateBookmark(
+                    keepOldTitle = keepOldTitle,
+                    updateEbook = updateEbook,
+                    updateArchive = updateArchive
+                )
+            }
+        )
 }
 
 @Composable
@@ -133,8 +148,10 @@ private fun FeedContent(
     onDeleteBookmark: (Bookmark) -> Unit,
     onBookmarkEpub: (Bookmark) -> Unit,
     onShareBookmark: (Bookmark) -> Unit,
+    onClickSync: (Bookmark) -> Unit,
     onClearError: () -> Unit,
     serverURL: String,
+    xSessionId: String,
     bookmarksUiState: UiState<List<Bookmark>>
 ) {
     if (bookmarksUiState.isLoading) {
@@ -175,11 +192,13 @@ private fun FeedContent(
                             bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
+                            xSessionId = xSessionId,
                             onRefreshFeed = onRefreshFeed,
                             onDeleteBookmark = onDeleteBookmark,
                             onEditBookmark = onEditBookmark,
                             onShareBookmark = onShareBookmark,
-                            onBookmarkEpub = onBookmarkEpub
+                            onBookmarkEpub = onBookmarkEpub,
+                            onClickSync = onClickSync,
                         )
                     }
                 }

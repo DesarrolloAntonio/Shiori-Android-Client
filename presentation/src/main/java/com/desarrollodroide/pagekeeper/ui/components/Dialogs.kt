@@ -9,6 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -171,6 +175,56 @@ fun ErrorDialog(
         )
 }
 
+@Composable
+fun UpdateCacheDialog(
+    showDialog: MutableState<Boolean>,
+    onConfirm: (keepOldTitle: Boolean, updateArchive: Boolean, updateEbook: Boolean) -> Unit,
+    defaultKeepOldTitle: Boolean,
+    defaultUpdateArchive: Boolean,
+    defaultUpdateEbook: Boolean
+) {
+    if (showDialog.value) {
+        var keepOldTitleChecked by remember { mutableStateOf(defaultKeepOldTitle) }
+        var updateArchiveChecked by remember { mutableStateOf(defaultUpdateArchive) }
+        var updateEbookChecked by remember { mutableStateOf(defaultUpdateEbook) }
+
+        AlertDialog(
+            onDismissRequest = {  },
+            title = { Text("Update cache for selected bookmarks? This action is irreversible.") },
+            text = {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = keepOldTitleChecked, onCheckedChange = { keepOldTitleChecked = it })
+                        Text("Keep the old title and excerpt", modifier = Modifier.padding(start = 8.dp))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = updateArchiveChecked, onCheckedChange = { updateArchiveChecked = it })
+                        Text("Update archive as well", modifier = Modifier.padding(start = 8.dp))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = updateEbookChecked, onCheckedChange = { updateEbookChecked = it })
+                        Text("Update Ebook as well", modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showDialog.value = false
+                    onConfirm(keepOldTitleChecked, updateArchiveChecked, updateEbookChecked)}) {
+                    Text("Update")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showDialog.value = false
+                }) {
+                    Text("Cancel")
+                }
+            },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+        )
+    }
+}
 
 
 
