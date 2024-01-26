@@ -5,6 +5,7 @@ import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.model.TagDTO
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -49,6 +50,13 @@ interface RetrofitNetwork {
         @Header("X-Session-Id") xSessionId: String,
         @Body body: String
     ): Response<BookmarkDTO>
+
+    @PUT()
+    suspend fun updateBookmarksCache(
+        @Url url: String,
+        @Header("X-Session-Id") xSessionId: String,
+        @Body body: String
+    ): Response<List<BookmarkDTO>>
 
     // Get tags
     @GET("/api/tags")

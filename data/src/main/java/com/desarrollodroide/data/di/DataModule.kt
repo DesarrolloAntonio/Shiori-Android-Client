@@ -17,8 +17,11 @@ import com.desarrollodroide.data.repository.BookmarksRepositoryImpl
 import com.desarrollodroide.data.repository.AuthRepository
 import com.desarrollodroide.data.repository.AuthRepositoryImpl
 import com.desarrollodroide.data.repository.ErrorHandlerImpl
+import com.desarrollodroide.data.repository.FileRepository
+import com.desarrollodroide.data.repository.FileRepositoryImpl
 import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
+import com.desarrollodroide.network.retrofit.FileRemoteDataSource
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -82,6 +85,11 @@ fun dataModule() = module {
         apiService = get(),
     ) as AccountRepository  }
 
+    single { FileRepositoryImpl(
+        remoteDataSource = get(),
+    ) as FileRepository }
+
+    single { FileRemoteDataSource() }
     single { ErrorHandlerImpl() as ErrorHandler }
 
 }

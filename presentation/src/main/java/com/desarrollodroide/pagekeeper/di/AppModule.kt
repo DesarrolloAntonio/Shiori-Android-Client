@@ -6,6 +6,7 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.BookmarksRepositoryImpl
 import com.desarrollodroide.domain.usecase.AddBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
+import com.desarrollodroide.domain.usecase.DownloadFileUseCase
 import com.desarrollodroide.domain.usecase.EditBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
@@ -63,6 +64,12 @@ fun appModule() = module {
     single {
         UpdateBookmarkCacheUseCase(
             bookmarksRepository = get()
+        )
+    }
+
+    single {
+        DownloadFileUseCase(
+            fileRepository = get()
         )
     }
 

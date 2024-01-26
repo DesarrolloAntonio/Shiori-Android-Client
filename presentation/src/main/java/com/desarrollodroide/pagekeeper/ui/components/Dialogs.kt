@@ -46,14 +46,16 @@ fun SimpleDialog(
             },
             icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
             title = {
-                if (title.isNotEmpty()){
+                if (title.isNotEmpty()) {
                     Text(text = title)
                 }
             },
             text = {
-                if (content.isNotEmpty()){
-                    Box(modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center) {
+                if (content.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             modifier = Modifier
                                 .align(Alignment.Center),
@@ -63,7 +65,7 @@ fun SimpleDialog(
                 }
             },
             confirmButton = {
-                if (confirmButtonText.isNotEmpty()){
+                if (confirmButtonText.isNotEmpty()) {
                     TextButton(
                         onClick = {
                             openDialog.value = false
@@ -73,9 +75,9 @@ fun SimpleDialog(
                         Text(confirmButtonText)
                     }
                 }
-             },
+            },
             dismissButton = {
-                if (dismissButtonText.isNotEmpty()){
+                if (dismissButtonText.isNotEmpty()) {
                     TextButton(
                         onClick = {
                             openDialog.value = false
@@ -101,7 +103,7 @@ fun ConfirmDialog(
     onConfirm: (() -> Unit)? = null,
     openDialog: MutableState<Boolean>,
     properties: DialogProperties = DialogProperties(),
-    ){
+) {
     SimpleDialog(
         title = title,
         content = content,
@@ -144,14 +146,15 @@ fun InfiniteProgressDialog(
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
-            if (title != null){
+            if (title != null) {
                 Surface(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20)),
                 ) {
                     Text(
                         modifier = Modifier.padding(vertical = 10.dp, horizontal = 15.dp),
-                        text = title)
+                        text = title
+                    )
                 }
             }
         }
@@ -164,7 +167,7 @@ fun ErrorDialog(
     content: String = "",
     openDialog: MutableState<Boolean>,
     onConfirm: (() -> Unit)? = null,
-){
+) {
     SimpleDialog(
         title = title,
         content = content,
@@ -172,37 +175,43 @@ fun ErrorDialog(
         confirmButtonText = "Accept",
         openDialog = openDialog,
         onConfirm = onConfirm,
-        )
+    )
 }
 
 @Composable
 fun UpdateCacheDialog(
     showDialog: MutableState<Boolean>,
     onConfirm: (keepOldTitle: Boolean, updateArchive: Boolean, updateEbook: Boolean) -> Unit,
-    defaultKeepOldTitle: Boolean,
-    defaultUpdateArchive: Boolean,
-    defaultUpdateEbook: Boolean
 ) {
     if (showDialog.value) {
-        var keepOldTitleChecked by remember { mutableStateOf(defaultKeepOldTitle) }
-        var updateArchiveChecked by remember { mutableStateOf(defaultUpdateArchive) }
-        var updateEbookChecked by remember { mutableStateOf(defaultUpdateEbook) }
+        var keepOldTitleChecked by remember { mutableStateOf(false) }
+        var updateArchiveChecked by remember { mutableStateOf(false) }
+        var updateEbookChecked by remember { mutableStateOf(false) }
 
         AlertDialog(
-            onDismissRequest = {  },
-            title = { Text("Update cache for selected bookmarks? This action is irreversible.") },
+            onDismissRequest = { },
+            title = { Text("Update cache for selected bookmark? This action is irreversible.") },
             text = {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = keepOldTitleChecked, onCheckedChange = { keepOldTitleChecked = it })
-                        Text("Keep the old title and excerpt", modifier = Modifier.padding(start = 8.dp))
+                        Checkbox(
+                            checked = keepOldTitleChecked,
+                            onCheckedChange = { keepOldTitleChecked = it })
+                        Text(
+                            "Keep the old title and excerpt",
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = updateArchiveChecked, onCheckedChange = { updateArchiveChecked = it })
+                        Checkbox(
+                            checked = updateArchiveChecked,
+                            onCheckedChange = { updateArchiveChecked = it })
                         Text("Update archive as well", modifier = Modifier.padding(start = 8.dp))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = updateEbookChecked, onCheckedChange = { updateEbookChecked = it })
+                        Checkbox(
+                            checked = updateEbookChecked,
+                            onCheckedChange = { updateEbookChecked = it })
                         Text("Update Ebook as well", modifier = Modifier.padding(start = 8.dp))
                     }
                 }
@@ -210,7 +219,8 @@ fun UpdateCacheDialog(
             confirmButton = {
                 Button(onClick = {
                     showDialog.value = false
-                    onConfirm(keepOldTitleChecked, updateArchiveChecked, updateEbookChecked)}) {
+                    onConfirm(keepOldTitleChecked, updateArchiveChecked, updateEbookChecked)
+                }) {
                     Text("Update")
                 }
             },
@@ -226,5 +236,64 @@ fun UpdateCacheDialog(
     }
 }
 
-
-
+@Composable
+fun EpubOptionsDialog(
+    title: String = "",
+    content: String = "",
+    icon: ImageVector? = null,
+    onClickOption: ((Int) -> Unit)? = null,
+    properties: DialogProperties = DialogProperties(),
+) {
+    val openDialog = remember { mutableStateOf(true) }
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
+            title = {
+                if (title.isNotEmpty()) {
+                    Text(text = title)
+                }
+            },
+            text = {
+                if (content.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .align(Alignment.Center),
+                            text = content
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.padding(all = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = { openDialog.value = false }) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        openDialog.value = false
+                        onClickOption?.invoke(1)
+                    }) {
+                        Text("Open folder")
+                    }
+                    TextButton(onClick = {
+                        openDialog.value = false
+                        onClickOption?.invoke(2)
+                    }) {
+                        Text("Share")
+                    }
+                }
+            },
+            properties = properties
+        )
+    }
+}

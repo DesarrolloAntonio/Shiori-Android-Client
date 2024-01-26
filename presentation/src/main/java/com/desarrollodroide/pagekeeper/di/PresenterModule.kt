@@ -22,6 +22,7 @@ fun presenterModule() = module {
             getBookmarksUseCase = get(),
             deleteBookmarkUseCase = get(),
             updateBookmarkCacheUseCase = get(),
+            downloadFileUseCase = get(),
         )
     }
 

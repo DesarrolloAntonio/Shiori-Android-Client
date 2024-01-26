@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import android.media.MediaScannerConnection
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,13 +32,17 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.pagekeeper.ui.components.EpubOptionsDialog
 import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
+import java.io.File
 
 @Composable
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
-    openUrlInBrowser: (String) -> Unit
+    openUrlInBrowser: (String) -> Unit,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -46,6 +52,7 @@ fun FeedScreen(
 
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
+        downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
         goToLogin = {
             feedViewModel.resetData()
             goToLogin.invoke()
@@ -74,12 +81,14 @@ fun FeedScreen(
             feedViewModel.resetData()
         },
         onBookmarkEpub = {
-            openUrlInBrowser.invoke(feedViewModel.getEpubUrl(it))
+            feedViewModel.downloadFile(it)
         },
         onClickSync = {
             feedViewModel.bookmarkToUpdateCache.value = it
             feedViewModel.showSyncDialog.value = true
-        }
+        },
+        shareEpubFile = shareEpubFile,
+        openDownloadsFolder = openDownloadsFolder
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -124,21 +133,19 @@ fun FeedScreen(
             )
         )
     }
-        UpdateCacheDialog(
-            showDialog = feedViewModel.showSyncDialog,
-            defaultKeepOldTitle = true,
-            defaultUpdateArchive = false,
-            defaultUpdateEbook = true,
-            onConfirm = { keepOldTitle, updateArchive, updateEbook ->
-                feedViewModel.updateBookmark(
-                    keepOldTitle = keepOldTitle,
-                    updateEbook = updateEbook,
-                    updateArchive = updateArchive
-                )
-            }
-        )
+    UpdateCacheDialog(
+        showDialog = feedViewModel.showSyncDialog,
+        onConfirm = { keepOldTitle, updateArchive, updateEbook ->
+            feedViewModel.updateBookmark(
+                keepOldTitle = keepOldTitle,
+                updateEbook = updateEbook,
+                updateArchive = updateArchive
+            )
+        }
+    )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedContent(
     goToLogin: () -> Unit,
@@ -152,9 +159,12 @@ private fun FeedContent(
     onClearError: () -> Unit,
     serverURL: String,
     xSessionId: String,
-    bookmarksUiState: UiState<List<Bookmark>>
+    bookmarksUiState: UiState<List<Bookmark>>,
+    downloadUiState: UiState<File>,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit,
 ) {
-    if (bookmarksUiState.isLoading) {
+    if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
     if (!bookmarksUiState.error.isNullOrEmpty()) {
@@ -184,7 +194,9 @@ private fun FeedContent(
                             .wrapContentHeight()
                             .nestedScroll(rememberNestedScrollInteropConnection()),
                     ) {
-                        val uniqueCategories = remember { mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct()) }
+                        val uniqueCategories = remember {
+                            mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct())
+                        }
                         DockedSearchBarWithCategories(
                             onBookmarkSelect = {
                                 onBookmarkSelect.invoke(it)
@@ -215,5 +227,40 @@ private fun FeedContent(
                 }
             }
         }
+
+    if (!downloadUiState.error.isNullOrEmpty()) {
+        ConfirmDialog(
+            icon = Icons.Default.Error,
+            title = "Download Error",
+            content = downloadUiState.error,
+            openDialog = remember { mutableStateOf(true) },
+            onConfirm = { },
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            ),
+        )
+    }
+
+    if (downloadUiState.data != null) {
+        val context = LocalContext.current
+        MediaScannerConnection.scanFile(context, arrayOf(downloadUiState.data.absolutePath),null) { path, uri -> }
+        EpubOptionsDialog(
+            icon = Icons.Default.Error,
+            title = "Download Error",
+            content = "Epub file downloaded in Downloads folder, would you like to share it?",
+            onClickOption = { index ->
+                when (index) {
+                    0 -> {  shareEpubFile.invoke(downloadUiState.data) }
+                    1 -> { openDownloadsFolder.invoke() }
+                    2 -> { shareEpubFile.invoke(downloadUiState.data) }
+                }
+            },
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            ),
+        )
+    }
 }
 

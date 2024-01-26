@@ -19,20 +19,27 @@ import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
+import com.desarrollodroide.domain.usecase.DownloadFileUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.UpdateCachePayload
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import java.io.File
 
 class FeedViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getBookmarksUseCase: GetBookmarksUseCase,
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
+    private val downloadFileUseCase: DownloadFileUseCase,
 ) : ViewModel() {
 
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
+    private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
+    val downloadUiState = _downloadUiState.asStateFlow()
+
     private var hasLoadedFeed = false
     private var serverUrl = ""
     private var xSessionId = ""
@@ -196,6 +203,24 @@ class FeedViewModel(
                 }
         }
     }
+
+    fun downloadFile(
+        bookmark: Bookmark,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sessionId = settingsPreferenceDataSource.getSession()
+            _downloadUiState.value = UiState(isLoading = true)
+            try {
+                val downloadedFile = downloadFileUseCase.execute(getEpubUrl(bookmark), bookmark.title, sessionId)
+                _downloadUiState.value = UiState(data = downloadedFile)
+            } catch (e: Exception) {
+                Log.e("DownloadFile", "Error al descargar el archivo: ${e.message}")
+                _downloadUiState.value = UiState(error = e.message)
+            }
+        }
+    }
+
+
 
     fun getServerUrl() = serverUrl
     fun getSession(): String = xSessionId

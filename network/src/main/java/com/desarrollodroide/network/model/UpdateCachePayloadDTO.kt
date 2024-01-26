@@ -3,13 +3,11 @@ package com.desarrollodroide.network.model
 import com.google.gson.annotations.SerializedName
 
 data class UpdateCachePayloadDTO(
-    @SerializedName("create_archive")
+    @SerializedName("createArchive")
     val createArchive : Boolean,
-    @SerializedName("create_ebook")
+    @SerializedName("createEbook")
     val createEbook : Boolean,
     val ids: List<Int>,
-    @SerializedName("keep_metadata")
+    @SerializedName("keepMetadata")
     val keepMetadata : Boolean,
-    @SerializedName("skip_exist")
-    val skipExist: Boolean
 )

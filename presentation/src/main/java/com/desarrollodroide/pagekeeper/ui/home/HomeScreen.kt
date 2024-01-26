@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import org.koin.androidx.compose.get
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
@@ -27,6 +26,7 @@ import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
+import java.io.File
 
 @Composable
 fun HomeScreen(
@@ -34,6 +34,8 @@ fun HomeScreen(
     goToLogin: () -> Unit,
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit
 ) {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
@@ -91,7 +93,9 @@ fun HomeScreen(
                         FeedScreen(
                             feedViewModel = feedViewModel,
                             goToLogin = goToLogin,
-                            openUrlInBrowser = openUrlInBrowser
+                            openUrlInBrowser = openUrlInBrowser,
+                            shareEpubFile = shareEpubFile,
+                            openDownloadsFolder = openDownloadsFolder
                         )
                     }
 

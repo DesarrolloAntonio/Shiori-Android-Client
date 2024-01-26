@@ -100,7 +100,6 @@ fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(
     createEbook = createEbook,
     ids = ids,
     keepMetadata = keepMetadata,
-    skipExist = skipExist,
 )
 
 

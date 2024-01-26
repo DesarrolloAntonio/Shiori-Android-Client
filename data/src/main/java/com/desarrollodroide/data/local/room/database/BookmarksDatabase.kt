@@ -28,8 +28,6 @@ abstract class BookmarksDatabase : RoomDatabase() {
         }
         val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                //TODO **********************************************************************************
-                //database.execSQL("ALTER TABLE bookmarks ADD COLUMN create_archive INTEGER NOT NULL DEFAULT 0")
                 database.execSQL("ALTER TABLE bookmarks ADD COLUMN create_ebook INTEGER NOT NULL DEFAULT 0")
             }
         }

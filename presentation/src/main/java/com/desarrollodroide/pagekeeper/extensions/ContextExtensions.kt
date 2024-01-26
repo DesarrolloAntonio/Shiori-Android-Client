@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
 
 fun Context.shareText(text: String) {
     val shareIntent = Intent().apply {
@@ -12,16 +14,6 @@ fun Context.shareText(text: String) {
         type = "text/plain"
     }
     startActivity(Intent.createChooser(shareIntent, null))
-}
-
-fun String.openInBrowser(context: Context): Boolean {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(this))
-    return if (intent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(intent)
-        true
-    } else {
-        false
-    }
 }
 
 fun Context.openUrlInBrowser(url: String) {
@@ -33,4 +25,18 @@ fun Context.openUrlInBrowser(url: String) {
         Toast.makeText(this, "Error opening URL", Toast.LENGTH_SHORT).show()
     }
 }
+
+fun Context.shareEpubFile( file: File) {
+    val uri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", file)
+
+    val intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_STREAM, uri)
+        type = "application/epub+zip"
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    startActivity(Intent.createChooser(intent, "Share EPUB"))
+}
+
 

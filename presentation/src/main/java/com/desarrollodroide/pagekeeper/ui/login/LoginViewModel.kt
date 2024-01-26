@@ -20,9 +20,9 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-//    var userName = mutableStateOf("Memnoch")
-//    var password = mutableStateOf("")
-//    var serverUrl = mutableStateOf("http://192.168.1.27:8580/")
+//    var userName = mutableStateOf("testing")
+//    var password = mutableStateOf("shiori")
+//    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")

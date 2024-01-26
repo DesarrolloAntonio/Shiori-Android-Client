@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import retrofit2.Response
 
 class BookmarksRepositoryImpl(
     private val apiService: RetrofitNetwork,
@@ -113,16 +114,18 @@ class BookmarksRepositoryImpl(
         serverUrl: String,
         updateCachePayload: UpdateCachePayload
     ) = object :
-        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
-        override suspend fun fetchFromRemote() = apiService.editBookmark(
+        NetworkNoCacheResource<List<BookmarkDTO>, Bookmark>(errorHandler = errorHandler) {
+        override suspend fun fetchFromRemote(): Response<List<BookmarkDTO>> = apiService.updateBookmarksCache(
             url = "${serverUrl.removeTrailingSlash()}/api/cache",
             xSessionId = xSession,
             body = updateCachePayload.toDTO().toJson()
         )
 
-        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
+        override fun fetchResult(data: List<BookmarkDTO>): Flow<Bookmark> {
             return flow {
-                emit(data.toDomainModel())
+                data.firstOrNull()?.let {
+                    emit(it.toDomainModel())
+                }
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
