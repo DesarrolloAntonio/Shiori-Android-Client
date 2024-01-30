@@ -247,7 +247,7 @@ private fun FeedContent(
         MediaScannerConnection.scanFile(context, arrayOf(downloadUiState.data.absolutePath),null) { path, uri -> }
         EpubOptionsDialog(
             icon = Icons.Default.Error,
-            title = "Download Error",
+            title = "Success",
             content = "Epub file downloaded in Downloads folder, would you like to share it?",
             onClickOption = { index ->
                 when (index) {
