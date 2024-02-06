@@ -63,7 +63,7 @@ class AuthRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.sendLogout(
             xSessionId = xSession,
-            url = "${serverUrl.removeTrailingSlash()}/api/logout")
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/logout")
 
         override fun shouldFetch(data: String?) = true
 
