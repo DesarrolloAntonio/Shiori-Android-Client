@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,8 @@ fun BookmarkEditorView(
     availableTags: State<List<Tag>>,
     saveBookmark: (BookmarkEditorType) -> Unit,
     onBackClick: () -> Unit,
+    createArchive: MutableState<Boolean>,
+    makeArchivePublic: MutableState<Boolean>
 ) {
     Column(
         modifier = Modifier
@@ -61,21 +64,38 @@ fun BookmarkEditorView(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
 
             Text(
                 text = title,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                modifier = Modifier.align(CenterVertically)
             )
             Spacer(modifier = Modifier.width(56.dp))
         }
+        if (bookmarkEditorType == BookmarkEditorType.ADD) {
+            Row(verticalAlignment = CenterVertically) {
+                Checkbox(
+                    checked = createArchive.value,
+                    onCheckedChange = { createArchive.value = it }
+                )
+                Text("Create archive")
+            }
+        }
+        Row(verticalAlignment = CenterVertically) {
+            Checkbox(
+                checked = makeArchivePublic.value,
+                onCheckedChange = { makeArchivePublic.value = it }
+            )
+            Text("Make archive publicly available")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         Row {
             OutlinedTextField(
                 modifier = Modifier.weight(1f),
@@ -181,5 +201,7 @@ fun BookmarkEditorPreview() {
         availableTags = assignedTags,
         newTag = newTag,
         onBackClick = {},
+        makeArchivePublic = remember { mutableStateOf(true) },
+        createArchive = remember { mutableStateOf(false) }
     )
 }

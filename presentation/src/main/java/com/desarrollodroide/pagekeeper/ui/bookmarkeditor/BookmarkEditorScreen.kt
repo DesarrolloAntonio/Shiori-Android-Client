@@ -29,6 +29,8 @@ fun BookmarkEditorScreen(
     val newTag = remember { mutableStateOf("") }
     val availableTags = viewModel.availableTags.collectAsState()
     val bookmarkUiState = viewModel.bookmarkUiState.collectAsState().value
+
+
     BackHandler {
         onBackClick()
     }
@@ -47,8 +49,9 @@ fun BookmarkEditorScreen(
         )
     }
 
-
-    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags ?: emptyList()) }
+    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
+    val createArchive = remember { mutableStateOf(bookmark.createArchive) }
+    val makeArchivePublic = remember { mutableStateOf(bookmark.public == 1) }
 
     BookmarkEditorView(
             title = title,
@@ -59,14 +62,25 @@ fun BookmarkEditorScreen(
             saveBookmark = {
                 when (bookmarkEditorType) {
                     BookmarkEditorType.ADD -> {
-                        viewModel.saveBookmark(bookmark.url, assignedTags.value)
+                        viewModel.saveBookmark(
+                            url = bookmark.url,
+                            tags = assignedTags.value,
+                            createArchive = createArchive.value,
+                            makeArchivePublic = makeArchivePublic.value
+                        )
                     }
                     BookmarkEditorType.EDIT -> {
-                        viewModel.editBookmark(bookmark.copy (tags = assignedTags.value))
+                        viewModel.editBookmark(bookmark = bookmark.copy(
+                            tags = assignedTags.value,
+                            createArchive = createArchive.value,
+                            public = if (makeArchivePublic.value) 1 else 0
+                        ))
                     }
                 }
             },
             onBackClick = onBackClick,
+            createArchive = createArchive,
+            makeArchivePublic = makeArchivePublic
         )
 
     if (bookmarkUiState.data != null) {
