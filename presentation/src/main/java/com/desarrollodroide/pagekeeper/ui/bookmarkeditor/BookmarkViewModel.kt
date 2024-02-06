@@ -52,12 +52,24 @@ class BookmarkViewModel(
         )
 
 
-    fun saveBookmark(url: String, tags: List<Tag>) = viewModelScope.launch {
+    fun saveBookmark(
+        url: String,
+        tags: List<Tag>,
+        createArchive: Boolean,
+        makeArchivePublic: Boolean
+    ) = viewModelScope.launch {
+        Log.v("Add BookmarkViewModel", "createArchive: ${createArchive} makeArchivePublic: ${makeArchivePublic}")
+
         viewModelScope.launch {
             bookmarkAdditionUseCase.invoke(
                 serverUrl = backendUrl,
                 xSession = userPreferences.getSession(),
-                bookmark = Bookmark(url, tags)
+                bookmark = Bookmark(
+                    url = url,
+                    tags = tags,
+                    createArchive = createArchive,
+                    public = if (makeArchivePublic) 1 else 0
+                )
             )
                 .collect { result ->
                     when (result) {

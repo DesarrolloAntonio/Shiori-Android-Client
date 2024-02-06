@@ -36,7 +36,12 @@ class BookmarkEditorActivity : ComponentActivity() {
                     BookmarkEditorScreen(
                         title  = "Add",
                         bookmarkEditorType = BookmarkEditorType.ADD,
-                        bookmark = Bookmark(sharedUrl, emptyList()),
+                        bookmark = Bookmark(
+                            url = sharedUrl,
+                            tags = emptyList(),
+                            public = 1,
+                            createArchive = true
+                        ),
                         onBackClick = { finish() },
                         updateBookmark = {  }
                     )

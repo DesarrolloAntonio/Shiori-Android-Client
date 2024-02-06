@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import android.media.MediaScannerConnection
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -10,9 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,26 +32,27 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
-import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
+import com.desarrollodroide.pagekeeper.ui.components.EpubOptionsDialog
+import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
+import java.io.File
 
 @Composable
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
-    openUrlInBrowser: (String) -> Unit
+    openUrlInBrowser: (String) -> Unit,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        feedViewModel.refreshUrl()
+        feedViewModel.refreshData()
         feedViewModel.getBookmarks()
     }
-    val showBookmarkEditorScreen = remember { mutableStateOf(false)}
-    val bookmarkSelected: MutableState<Bookmark?> = remember { mutableStateOf(null) }
-    val showDeleteConfirmationDialog = remember { mutableStateOf(false) }
-    val bookmarkToDelete: MutableState<Bookmark?> = remember { mutableStateOf(null) }
 
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
+        downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
         goToLogin = {
             feedViewModel.resetData()
             goToLogin.invoke()
@@ -60,16 +62,17 @@ fun FeedScreen(
             openUrlInBrowser.invoke(feedViewModel.getUrl(it))
         },
         serverURL = feedViewModel.getServerUrl(),
+        xSessionId = feedViewModel.getSession(),
         onRefreshFeed = {
             feedViewModel.refreshFeed()
         },
         onEditBookmark = { bookmark ->
-            bookmarkSelected.value = bookmark
-            showBookmarkEditorScreen.value = true
+            feedViewModel.bookmarkSelected.value = bookmark
+            feedViewModel.showBookmarkEditorScreen.value = true
         },
         onDeleteBookmark = {
-            bookmarkToDelete.value = it
-            showDeleteConfirmationDialog.value = true
+            feedViewModel.bookmarkToDelete.value = it
+            feedViewModel.showDeleteConfirmationDialog.value = true
         },
         onShareBookmark = {
             context.shareText(it.url)
@@ -78,52 +81,71 @@ fun FeedScreen(
             feedViewModel.resetData()
         },
         onBookmarkEpub = {
-            openUrlInBrowser.invoke(feedViewModel.getEpubUrl(it))
-        }
+            feedViewModel.downloadFile(it)
+        },
+        onClickSync = {
+            feedViewModel.bookmarkToUpdateCache.value = it
+            feedViewModel.showSyncDialog.value = true
+        },
+        shareEpubFile = shareEpubFile,
+        openDownloadsFolder = openDownloadsFolder
     )
-    if (showBookmarkEditorScreen.value && bookmarkSelected.value != null) {
+    if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
-            modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-                detectTapGestures { }
-            }
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures { }
+                }
         ) {
-            bookmarkSelected.value?.let {
+            feedViewModel.bookmarkSelected.value?.let {
                 BookmarkEditorScreen(
                     title = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,
                     onBackClick = {
-                        showBookmarkEditorScreen.value = false
+                        feedViewModel.showBookmarkEditorScreen.value = false
                     },
                     updateBookmark = { bookMark ->
-                        showBookmarkEditorScreen.value = false
+                        feedViewModel.showBookmarkEditorScreen.value = false
                         feedViewModel.refreshFeed()
                     }
                 )
             }
         }
     }
-    if (showDeleteConfirmationDialog.value && bookmarkToDelete.value != null) {
+    if (feedViewModel.showDeleteConfirmationDialog.value && feedViewModel.bookmarkToDelete.value != null) {
         ConfirmDialog(
             title = "Confirmation",
             content = "Are you sure you want to delete this bookmark?",
             confirmButton = "Delete",
             dismissButton = "Cancel",
             onConfirm = {
-                bookmarkToDelete.value?.let {
+                feedViewModel.bookmarkToDelete.value?.let {
                     feedViewModel.deleteBookmark(it)
-                    showDeleteConfirmationDialog.value = false
+                    feedViewModel.showDeleteConfirmationDialog.value = false
                 }
             },
-            openDialog = showDeleteConfirmationDialog,
+            openDialog = feedViewModel.showDeleteConfirmationDialog,
             properties = DialogProperties(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true
             )
         )
     }
+    UpdateCacheDialog(
+        showDialog = feedViewModel.showSyncDialog,
+        onConfirm = { keepOldTitle, updateArchive, updateEbook ->
+            feedViewModel.updateBookmark(
+                keepOldTitle = keepOldTitle,
+                updateEbook = updateEbook,
+                updateArchive = updateArchive
+            )
+        }
+    )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedContent(
     goToLogin: () -> Unit,
@@ -133,11 +155,16 @@ private fun FeedContent(
     onDeleteBookmark: (Bookmark) -> Unit,
     onBookmarkEpub: (Bookmark) -> Unit,
     onShareBookmark: (Bookmark) -> Unit,
+    onClickSync: (Bookmark) -> Unit,
     onClearError: () -> Unit,
     serverURL: String,
-    bookmarksUiState: UiState<List<Bookmark>>
+    xSessionId: String,
+    bookmarksUiState: UiState<List<Bookmark>>,
+    downloadUiState: UiState<File>,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit,
 ) {
-    if (bookmarksUiState.isLoading) {
+    if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
     if (!bookmarksUiState.error.isNullOrEmpty()) {
@@ -167,7 +194,9 @@ private fun FeedContent(
                             .wrapContentHeight()
                             .nestedScroll(rememberNestedScrollInteropConnection()),
                     ) {
-                        val uniqueCategories = remember { mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct()) }
+                        val uniqueCategories = remember {
+                            mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct())
+                        }
                         DockedSearchBarWithCategories(
                             onBookmarkSelect = {
                                 onBookmarkSelect.invoke(it)
@@ -175,11 +204,13 @@ private fun FeedContent(
                             bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
+                            xSessionId = xSessionId,
                             onRefreshFeed = onRefreshFeed,
                             onDeleteBookmark = onDeleteBookmark,
                             onEditBookmark = onEditBookmark,
                             onShareBookmark = onShareBookmark,
-                            onBookmarkEpub = onBookmarkEpub
+                            onBookmarkEpub = onBookmarkEpub,
+                            onClickSync = onClickSync,
                         )
                     }
                 }
@@ -196,5 +227,40 @@ private fun FeedContent(
                 }
             }
         }
+
+    if (!downloadUiState.error.isNullOrEmpty()) {
+        ConfirmDialog(
+            icon = Icons.Default.Error,
+            title = "Download Error",
+            content = downloadUiState.error,
+            openDialog = remember { mutableStateOf(true) },
+            onConfirm = { },
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            ),
+        )
+    }
+
+    if (downloadUiState.data != null) {
+        val context = LocalContext.current
+        MediaScannerConnection.scanFile(context, arrayOf(downloadUiState.data.absolutePath),null) { path, uri -> }
+        EpubOptionsDialog(
+            icon = Icons.Default.Error,
+            title = "Success",
+            content = "Epub file downloaded in Downloads folder, would you like to share it?",
+            onClickOption = { index ->
+                when (index) {
+                    0 -> {  shareEpubFile.invoke(downloadUiState.data) }
+                    1 -> { openDownloadsFolder.invoke() }
+                    2 -> { shareEpubFile.invoke(downloadUiState.data) }
+                }
+            },
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            ),
+        )
+    }
 }
 

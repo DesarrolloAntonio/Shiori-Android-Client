@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
@@ -39,18 +39,20 @@ import coil.request.ImageRequest
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.R
-import com.desarrollodroide.data.extensions.removeTrailingSlash
+import okhttp3.Headers
 
 @Composable
 fun BookmarkItem(
     bookmark: Bookmark,
     serverURL: String,
+    xSessionId: String,
     onClickEdit: (Bookmark) -> Unit,
     onClickDelete: (Bookmark) -> Unit,
     onClickShare: (Bookmark) -> Unit,
     onClickCategory: (Tag) -> Unit,
     onClickBookmark: (Bookmark) -> Unit,
-    onClickEpub: (Bookmark) -> Unit
+    onClickEpub: (Bookmark) -> Unit,
+    onClickSync: (Bookmark) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -68,7 +70,12 @@ fun BookmarkItem(
                     .wrapContentHeight(),
                 contentScale = ContentScale.FillWidth,
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data("${serverURL.removeTrailingSlash()}${bookmark.imageURL}")
+                    .data("$serverURL${bookmark.imageURL}")
+                    .headers(
+                        Headers.Builder()
+                            .add("X-Session-Id", xSessionId)
+                            .build()
+                    )
                     .build(),
                 contentDescription = "ImageRequest example",
                 loading = { },
@@ -113,7 +120,8 @@ fun BookmarkItem(
                     onclickDelete = { onClickDelete(bookmark) },
                     onClickEdit = { onClickEdit(bookmark) },
                     onClickShare = { onClickShare(bookmark) },
-                    onClickEpub = { onClickEpub(bookmark) }
+                    onClickEpub = { onClickEpub(bookmark) },
+                    onClickSync = { onClickSync(bookmark) }
                 )
             }
         }
@@ -127,6 +135,7 @@ fun ButtonsView(
     onclickDelete: () -> Unit,
     onClickShare: () -> Unit,
     onClickEpub: () -> Unit,
+    onClickSync: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -164,6 +173,14 @@ fun ButtonsView(
                 contentDescription = "Share"
             )
         }
+
+        IconButton(onClick = onClickSync) {
+            Icon(
+                tint = MaterialTheme.colorScheme.secondary,
+                imageVector = Icons.Filled.CloudUpload,
+                contentDescription = "Sync"
+            )
+        }
     }
 }
 
@@ -178,11 +195,11 @@ fun ClickableCategoriesView(
     ) {
         uniqueCategories.forEach { category ->
             Text(
-                color = MaterialTheme.colorScheme.onSurface, // Adapt to theme
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .padding(5.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) // Adjust opacity for a subtle difference
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                     .clickable { onClickCategory(category) }
                     .padding(vertical = 8.dp, horizontal = 16.dp),
                 text = category.name
@@ -209,17 +226,20 @@ fun PreviewPost() {
             hasArchive = true,
             hasEbook = false,
             createArchive = true,
+            createEbook = true,
             tags = listOf(Tag("tag1"), Tag("tag2")),
         )
         BookmarkItem(
             bookmark = bookmark,
             serverURL = "",
+            xSessionId = "",
             onClickEdit = {},
             onClickDelete = {},
             onClickShare = {},
             onClickCategory = {},
             onClickBookmark = {},
-            onClickEpub = {}
+            onClickEpub = {},
+            onClickSync = {}
         )
     }
 }

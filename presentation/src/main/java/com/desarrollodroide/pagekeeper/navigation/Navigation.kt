@@ -12,13 +12,16 @@ import com.desarrollodroide.pagekeeper.ui.home.HomeScreen
 import com.desarrollodroide.pagekeeper.ui.login.LoginScreen
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import org.koin.androidx.compose.get
+import java.io.File
 
 @ExperimentalFoundationApi
 @Composable
 fun Navigation(
     onFinish: () -> Unit,
-    openUrlInBrowser: (String) -> Unit
-    ) {
+    openUrlInBrowser: (String) -> Unit,
+    shareEpubFile: (File) -> Unit,
+    openDownloadsFolder: () -> Unit
+) {
 
     val navController = rememberNavController()
     val feedViewModel = get<FeedViewModel>()
@@ -47,7 +50,9 @@ fun Navigation(
                     }
                 },
                 onFinish = onFinish,
-                openUrlInBrowser = openUrlInBrowser
+                openUrlInBrowser = openUrlInBrowser,
+                shareEpubFile = shareEpubFile,
+                openDownloadsFolder = openDownloadsFolder
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -18,21 +19,38 @@ import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
+import com.desarrollodroide.domain.usecase.DownloadFileUseCase
+import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.UpdateCachePayload
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import java.io.File
 
 class FeedViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getBookmarksUseCase: GetBookmarksUseCase,
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
+    private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
+    private val downloadFileUseCase: DownloadFileUseCase,
 ) : ViewModel() {
 
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
+    private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
+    val downloadUiState = _downloadUiState.asStateFlow()
+
     private var hasLoadedFeed = false
     private var serverUrl = ""
+    private var xSessionId = ""
     private var bookmarksJob: Job? = null
+    val showBookmarkEditorScreen = mutableStateOf(false)
+    val showDeleteConfirmationDialog = mutableStateOf(false)
+    val showSyncDialog = mutableStateOf(false)
+    val bookmarkSelected = mutableStateOf<Bookmark?>(null)
+    val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
+    val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
+
 
     fun getBookmarks() {
         bookmarksJob?.cancel()
@@ -76,9 +94,10 @@ class FeedViewModel(
         }
     }
 
-    fun refreshUrl() {
+    fun refreshData() {
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
+            xSessionId = settingsPreferenceDataSource.getSession()
         }
     }
 
@@ -87,10 +106,49 @@ class FeedViewModel(
         getBookmarks()
     }
 
-    fun updateBookmark(newBookmark: Bookmark) {
-        _bookmarksUiState.value = _bookmarksUiState.value.copy(data = _bookmarksUiState.value.data?.map {
-            if (it.url == newBookmark.url) newBookmark else it }
+    fun updateBookmark(
+        keepOldTitle: Boolean,
+        updateArchive: Boolean,
+        updateEbook: Boolean
+    ) {
+        val updateCachePayload = UpdateCachePayload(
+            ids = listOf(bookmarkToUpdateCache.value?.id ?: -1),
+            createArchive = updateArchive,
+            createEbook = updateEbook,
+            keepMetadata = keepOldTitle,
+            skipExist = false
         )
+
+        viewModelScope.launch {
+            updateBookmarkCacheUseCase.invoke(
+                serverUrl = serverUrl,
+                xSession = settingsPreferenceDataSource.getSession(),
+                updateCachePayload = updateCachePayload
+            )
+                .collect { result ->
+                    when (result) {
+                        is Result.Error -> {
+                            Log.v(
+                                "FeedViewModel",
+                                "Error updating bookmark: ${result.error?.message}"
+                            )
+                            _bookmarksUiState.error(
+                                errorMessage = result.error?.message ?: "Unknown error"
+                            )
+                        }
+
+                        is Result.Loading -> {
+                            Log.v("FeedViewModel", "updating bookmark...")
+                            _bookmarksUiState.isLoading(true)
+                        }
+
+                        is Result.Success -> {
+                            Log.v("FeedViewModel", "Bookmark updating successfully.")
+                            refreshFeed()
+                        }
+                    }
+                }
+        }
     }
 
     fun resetData() {
@@ -105,11 +163,13 @@ class FeedViewModel(
         }
     }
 
-    fun getUrl(bookmark: Bookmark) = if (bookmark.public == 1) "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/content" else {
-        bookmark.url
-    }
+    fun getUrl(bookmark: Bookmark) =
+        if (bookmark.public == 1) "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/content" else {
+            bookmark.url
+        }
 
-    fun getEpubUrl(bookmark: Bookmark) =  "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/ebook"
+    fun getEpubUrl(bookmark: Bookmark) =
+        "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/ebook"
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
@@ -121,8 +181,13 @@ class FeedViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v( "FeedViewModel","Error deleting bookmark: ${result.error?.message}")
-                            _bookmarksUiState.error(errorMessage = result.error?.message ?: "Unknown error")
+                            Log.v(
+                                "FeedViewModel",
+                                "Error deleting bookmark: ${result.error?.message}"
+                            )
+                            _bookmarksUiState.error(
+                                errorMessage = result.error?.message ?: "Unknown error"
+                            )
                         }
 
                         is Result.Loading -> {
@@ -139,5 +204,24 @@ class FeedViewModel(
         }
     }
 
+    fun downloadFile(
+        bookmark: Bookmark,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sessionId = settingsPreferenceDataSource.getSession()
+            _downloadUiState.value = UiState(isLoading = true)
+            try {
+                val downloadedFile = downloadFileUseCase.execute(getEpubUrl(bookmark), bookmark.title, sessionId)
+                _downloadUiState.value = UiState(data = downloadedFile)
+            } catch (e: Exception) {
+                Log.e("DownloadFile", "Error al descargar el archivo: ${e.message}")
+                _downloadUiState.value = UiState(error = e.message)
+            }
+        }
+    }
+
+
+
     fun getServerUrl() = serverUrl
+    fun getSession(): String = xSessionId
 }

@@ -3,10 +3,13 @@ package com.desarrollodroide.data.repository
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
+import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
+import com.desarrollodroide.network.model.UpdateCachePayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import retrofit2.Response
 
 class BookmarksRepositoryImpl(
     private val apiService: RetrofitNetwork,
@@ -42,7 +46,7 @@ class BookmarksRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.getBookmarks(
             xSessionId = xSession,
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks"
+            url = "$serverUrl/api/bookmarks"
         )
 
         override fun shouldFetch(data: List<Bookmark>?) = true
@@ -57,7 +61,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.addBookmark(
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
+            url = "$serverUrl/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
@@ -77,7 +81,7 @@ class BookmarksRepositoryImpl(
     ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
             override suspend fun fetchFromRemote()  =
                 apiService.deleteBookmarks(
-                    url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
+                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
                     xSessionId = xSession,
                     bookmarkIds = listOf(bookmarkId)
                 )
@@ -93,7 +97,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.editBookmark(
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
@@ -101,6 +105,27 @@ class BookmarksRepositoryImpl(
         override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
             return flow {
                 emit(data.toDomainModel())
+            }
+        }
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun updateBookmarkCache(
+        xSession: String,
+        serverUrl: String,
+        updateCachePayload: UpdateCachePayload
+    ) = object :
+        NetworkNoCacheResource<List<BookmarkDTO>, Bookmark>(errorHandler = errorHandler) {
+        override suspend fun fetchFromRemote(): Response<List<BookmarkDTO>> = apiService.updateBookmarksCache(
+            url = "${serverUrl.removeTrailingSlash()}/api/cache",
+            xSessionId = xSession,
+            body = updateCachePayload.toDTO().toJson()
+        )
+
+        override fun fetchResult(data: List<BookmarkDTO>): Flow<Bookmark> {
+            return flow {
+                data.firstOrNull()?.let {
+                    emit(it.toDomainModel())
+                }
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
