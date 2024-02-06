@@ -7,7 +7,7 @@ import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.User
 import com.desarrollodroide.network.model.LoginBodyContent
-import com.desarrollodroide.network.model.SessionDTO
+import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
@@ -25,19 +25,19 @@ class AuthRepositoryImpl(
         password: String,
         serverUrl: String
     ) = object :
-        NetworkBoundResource<SessionDTO, User>(errorHandler = errorHandler) {
+        NetworkBoundResource<LoginResponseDTO, User>(errorHandler = errorHandler) {
 
-        override suspend fun saveRemoteData(response: SessionDTO) {
+        override suspend fun saveRemoteData(response: LoginResponseDTO) {
             settingsPreferenceDataSource.saveUser(
                 password = password,
-                session = response.toProtoEntity(),
+                session = response.toProtoEntity(username),
                 serverUrl = serverUrl
             )
         }
         override fun fetchFromLocal() = settingsPreferenceDataSource.getUser()
 
         override suspend fun fetchFromRemote() = apiService.sendLogin(
-            "${serverUrl.removeTrailingSlash()}/api/login",
+            "${serverUrl.removeTrailingSlash()}/api/v1/auth/login",
             LoginBodyContent(
                 username = username,
                 password = password
@@ -63,7 +63,7 @@ class AuthRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.sendLogout(
             xSessionId = xSession,
-            url = "${serverUrl.removeTrailingSlash()}/api/logout")
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/logout")
 
         override fun shouldFetch(data: String?) = true
 

@@ -46,7 +46,7 @@ class BookmarksRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.getBookmarks(
             xSessionId = xSession,
-            url = "$serverUrl/api/bookmarks"
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
         )
 
         override fun shouldFetch(data: List<Bookmark>?) = true
@@ -61,7 +61,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.addBookmark(
-            url = "$serverUrl/api/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
@@ -81,7 +81,7 @@ class BookmarksRepositoryImpl(
     ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
             override suspend fun fetchFromRemote()  =
                 apiService.deleteBookmarks(
-                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
+                    url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
                     xSessionId = xSession,
                     bookmarkIds = listOf(bookmarkId)
                 )
@@ -97,7 +97,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.editBookmark(
-            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
@@ -116,7 +116,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<List<BookmarkDTO>, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote(): Response<List<BookmarkDTO>> = apiService.updateBookmarksCache(
-            url = "${serverUrl.removeTrailingSlash()}/api/cache",
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/cache",
             xSessionId = xSession,
             body = updateCachePayload.toDTO().toJson()
         )
