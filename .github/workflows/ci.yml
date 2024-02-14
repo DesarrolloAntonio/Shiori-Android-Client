@@ -43,14 +43,6 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
-      - name: Build Release Bundle
-        run: ./gradlew bundleRelease
-        env:
-          KEYSTORE_PATH: ${{ github.workspace }}/keys_tore.jks
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-
       - name: Retrieve Version
         run: echo "APP_VERSION_NAME=$(grep '^versionName=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
 
@@ -64,5 +56,4 @@ jobs:
           generate_release_notes: true
           prerelease: false
           files: |
-            presentation/build/outputs/bundle/release/*.aab
             presentation/build/outputs/apk/release/*.apk

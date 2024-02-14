@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -47,6 +49,14 @@ android {
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    applicationVariants.all {
+        val outputFileName = "PageKeeper v$versionName.apk"
+        outputs.all {
+            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output?.outputFileName = outputFileName
         }
     }
 }
