@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,14 +7,15 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
-    compileSdk = 33
+    compileSdk = (findProperty("compileSdkVersion") as String).toInt()
+
 
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
-        minSdk = 21
-        targetSdk = 33
-        versionCode = 7
-        versionName = "1.06"
+        minSdk = (findProperty("minSdkVersion") as String).toInt()
+        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
+        versionCode = (findProperty("versionCode") as String).toInt()
+        versionName = project.findProperty("versionName") as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +49,14 @@ android {
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    applicationVariants.all {
+        val outputFileName = "PageKeeper v$versionName.apk"
+        outputs.all {
+            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output?.outputFileName = outputFileName
         }
     }
 }
@@ -86,3 +97,9 @@ dependencies {
 
 
 }
+//
+//tasks.register("appVersionName") {
+//    doLast {
+//        project.findProperty("versionName") as String
+//    }
+//}

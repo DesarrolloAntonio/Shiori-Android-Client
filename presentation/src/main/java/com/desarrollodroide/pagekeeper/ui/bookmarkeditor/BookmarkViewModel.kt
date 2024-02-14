@@ -56,7 +56,8 @@ class BookmarkViewModel(
         url: String,
         tags: List<Tag>,
         createArchive: Boolean,
-        makeArchivePublic: Boolean
+        makeArchivePublic: Boolean,
+        createEbook: Boolean
     ) = viewModelScope.launch {
         Log.v("Add BookmarkViewModel", "createArchive: ${createArchive} makeArchivePublic: ${makeArchivePublic}")
 
@@ -68,6 +69,7 @@ class BookmarkViewModel(
                     url = url,
                     tags = tags,
                     createArchive = createArchive,
+                    createEbook = createEbook,
                     public = if (makeArchivePublic) 1 else 0
                 )
             )

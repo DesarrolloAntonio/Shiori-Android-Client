@@ -13,4 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+keystore.properties
 resources

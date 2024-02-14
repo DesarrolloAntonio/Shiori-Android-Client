@@ -18,7 +18,6 @@ abstract class BookmarksDatabase : RoomDatabase() {
     abstract fun bookmarksDao(): BookmarksDao
 
 
-
     companion object {
 
         val MIGRATION_1_2: Migration = object : Migration(1, 2) {
