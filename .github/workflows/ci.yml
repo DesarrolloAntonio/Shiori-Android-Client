@@ -64,5 +64,5 @@ jobs:
           generate_release_notes: true
           prerelease: false
           files: |
-            presentation/release/*.apk
-            presentation/release/*.aab
+            presentation/build/outputs/bundle/release/*.aab
+            presentation/build/outputs/apk/release/*.apk
