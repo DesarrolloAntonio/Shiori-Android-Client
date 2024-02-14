@@ -52,7 +52,7 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
       - name: Retrieve Version
-        run: echo "APP_VERSION_NAME=$(grep '^app.version.name=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
+        run: echo "APP_VERSION_NAME=$(grep '^versionName=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
 
       - name: Create Release on GitHub
         uses: softprops/action-gh-release@v1
@@ -64,5 +64,5 @@ jobs:
           generate_release_notes: true
           prerelease: false
           files: |
-            presentation/release/release/*.apk
-            presentation//release/*.aab
+            presentation/release/*.apk
+            presentation/release/*.aab

@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
-    compileSdk = libs.versions.compileSdkVersion.get().toInt()
+    compileSdk = project.findProperty("compileSdkVersion") as? Int
 
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
-        minSdk = libs.versions.minSdkVersion.get().toInt()
-        targetSdk = libs.versions.targetSdkVersion.get().toInt()
-        versionCode = libs.versions.versionCode.get().toInt()
-        versionName = libs.versions.versionName.get()
+        minSdk = project.findProperty("minSdkVersion") as? Int
+        targetSdk = project.findProperty("targetSdkVersion") as? Int
+        versionCode = project.findProperty("versionCode") as? Int
+        versionName = project.findProperty("versionName") as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -86,9 +86,9 @@ dependencies {
 
 
 }
-
-tasks.register("appVersionName") {
-    doLast {
-        println(libs.versions.versionName.get())
-    }
-}
+//
+//tasks.register("appVersionName") {
+//    doLast {
+//        project.findProperty("versionName") as String
+//    }
+//}
