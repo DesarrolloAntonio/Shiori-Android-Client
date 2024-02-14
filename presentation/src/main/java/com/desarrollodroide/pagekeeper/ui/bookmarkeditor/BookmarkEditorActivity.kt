@@ -40,7 +40,8 @@ class BookmarkEditorActivity : ComponentActivity() {
                             url = sharedUrl,
                             tags = emptyList(),
                             public = 1,
-                            createArchive = true
+                            createArchive = true,
+                            createEbook = false
                         ),
                         onBackClick = { finish() },
                         updateBookmark = {  }

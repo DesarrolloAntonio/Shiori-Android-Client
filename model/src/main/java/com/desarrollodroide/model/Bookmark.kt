@@ -20,7 +20,8 @@ data class Bookmark (
         url: String,
         tags: List<Tag>,
         public: Int,
-        createArchive: Boolean
+        createArchive: Boolean,
+        createEbook: Boolean
     ) : this(
         id = -1,
         url= url,
@@ -35,6 +36,6 @@ data class Bookmark (
         hasEbook = false,
         tags = tags,
         createArchive = createArchive,
-        createEbook = true,
+        createEbook = createEbook,
     )
 }

@@ -2,25 +2,65 @@ name: Android CI
 
 on:
   push:
-    branches: [ "ci_cd", "master" ]
+    branches:
+      - master
+      - develop
+    tags:
+      - 'v*'
+
   pull_request:
-    branches: [ "ci_cd", "master" ]
+    branches:
+      - master
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-
     steps:
       - uses: actions/checkout@v3
-      - name: set up JDK 11
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/key_store.jks
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+
       - name: Build app
-        run: ./gradlew assemble
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/key_store.jks
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Build Release Bundle
+        run: ./gradlew bundleRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/keys_tore.jks
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Retrieve Version
+        run: echo "APP_VERSION_NAME=$(grep '^app.version.name=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
+
+      - name: Create Release on GitHub
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHIORI_TOKEN }}
+        with:
+          tag_name: v${{ env.APP_VERSION_NAME }}
+          name: Release - v${{ env.APP_VERSION_NAME }}
+          generate_release_notes: true
+          prerelease: false
+          files: |
+            presentation/release/release/*.apk
+            presentation//release/*.aab

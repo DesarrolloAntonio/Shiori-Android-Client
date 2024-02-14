@@ -30,7 +30,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -55,7 +54,8 @@ fun BookmarkEditorView(
     saveBookmark: (BookmarkEditorType) -> Unit,
     onBackClick: () -> Unit,
     createArchive: MutableState<Boolean>,
-    makeArchivePublic: MutableState<Boolean>
+    makeArchivePublic: MutableState<Boolean>,
+    createEbook: MutableState<Boolean>,
 ) {
     Column(
         modifier = Modifier
@@ -79,23 +79,7 @@ fun BookmarkEditorView(
             )
             Spacer(modifier = Modifier.width(56.dp))
         }
-        if (bookmarkEditorType == BookmarkEditorType.ADD) {
-            Row(verticalAlignment = CenterVertically) {
-                Checkbox(
-                    checked = createArchive.value,
-                    onCheckedChange = { createArchive.value = it }
-                )
-                Text("Create archive")
-            }
-        }
-        Row(verticalAlignment = CenterVertically) {
-            Checkbox(
-                checked = makeArchivePublic.value,
-                onCheckedChange = { makeArchivePublic.value = it }
-            )
-            Text("Make archive publicly available")
-        }
-        Spacer(modifier = Modifier.height(10.dp))
+
         Row {
             OutlinedTextField(
                 modifier = Modifier.weight(1f),
@@ -142,6 +126,31 @@ fun BookmarkEditorView(
                 .weight(1f)
                 .fillMaxHeight()
         )
+
+        if (bookmarkEditorType == BookmarkEditorType.ADD) {
+            Row(verticalAlignment = CenterVertically) {
+                Checkbox(
+                    checked = createArchive.value,
+                    onCheckedChange = { createArchive.value = it }
+                )
+                Text("Create archive")
+            }
+        }
+        Row(verticalAlignment = CenterVertically) {
+            Checkbox(
+                checked = createEbook.value,
+                onCheckedChange = { createEbook.value = it }
+            )
+            Text("Create Ebook")
+        }
+        Row(verticalAlignment = CenterVertically) {
+            Checkbox(
+                checked = makeArchivePublic.value,
+                onCheckedChange = { makeArchivePublic.value = it }
+            )
+            Text("Make bookmark publicly available")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         Button(
             modifier = Modifier.align(CenterHorizontally),
             onClick = {
@@ -202,6 +211,7 @@ fun BookmarkEditorPreview() {
         newTag = newTag,
         onBackClick = {},
         makeArchivePublic = remember { mutableStateOf(true) },
-        createArchive = remember { mutableStateOf(false) }
+        createArchive = remember { mutableStateOf(false) },
+        createEbook = remember { mutableStateOf(false) }
     )
 }

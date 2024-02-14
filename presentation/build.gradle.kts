@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
-    compileSdk = 33
+    compileSdk = libs.versions.compileSdkVersion.get().toInt()
 
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
-        minSdk = 21
-        targetSdk = 33
-        versionCode = 7
-        versionName = "1.06"
+        minSdk = libs.versions.minSdkVersion.get().toInt()
+        targetSdk = libs.versions.targetSdkVersion.get().toInt()
+        versionCode = libs.versions.versionCode.get().toInt()
+        versionName = libs.versions.versionName.get()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -85,4 +85,10 @@ dependencies {
 //    implementation ("io.insert-koin:koin-core:3.3.2")
 
 
+}
+
+tasks.register("appVersionName") {
+    doLast {
+        println(libs.versions.versionName.get())
+    }
 }
