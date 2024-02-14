@@ -5,13 +5,14 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
-    compileSdk = project.findProperty("compileSdkVersion") as? Int
+    compileSdk = (findProperty("compileSdkVersion") as String).toInt()
+
 
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
-        minSdk = project.findProperty("minSdkVersion") as? Int
-        targetSdk = project.findProperty("targetSdkVersion") as? Int
-        versionCode = project.findProperty("versionCode") as? Int
+        minSdk = (findProperty("minSdkVersion") as String).toInt()
+        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
+        versionCode = (findProperty("versionCode") as String).toInt()
         versionName = project.findProperty("versionName") as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
