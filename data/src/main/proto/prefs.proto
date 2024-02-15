@@ -21,5 +21,8 @@ message RememberUserPreferences {
   string username = 2;
   string password = 3;
   string url = 4;
+  bool makeArchivePublic = 5;
+  bool createEbook = 6;
+  bool createArchive = 7;
 
 }

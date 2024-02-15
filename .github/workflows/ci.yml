@@ -4,16 +4,12 @@ on:
   push:
     branches:
       - master
-      - develop
-      - ci_cd
     tags:
       - 'v*'
 
   pull_request:
     branches:
       - master
-      - develop
-      - ci_cd
 
 jobs:
   build:

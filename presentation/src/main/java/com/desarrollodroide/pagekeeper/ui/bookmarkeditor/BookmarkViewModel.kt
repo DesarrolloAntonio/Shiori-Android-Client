@@ -21,13 +21,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class BookmarkViewModel(
     bookmarkDatabase: BookmarksDao,
     private val bookmarkAdditionUseCase: AddBookmarkUseCase,
     private val editBookmarkUseCase: EditBookmarkUseCase,
     private val userPreferences: SettingsPreferenceDataSource,
-
+    private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     ) : ViewModel() {
 
     var backendUrl = ""
@@ -122,4 +123,23 @@ class BookmarkViewModel(
                 }
         }
     }
+
+    fun getCreateArchive(): Boolean {
+        return runBlocking {
+            settingsPreferenceDataSource.getCreateArchive()
+        }
+    }
+
+    fun getCreateEbook(): Boolean {
+        return runBlocking {
+            settingsPreferenceDataSource.getCreateEbook()
+        }
+    }
+
+    fun getMakeArchivePublic(): Boolean {
+        return runBlocking {
+            settingsPreferenceDataSource.getMakeArchivePublic()
+        }
+    }
+
 }

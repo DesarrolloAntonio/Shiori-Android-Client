@@ -23,13 +23,11 @@ fun BookmarkEditorScreen(
     bookmark: Bookmark,
     onBackClick: () -> Unit,
     updateBookmark: (Bookmark) -> Unit,
-
     ) {
-    val viewModel = get<BookmarkViewModel>()
+    val bookmarkViewModel = get<BookmarkViewModel>()
     val newTag = remember { mutableStateOf("") }
-    val availableTags = viewModel.availableTags.collectAsState()
-    val bookmarkUiState = viewModel.bookmarkUiState.collectAsState().value
-
+    val availableTags = bookmarkViewModel.availableTags.collectAsState()
+    val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
 
     BackHandler {
         onBackClick()
@@ -43,7 +41,7 @@ fun BookmarkEditorScreen(
         ConfirmDialog(
             icon = Icons.Default.Error,
             title = "Error",
-            content = bookmarkUiState.error?:"",
+            content = bookmarkUiState.error,
             openDialog = remember { mutableStateOf(true) },
             onConfirm = { }
         )
@@ -63,7 +61,7 @@ fun BookmarkEditorScreen(
             saveBookmark = {
                 when (bookmarkEditorType) {
                     BookmarkEditorType.ADD -> {
-                        viewModel.saveBookmark(
+                        bookmarkViewModel.saveBookmark(
                             url = bookmark.url,
                             tags = assignedTags.value,
                             createArchive = createArchive.value,
@@ -72,7 +70,7 @@ fun BookmarkEditorScreen(
                         )
                     }
                     BookmarkEditorType.EDIT -> {
-                        viewModel.editBookmark(bookmark = bookmark.copy(
+                        bookmarkViewModel.editBookmark(bookmark = bookmark.copy(
                             tags = assignedTags.value,
                             createArchive = createArchive.value,
                             public = if (makeArchivePublic.value) 1 else 0

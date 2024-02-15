@@ -92,14 +92,4 @@ dependencies {
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
     implementation ("io.coil-kt:coil-compose:2.4.0")
 
-//    implementation ("io.insert-koin:koin-android:3.3.2")
-//    implementation ("io.insert-koin:koin-core:3.3.2")
-
-
 }
-//
-//tasks.register("appVersionName") {
-//    doLast {
-//        project.findProperty("versionName") as String
-//    }
-//}
