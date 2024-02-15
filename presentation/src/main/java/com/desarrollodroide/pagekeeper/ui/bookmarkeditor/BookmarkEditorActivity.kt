@@ -12,8 +12,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 import com.desarrollodroide.model.Bookmark
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class BookmarkEditorActivity : ComponentActivity() {
+
+    private val bookmarkViewModel: BookmarkViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,14 +37,14 @@ class BookmarkEditorActivity : ComponentActivity() {
                         .background(MaterialTheme.colorScheme.inverseOnSurface)
                 ){
                     BookmarkEditorScreen(
-                        title  = "Add",
+                        title = "Add",
                         bookmarkEditorType = BookmarkEditorType.ADD,
                         bookmark = Bookmark(
                             url = sharedUrl,
                             tags = emptyList(),
-                            public = 1,
-                            createArchive = true,
-                            createEbook = false
+                            public = if (bookmarkViewModel.getMakeArchivePublic()) 1 else 0,
+                            createArchive = bookmarkViewModel.getCreateArchive(),
+                            createEbook = bookmarkViewModel.getCreateEbook()
                         ),
                         onBackClick = { finish() },
                         updateBookmark = {  }

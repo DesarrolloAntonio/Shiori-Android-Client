@@ -41,6 +41,7 @@ fun presenterModule() = module {
             bookmarkAdditionUseCase = get(),
             editBookmarkUseCase = get(),
             userPreferences = get(),
+            settingsPreferenceDataSource =  get(),
         )
     }
 

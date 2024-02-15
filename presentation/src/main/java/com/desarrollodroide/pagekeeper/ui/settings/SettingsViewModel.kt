@@ -27,6 +27,14 @@ class SettingsViewModel(
     private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
     val settingsUiState = _settingsUiState.asStateFlow()
 
+    val makeArchivePublic = MutableStateFlow<Boolean>(false)
+    val createEbook = MutableStateFlow<Boolean>(false)
+    val createArchive = MutableStateFlow<Boolean>(false)
+
+    init {
+        loadSettings()
+        observeDefaultsSettings()
+    }
     fun logout() {
         viewModelScope.launch {
             sendLogoutUseCase(
@@ -59,5 +67,30 @@ class SettingsViewModel(
         themeManager.themeMode.value = newMode
     }
 
+    private fun loadSettings() {
+        viewModelScope.launch {
+            makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
+            createEbook.value = settingsPreferenceDataSource.getCreateEbook()
+            createArchive.value = settingsPreferenceDataSource.getCreateArchive()
+        }
+    }
+
+    private fun observeDefaultsSettings() {
+        viewModelScope.launch {
+            makeArchivePublic.collect { newValue ->
+                settingsPreferenceDataSource.setMakeArchivePublic(newValue)
+            }
+        }
+        viewModelScope.launch {
+            createEbook.collect { newValue ->
+                settingsPreferenceDataSource.setCreateEbook(newValue)
+            }
+        }
+        viewModelScope.launch {
+            createArchive.collect { newValue ->
+                settingsPreferenceDataSource.setCreateArchive(newValue)
+            }
+        }
+    }
 }
 

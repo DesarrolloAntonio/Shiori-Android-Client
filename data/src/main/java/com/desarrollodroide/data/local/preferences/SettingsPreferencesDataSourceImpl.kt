@@ -155,5 +155,34 @@ class SettingsPreferencesDataSourceImpl(
             ThemeMode.valueOf(modeName)
         }
     }
+    override suspend fun getMakeArchivePublic(): Boolean {
+        return rememberUserProtoDataStore.data.map { it.makeArchivePublic }.first()
+    }
+
+    override suspend fun setMakeArchivePublic(newValue: Boolean) {
+        rememberUserProtoDataStore.updateData { preferences ->
+            preferences.toBuilder().setMakeArchivePublic(newValue).build()
+        }
+    }
+
+    override suspend fun getCreateEbook(): Boolean {
+        return rememberUserProtoDataStore.data.map { it.createEbook }.first()
+    }
+
+    override suspend fun setCreateEbook(newValue: Boolean) {
+        rememberUserProtoDataStore.updateData { preferences ->
+            preferences.toBuilder().setCreateEbook(newValue).build()
+        }
+    }
+
+    override suspend fun getCreateArchive(): Boolean {
+        return rememberUserProtoDataStore.data.map { it.createArchive }.first()
+    }
+
+    override suspend fun setCreateArchive(newValue: Boolean) {
+        rememberUserProtoDataStore.updateData { preferences ->
+            preferences.toBuilder().setCreateArchive(newValue).build()
+        }
+    }
 
 }
