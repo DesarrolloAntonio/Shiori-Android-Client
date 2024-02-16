@@ -24,7 +24,7 @@ android {
         create("release") {
             keyAlias = System.getenv("RELEASE_KEY_ALIAS")
             keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
-            storeFile = file( "${project.rootDir}/keystore.jks")
+            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/key_store.jks")
             storePassword = System.getenv("RELEASE_STORE_PASSWORD")
         }
     }
