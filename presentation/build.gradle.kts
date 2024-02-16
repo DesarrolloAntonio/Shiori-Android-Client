@@ -1,13 +1,7 @@
-import org.jetbrains.kotlin.konan.properties.loadProperties
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
-
-val keystorePropertiesPath: String = rootProject.file("keystore.properties").path
-val keystoreProperties: Properties = loadProperties(keystorePropertiesPath)
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
