@@ -1,9 +1,13 @@
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import org.jetbrains.kotlin.konan.properties.loadProperties
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+val keystorePropertiesPath: String = rootProject.file("keystore.properties").path
+val keystoreProperties: Properties = loadProperties(keystorePropertiesPath)
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
@@ -22,15 +26,19 @@ android {
             useSupportLibrary = true
         }
     }
+    signingConfigs {
+        create("release") {
+            keyAlias = "${keystoreProperties["RELEASE_KEY_ALIAS"]}"
+            keyPassword = "${keystoreProperties["RELEASE_KEY_PASSWORD"]}"
+            storeFile = file( "${project.rootDir}/keystore.jks")
+            storePassword = "${keystoreProperties["RELEASE_STORE_PASSWORD"]}"
+        }
+    }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -84,7 +92,7 @@ dependencies {
     implementation (libs.compose.material.iconsext)
     implementation (libs.compose.runtime.livedata)
 
-   // implementation (libs.bundles.koin)
+    // implementation (libs.bundles.koin)
     implementation (libs.bundles.retrofit)
     implementation (libs.accompanist.permissions)
 
