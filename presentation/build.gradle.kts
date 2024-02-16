@@ -19,7 +19,7 @@ android {
         minSdk = (findProperty("minSdkVersion") as String).toInt()
         targetSdk = (findProperty("targetSdkVersion") as String).toInt()
         versionCode = (findProperty("versionCode") as String).toInt()
-        versionName = project.findProperty("versionName") as String
+        versionName = findProperty("versionName") as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -28,10 +28,10 @@ android {
     }
     signingConfigs {
         create("release") {
-            keyAlias = "${keystoreProperties["RELEASE_KEY_ALIAS"]}"
-            keyPassword = "${keystoreProperties["RELEASE_KEY_PASSWORD"]}"
+            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
             storeFile = file( "${project.rootDir}/keystore.jks")
-            storePassword = "${keystoreProperties["RELEASE_STORE_PASSWORD"]}"
+            storePassword = System.getenv("RELEASE_STORE_PASSWORD")
         }
     }
 
