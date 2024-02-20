@@ -17,6 +17,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.desarrollodroide.data.RememberUserPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 
 class SettingsPreferencesDataSourceImpl(
@@ -150,8 +151,8 @@ class SettingsPreferencesDataSourceImpl(
 
     override fun getThemeMode(): ThemeMode {
         return runBlocking {
-            val preferences = dataStore.data.first()
-            val modeName = preferences[THEME_MODE_KEY] ?: ThemeMode.AUTO.name
+            val preferences = dataStore.data.firstOrNull()
+            val modeName = preferences?.get(THEME_MODE_KEY) ?: ThemeMode.AUTO.name
             ThemeMode.valueOf(modeName)
         }
     }

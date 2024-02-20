@@ -61,6 +61,11 @@ android {
             output?.outputFileName = outputFileName
         }
     }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 dependencies {

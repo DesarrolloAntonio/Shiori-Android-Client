@@ -42,7 +42,6 @@ fun FeedScreen(
     goToLogin: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
-    openDownloadsFolder: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -88,7 +87,6 @@ fun FeedScreen(
             feedViewModel.showSyncDialog.value = true
         },
         shareEpubFile = shareEpubFile,
-        openDownloadsFolder = openDownloadsFolder
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -162,7 +160,6 @@ private fun FeedContent(
     bookmarksUiState: UiState<List<Bookmark>>,
     downloadUiState: UiState<File>,
     shareEpubFile: (File) -> Unit,
-    openDownloadsFolder: () -> Unit,
 ) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -248,11 +245,9 @@ private fun FeedContent(
         EpubOptionsDialog(
             icon = Icons.Default.Error,
             title = "Success",
-            content = "Epub file downloaded in Downloads folder, would you like to share it?",
+            content = "Epub file downloaded, would you like to share it?",
             onClickOption = { index ->
                 when (index) {
-                    0 -> {  shareEpubFile.invoke(downloadUiState.data) }
-                    1 -> { openDownloadsFolder.invoke() }
                     2 -> { shareEpubFile.invoke(downloadUiState.data) }
                 }
             },

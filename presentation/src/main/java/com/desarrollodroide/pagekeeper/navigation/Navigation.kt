@@ -20,7 +20,6 @@ fun Navigation(
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
-    openDownloadsFolder: () -> Unit
 ) {
 
     val navController = rememberNavController()
@@ -52,7 +51,6 @@ fun Navigation(
                 onFinish = onFinish,
                 openUrlInBrowser = openUrlInBrowser,
                 shareEpubFile = shareEpubFile,
-                openDownloadsFolder = openDownloadsFolder
             )
         }
     }

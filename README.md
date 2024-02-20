@@ -33,6 +33,14 @@ PageKeeper is available for download on Google Play.
        src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height="60" />
 </a>
 
+## Available on IzzyOnDroid
+PageKeeper is also available on IzzyOnDroid.
+
+<a href="https://apt.izzysoft.de/packages/com.desarrollodroide.pagekeeper">
+  <img alt="Get Pagekeeper on IzzyOnDroid"
+       src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="60" />
+</a>
+
 ## License
 This project is licensed under the Apache License - see the [LICENSE](LICENSE) file for details.
 
