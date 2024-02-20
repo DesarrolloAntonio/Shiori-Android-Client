@@ -35,7 +35,6 @@ fun HomeScreen(
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
-    openDownloadsFolder: () -> Unit
 ) {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
@@ -95,7 +94,6 @@ fun HomeScreen(
                             goToLogin = goToLogin,
                             openUrlInBrowser = openUrlInBrowser,
                             shareEpubFile = shareEpubFile,
-                            openDownloadsFolder = openDownloadsFolder
                         )
                     }
 

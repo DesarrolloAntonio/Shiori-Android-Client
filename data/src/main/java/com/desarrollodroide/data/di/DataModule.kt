@@ -10,8 +10,6 @@ import com.desarrollodroide.data.local.datastore.RememberUserPreferencesSerializ
 import com.desarrollodroide.data.local.datastore.UserPreferencesSerializer
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.preferences.SettingsPreferencesDataSourceImpl
-import com.desarrollodroide.data.repository.AccountRepository
-import com.desarrollodroide.data.repository.AccountRepositoryImpl
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.BookmarksRepositoryImpl
 import com.desarrollodroide.data.repository.AuthRepository
@@ -81,11 +79,8 @@ fun dataModule() = module {
         errorHandler = get()
     ) as BookmarksRepository }
 
-    single { AccountRepositoryImpl(
-        apiService = get(),
-    ) as AccountRepository  }
-
     single { FileRepositoryImpl(
+        context = androidContext(),
         remoteDataSource = get(),
     ) as FileRepository }
 

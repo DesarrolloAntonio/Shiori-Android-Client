@@ -279,12 +279,12 @@ fun EpubOptionsDialog(
                         Text("Cancel")
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-                        openDialog.value = false
-                        onClickOption?.invoke(1)
-                    }) {
-                        Text("Open folder")
-                    }
+//                    TextButton(onClick = {
+//                        openDialog.value = false
+//                        onClickOption?.invoke(1)
+//                    }) {
+//                        Text("Open folder")
+//                    }
                     TextButton(onClick = {
                         openDialog.value = false
                         onClickOption?.invoke(2)

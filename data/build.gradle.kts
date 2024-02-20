@@ -12,13 +12,15 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.data"
-    compileSdk = 33
+    compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 33
+        minSdk = (findProperty("minSdkVersion") as String).toInt()
+        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArgument("runnerBuilder", "de.mannodermaus.junit5.AndroidJUnit5Builder")
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -27,10 +29,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
     compileOptions {
@@ -40,6 +38,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
 }
 
 dependencies {
@@ -49,28 +48,21 @@ dependencies {
     implementation(project(":common"))
 
     implementation (libs.bundles.retrofit)
+    implementation (libs.koin.androidx.compose)
 
-
-//    // Koin
-//    def koin_version= "3.2.0"
-//    implementation "io.insert-koin:koin-androidx-compose:$koin_version"
-//    //implementation "io.insert-koin:koin-androidx-navigation:$koin_version"
-//    implementation "io.insert-koin:koin-android:$koin_version"
-
-    implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
-//    implementation ("io.insert-koin:koin-android:3.3.2")
-//    implementation ("io.insert-koin:koin-core:3.3.2")
-
-    //implementation (libs.bundles.koin)
-
-
-    implementation ("androidx.core:core-ktx:1.9.0")
-    implementation ("androidx.datastore:datastore-preferences:1.0.0")
-    implementation ("androidx.datastore:datastore-core:1.0.0")
-//    implementation ("com.google.protobuf:protobuf-javalite:3.18.0")
+    implementation (libs.androidx.core)
+    implementation (libs.androidx.datastore.preferences)
+    implementation (libs.androidx.datastore.core)
     implementation(libs.protobuf.kotlin.lite)
     implementation(libs.androidx.room)
     kapt(libs.androidx.room.compiler)
+
+    // Test
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlin.coroutines.test)
 
 }
 
@@ -79,23 +71,9 @@ protobuf {
     protoc {
         artifact = libs.protobuf.protoc.get().toString()
     }
-//    protoc {
-//        artifact = libs.protobuf.kotlin.lite.get().toString()
-//    }
-
-//    plugins {
-//        id("grpc"){
-//            artifact = "io.grpc:protoc-gen-grpc-java:1.33.1"
-//        }
-//        id("grpckt") {
-//            artifact = "io.grpc:protoc-gen-grpc-kotlin:0.1.5"
-//        }
-//    }
     generateProtoTasks {
         all().forEach { task ->
             task.builtins {
-                //remove("java")
-//                remove java
                 val java by registering {
                     option("lite")
                 }
@@ -103,11 +81,10 @@ protobuf {
                     option("lite")
                 }
             }
-//            task.plugins {
-//
-//            }
         }
     }
 }
 
-
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
