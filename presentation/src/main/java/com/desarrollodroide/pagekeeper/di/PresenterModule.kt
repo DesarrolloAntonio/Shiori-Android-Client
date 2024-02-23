@@ -13,6 +13,7 @@ fun presenterModule() = module {
         LoginViewModel(
             loginUseCase = get(),
             settingsPreferenceDataSource = get(),
+            livenessUseCase = get(),
         )
     }
 
