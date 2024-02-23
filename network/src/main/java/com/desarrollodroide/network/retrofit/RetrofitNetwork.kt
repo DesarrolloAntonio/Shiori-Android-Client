@@ -98,4 +98,10 @@ interface RetrofitNetwork {
         @Body accountNames: List<String>
     ): Response<Unit>
 
+    // Test system liveness
+    @GET()
+    suspend fun systemLiveness(
+        @Url url: String
+    ): Response<String>
+
 }

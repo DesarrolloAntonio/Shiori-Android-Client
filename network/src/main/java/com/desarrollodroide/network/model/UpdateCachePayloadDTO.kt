@@ -6,7 +6,7 @@ data class UpdateCachePayloadDTO(
     @SerializedName("createArchive")
     val createArchive : Boolean,
     @SerializedName("createEbook")
-    val createEbook : Boolean,
+    val createEbook : Boolean?,
     val ids: List<Int>,
     @SerializedName("keepMetadata")
     val keepMetadata : Boolean,

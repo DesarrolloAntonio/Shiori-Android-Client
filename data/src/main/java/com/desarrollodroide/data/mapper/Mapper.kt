@@ -102,6 +102,16 @@ fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(
     keepMetadata = keepMetadata,
 )
 
+fun LivenessResponseDTO.toDomainModel() = LivenessResponse(
+    ok   = ok?:false,
+    message = message?.toDomainModel()
+)
+
+fun ReleaseInfoDTO.toDomainModel() = ReleaseInfo(
+    version = version?:"",
+    date = date?:"",
+    commit = commit?:""
+)
 
 
 

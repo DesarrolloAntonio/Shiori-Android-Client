@@ -13,20 +13,27 @@ import com.desarrollodroide.model.User
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
+import com.desarrollodroide.model.LivenessResponse
 
 class LoginViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val loginUseCase: SendLoginUseCase,
+    private val livenessUseCase: SystemLivenessUseCase,
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-//    var userName = mutableStateOf("testing")
-//    var password = mutableStateOf("shiori")
-//    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
+    var userName = mutableStateOf("testing")
+    var password = mutableStateOf("shiori")
+    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
 
-    var serverUrl = mutableStateOf("")
-    var userName = mutableStateOf("")
-    var password = mutableStateOf("")
+//    var userName = mutableStateOf("Test")
+//    var password = mutableStateOf("Test")
+//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
+//
+//    var serverUrl = mutableStateOf("")
+//    var userName = mutableStateOf("")
+//    var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
     val passwordError = mutableStateOf(false)
@@ -35,10 +42,14 @@ class LoginViewModel(
     private val _userUiState = MutableStateFlow(UiState<User>(idle = true))
     val userUiState = _userUiState.asStateFlow()
 
+    private val _livenessUiState = MutableStateFlow(UiState<LivenessResponse>(idle = true))
+    val livenessUiState = _livenessUiState.asStateFlow()
+
     init {
         viewModelScope.launch {
             getUser()
             getRememberUser()
+            //checkSystemLiveness()
         }
     }
 
@@ -80,6 +91,27 @@ class LoginViewModel(
                             } else {
                                 settingsPreferenceDataSource.resetUser()
                             }
+                        }
+                    }
+                }
+        }
+    }
+
+    fun checkSystemLiveness(){
+        viewModelScope.launch {
+            livenessUseCase.invoke(serverUrl.value)
+                .collect { result ->
+                    when (result) {
+                        is Result.Error -> {}
+
+                        is Result.Loading -> {
+//                            _userUiState.isLoading(true)
+                        }
+
+                        is Result.Success -> {
+//                            if (result.data != null) {
+//                                _userUiState.success(result.data)
+//                            }
                         }
                     }
                 }

@@ -11,6 +11,7 @@ import com.desarrollodroide.domain.usecase.EditBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
+import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import org.koin.dsl.module
 
@@ -70,6 +71,12 @@ fun appModule() = module {
     single {
         DownloadFileUseCase(
             fileRepository = get()
+        )
+    }
+
+    single {
+        SystemLivenessUseCase(
+            authRepository = get()
         )
     }
 
