@@ -19,6 +19,7 @@ import com.desarrollodroide.data.repository.FileRepository
 import com.desarrollodroide.data.repository.FileRepositoryImpl
 import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
+import com.desarrollodroide.data.repository.SystemRepository
 import com.desarrollodroide.data.repository.SystemRepositoryImpl
 import com.desarrollodroide.network.retrofit.FileRemoteDataSource
 import org.koin.android.ext.koin.androidContext
@@ -90,8 +91,10 @@ fun dataModule() = module {
             apiService = get(),
             settingsPreferenceDataSource = get(),
             errorHandler = get()
-        )
+        ) as SystemRepository
     }
+
+
 
     single { FileRemoteDataSource() }
     single { ErrorHandlerImpl() as ErrorHandler }

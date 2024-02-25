@@ -23,17 +23,17 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-    var userName = mutableStateOf("testing")
-    var password = mutableStateOf("shiori")
-    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
+//    var userName = mutableStateOf("testing")
+//    var password = mutableStateOf("shiori")
+//    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
 
 //    var userName = mutableStateOf("Test")
 //    var password = mutableStateOf("Test")
 //    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
 //
-//    var serverUrl = mutableStateOf("")
-//    var userName = mutableStateOf("")
-//    var password = mutableStateOf("")
+    var serverUrl = mutableStateOf("")
+    var userName = mutableStateOf("")
+    var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
     val passwordError = mutableStateOf(false)
