@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,14 +24,16 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
+    // V1.5
 //    var userName = mutableStateOf("testing")
 //    var password = mutableStateOf("shiori")
 //    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
 
+    // v1.6
 //    var userName = mutableStateOf("Test")
 //    var password = mutableStateOf("Test")
 //    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
-//
+
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")
     var password = mutableStateOf("")
@@ -49,7 +52,6 @@ class LoginViewModel(
         viewModelScope.launch {
             getUser()
             getRememberUser()
-            //checkSystemLiveness()
         }
     }
 
@@ -58,7 +60,8 @@ class LoginViewModel(
             loginUseCase.invoke(
                 username = userName.value,
                 password = password.value,
-                serverUrl = serverUrl.value
+                serverUrl = serverUrl.value,
+                isLegacyApi = livenessUiState.value.data?.ok != true
             )
                 .collect { result ->
                     when (result) {
@@ -102,16 +105,30 @@ class LoginViewModel(
             livenessUseCase.invoke(serverUrl.value)
                 .collect { result ->
                     when (result) {
-                        is Result.Error -> {}
+                        is Result.Error -> {
+                            if (result.error?.statusCode == 404){
+                                // Liveness not supported, versión < 1.6
+                                sendLogin()
+                                Log.v("LoginViewModel", "Liveness not supported")
+                            } else if (result.error is Result.ErrorType.IOError) {
+                                // Error connecting to server
+                                Log.v("LoginViewModel", "Error connecting to server")
+                                val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
+                                _livenessUiState.error(errorMessage = error)
+                            }
+                        }
 
                         is Result.Loading -> {
-//                            _userUiState.isLoading(true)
+                            _livenessUiState.isLoading(true)
                         }
 
                         is Result.Success -> {
+                            Log.v("LoginViewModel", "Liveness: ${result.data}")
+                            _livenessUiState.success(result.data)
 //                            if (result.data != null) {
-//                                _userUiState.success(result.data)
+//                                _livenessUiState.success(result.data)
 //                            }
+                            sendLogin()
                         }
                     }
                 }
@@ -120,6 +137,7 @@ class LoginViewModel(
 
     fun clearState() {
         _userUiState.success(null)
+        _livenessUiState.success(null)
     }
 
     private suspend fun getUser() {

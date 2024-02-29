@@ -40,6 +40,7 @@ class SettingsPreferencesDataSourceImpl(
                     owner = it.owner,
                     password = it.password,
                     serverUrl = it.url,
+                    isLegacyApi = it.isLegacyApi
                 )
             )
         }
@@ -58,6 +59,7 @@ class SettingsPreferencesDataSourceImpl(
                         owner = preference.owner,
                         password = preference.password,
                         serverUrl = preference.url,
+                        isLegacyApi = preference.isLegacyApi
                     )
                 )
             }
@@ -87,6 +89,7 @@ class SettingsPreferencesDataSourceImpl(
                 owner = false,
                 password = it.password,
                 serverUrl = it.url,
+                isLegacyApi = false // Set a default value
             )
         }
 
@@ -102,6 +105,7 @@ class SettingsPreferencesDataSourceImpl(
                     owner = false,
                     password = preference.password,
                     serverUrl = preference.url,
+                    isLegacyApi = false // Set a default value
                 )
             }
     }
@@ -109,7 +113,7 @@ class SettingsPreferencesDataSourceImpl(
     override suspend fun saveRememberUser(
         url: String,
         userName: String,
-        password: String
+        password: String,
     ) {
         rememberUserProtoDataStore.updateData { protoSession ->
             protoSession.copy {

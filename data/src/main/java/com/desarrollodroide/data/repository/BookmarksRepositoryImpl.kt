@@ -46,7 +46,7 @@ class BookmarksRepositoryImpl(
 
         override suspend fun fetchFromRemote() = apiService.getBookmarks(
             xSessionId = xSession,
-            url = "$serverUrl/api/bookmarks"
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks"
         )
 
         override fun shouldFetch(data: List<Bookmark>?) = true
@@ -61,7 +61,7 @@ class BookmarksRepositoryImpl(
     ) = object :
         NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
         override suspend fun fetchFromRemote() = apiService.addBookmark(
-            url = "$serverUrl/api/bookmarks",
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )

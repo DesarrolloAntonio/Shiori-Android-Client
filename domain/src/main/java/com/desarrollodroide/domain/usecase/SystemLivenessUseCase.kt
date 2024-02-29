@@ -3,6 +3,7 @@ package com.desarrollodroide.domain.usecase
 import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.repository.SystemRepository
+import com.desarrollodroide.model.LivenessResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 
@@ -11,7 +12,7 @@ class SystemLivenessUseCase(
 ) {
     operator fun invoke(
         serverUrl: String
-    ): Flow<Result<String?>> {
+    ): Flow<Result<LivenessResponse?>> {
         return systemRepository.liveness(serverUrl).flowOn(Dispatchers.IO)
     }
 }

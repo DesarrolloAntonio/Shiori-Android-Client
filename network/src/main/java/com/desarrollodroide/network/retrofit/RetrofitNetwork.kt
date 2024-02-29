@@ -3,6 +3,8 @@ package com.desarrollodroide.network.retrofit
 import com.desarrollodroide.network.model.AccountDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
+import com.desarrollodroide.network.model.LivenessResponseDTO
+import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.model.TagDTO
 import okhttp3.ResponseBody
@@ -22,6 +24,12 @@ interface RetrofitNetwork {
         @Url url: String,
         @Body jsonData: String
     ): Response<SessionDTO>
+
+    @POST()
+    suspend fun sendLoginV1(
+        @Url url: String,
+        @Body jsonData: String
+    ): Response<LoginResponseDTO>
 
     @POST()
     suspend fun sendLogout(
@@ -102,6 +110,6 @@ interface RetrofitNetwork {
     @GET()
     suspend fun systemLiveness(
         @Url url: String
-    ): Response<String>
+    ): Response<LivenessResponseDTO>
 
 }

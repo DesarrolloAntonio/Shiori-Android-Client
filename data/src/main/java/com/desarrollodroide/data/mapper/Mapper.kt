@@ -15,7 +15,8 @@ fun AccountDTO.toDomainModel() = Account(
     userName = userName?:"",
     password = password?:"",
     owner = isOwner?:false,
-    serverUrl = ""
+    serverUrl = "",
+    isLegacyApi = isLegacyApi?:false
 )
 
 fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
@@ -23,6 +24,7 @@ fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
     .setUsername(account?.userName?:"")
     .setId(account?.id?:-1)
     .setOwner(account?.isOwner?:false)
+    .setIsLegacyApi(true)
     .build()
 
 fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
@@ -56,7 +58,7 @@ fun TagDTO.toDomainModel() = Tag(
 )
 
 fun Account.toRequestBody() =
-    LoginBodyContent(
+    LoginRequestPayload(
         username = userName,
         password = password
     )
@@ -103,7 +105,7 @@ fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(
 )
 
 fun LivenessResponseDTO.toDomainModel() = LivenessResponse(
-    ok   = ok?:false,
+    ok = ok?:false,
     message = message?.toDomainModel()
 )
 
@@ -114,6 +116,18 @@ fun ReleaseInfoDTO.toDomainModel() = ReleaseInfo(
 )
 
 
+fun LoginResponseDTO.toProtoEntity(
+    userName: String,
+): UserPreferences = UserPreferences.newBuilder()
+    .setSession(message?.session?:"")
+    .setUsername(userName)
+    .build()
+
+fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(
+    expires = expires?:0,
+    session = session?:"",
+    token = token?:""
+)
 
 
 

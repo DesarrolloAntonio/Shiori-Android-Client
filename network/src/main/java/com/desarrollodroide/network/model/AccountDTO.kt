@@ -20,5 +20,8 @@ data class AccountDTO(
     val oldPassword: String? = null,
 
     @SerializedName("newPassword")
-    val newPassword: String? = null
+    val newPassword: String? = null,
+
+    @SerializedName("isLegacyApi")
+    val isLegacyApi: Boolean? = null,
 )

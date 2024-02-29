@@ -6,12 +6,14 @@ class Account(
     val password: String,
     val owner: Boolean ,
     val serverUrl: String,
+    val isLegacyApi: Boolean,
 ) {
     constructor() : this(
         id = -1,
         userName = "",
         password = "",
         owner = false,
-        serverUrl = ""
+        serverUrl = "",
+        isLegacyApi = false
     )
 }

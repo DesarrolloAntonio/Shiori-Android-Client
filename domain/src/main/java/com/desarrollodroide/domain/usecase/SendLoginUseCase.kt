@@ -13,8 +13,12 @@ class SendLoginUseCase(
     operator fun invoke(
         username: String,
         password: String,
-        serverUrl: String
+        serverUrl: String,
+        isLegacyApi: Boolean,
     ): Flow<Result<User?>> {
-        return authRepository.sendLogin(username, password, serverUrl).flowOn(Dispatchers.IO)
+        return if (isLegacyApi)
+            authRepository.sendLogin(username, password, serverUrl).flowOn(Dispatchers.IO)
+        else
+            authRepository.sendLoginV1(username, password, serverUrl).flowOn(Dispatchers.IO)
     }
 }

@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
+import com.desarrollodroide.model.LivenessResponse
 
 @Composable
 fun LoginScreen(
@@ -30,7 +31,7 @@ fun LoginScreen(
     onSuccess: (User) -> Unit,
     ) {
     val loginUiState: UiState<User> by loginViewModel.userUiState.collectAsStateWithLifecycle()
-
+    val livenessUiState: UiState<LivenessResponse> by loginViewModel.livenessUiState.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +43,7 @@ fun LoginScreen(
             passwordErrorState = loginViewModel.passwordError,
             urlErrorState = loginViewModel.urlError,
             onClickLoginButton = {
-                loginViewModel.sendLogin()
+                loginViewModel.checkSystemLiveness()
             },
             onCheckedRememberSessionChange = {
                 loginViewModel.rememberSession.value = it
@@ -57,6 +58,7 @@ fun LoginScreen(
             onClearError = {
                 loginViewModel.clearState()
             },
+            livenessUiState = livenessUiState
         )
     }
 }
@@ -75,9 +77,22 @@ fun LoginContent(
     onClearError: () -> Unit,
     onCheckedRememberSessionChange: (Boolean) -> Unit,
     loginUiState: UiState<User>,
+    livenessUiState: UiState<LivenessResponse>,
 ) {
-    if (loginUiState.isLoading) {
+    if (loginUiState.isLoading || livenessUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
+    }
+    if (!livenessUiState.error.isNullOrEmpty()) {
+        ConfirmDialog(
+            icon = Icons.Default.Error,
+            title = "Error",
+            content = livenessUiState.error,
+            openDialog = remember { mutableStateOf(true) },
+            onConfirm = {
+                onClearError.invoke()
+            }
+        )
+        Log.v("loginUiState", "Error")
     }
     if (!loginUiState.error.isNullOrEmpty()) {
         ConfirmDialog(
@@ -202,7 +217,8 @@ fun DefaultPreview() {
             onClickLoginButton = {},
             onCheckedRememberSessionChange = {},
             onClearError = {},
-            loginUiState = UiState(false)
+            loginUiState = UiState(false),
+            livenessUiState = UiState(false)
         )
     }
 }

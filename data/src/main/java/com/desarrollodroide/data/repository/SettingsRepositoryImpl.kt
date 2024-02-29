@@ -20,6 +20,7 @@ class SettingsRepositoryImpl(
                 password = it.account.password,
                 owner = it.account.owner,
                 serverUrl = it.account.serverUrl,
+                isLegacyApi = it.account.isLegacyApi
             )
         )
     }.first()
