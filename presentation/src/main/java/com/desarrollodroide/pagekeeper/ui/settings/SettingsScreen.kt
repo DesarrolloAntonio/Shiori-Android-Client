@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
+    onNavigateToTermsOfUse: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
     goToLogin: () -> Unit
 ) {
     val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
@@ -42,6 +44,8 @@ fun SettingsScreen(
         makeArchivePublic = settingsViewModel.makeArchivePublic,
         createEbook = settingsViewModel.createEbook,
         createArchive = settingsViewModel.createArchive,
+        onNavigateToTermsOfUse = onNavigateToTermsOfUse,
+        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
     )
 }
 
@@ -52,6 +56,8 @@ fun SettingsContent(
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
+    onNavigateToTermsOfUse: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
     onThemeChanged: (ThemeMode) -> Unit,
     themeMode: ThemeMode,
     goToLogin: () -> Unit
@@ -93,7 +99,11 @@ fun SettingsContent(
             createEbook = createEbook,
             createArchive = createArchive
         )
-        AccountSection(onLogout = onLogout)
+        AccountSection(
+            onLogout = onLogout,
+            onNavigateToTermsOfUse = onNavigateToTermsOfUse,
+            onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+        )
     }
 }
 
@@ -115,6 +125,8 @@ fun SettingsScreenPreview() {
         themeMode = ThemeMode.AUTO,
         makeArchivePublic = remember { MutableStateFlow(false) },
         createArchive = remember { MutableStateFlow(false) },
-        createEbook = remember { MutableStateFlow(false) }
+        createEbook = remember { MutableStateFlow(false) },
+        onNavigateToTermsOfUse = {},
+        onNavigateToPrivacyPolicy = {}
     )
 }

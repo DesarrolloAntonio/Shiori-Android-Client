@@ -10,12 +10,13 @@ sealed class NavItem(
     object SplashNavItem : NavItem("splash")
     object LoginNavItem : NavItem("login")
     object HomeNavItem : NavItem("home")
-    object RegisterNavItem : NavItem("register")
     object SettingsNavItem : NavItem("settings")
+    object TermsOfUseNavItem : NavItem("termsOfUse")
+    object PrivacyPolicyNavItem : NavItem("privacyPolicy")
 
     object FeedNavItem : NavItem("feed")
 
-        val route = run {
+    val route = run {
         val argValues = navArgs.map { "{${it.key}}" }
         listOf(baseRoute)
             .plus(argValues)

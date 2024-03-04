@@ -19,7 +19,9 @@ import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 
 @Composable
 fun AccountSection(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToTermsOfUse: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit
 ) {
     val privacyPolicyUrl =
         "https://www.dropbox.com/scl/fi/lsukil03brxd28edmpiyi/Pagekeeper-Privacy-Policy.md?rlkey=5qfuu6drer4nbnt18fq0mbsxx&dl=0"
@@ -33,20 +35,26 @@ fun AccountSection(
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
         ) {
-            Text(text = "Account", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "Account",
+                style = MaterialTheme.typography.titleSmall
+            )
 
-            ClickableOption(Item(title = "Terms of Use", icon = Icons.Filled.Gavel, onClick =  {
-                context.openUrlInBrowser(
-                    termsOfUseUrl
-                )
-            }))
-            ClickableOption(Item(title ="Privacy policy", icon = Icons.Filled.Security, onClick =  {
-                context.openUrlInBrowser(
-                    privacyPolicyUrl
-                )
-            }))
             ClickableOption(
-                Item("Logout", Icons.Filled.Logout, onClick = onLogout),
+                Item(
+                    title = "Terms of Use",
+                    icon = Icons.Filled.Gavel,
+                    onClick =  onNavigateToTermsOfUse)
+            )
+            ClickableOption(
+                Item(title ="Privacy policy",
+                    icon = Icons.Filled.Security,
+                    onClick =  onNavigateToPrivacyPolicy)
+            )
+            ClickableOption(
+                Item("Logout",
+                    icon =  Icons.Filled.Logout,
+                    onClick = onLogout),
                 color = Color.Red
             )
         }

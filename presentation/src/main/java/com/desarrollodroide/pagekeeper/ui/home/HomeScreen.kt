@@ -25,7 +25,9 @@ import androidx.navigation.compose.rememberNavController
 import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
+import com.desarrollodroide.pagekeeper.ui.settings.PrivacyPolicyScreen
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
+import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 
 @Composable
@@ -100,7 +102,27 @@ fun HomeScreen(
                     composable(NavItem.SettingsNavItem.route) {
                         SettingsScreen(
                             settingsViewModel = get(),
-                            goToLogin = goToLogin
+                            goToLogin = goToLogin,
+                            onNavigateToPrivacyPolicy = {
+                                navController.navigate(NavItem.PrivacyPolicyNavItem.route)
+                            },
+                            onNavigateToTermsOfUse = {
+                                navController.navigate(NavItem.TermsOfUseNavItem.route)
+                            }
+                        )
+                    }
+                    composable(NavItem.TermsOfUseNavItem.route) {
+                        TermsOfUseScreen(
+                            onBack = {
+                                navController.navigateUp()
+                            }
+                        )
+                    }
+                    composable(NavItem.PrivacyPolicyNavItem.route) {
+                        PrivacyPolicyScreen(
+                            onBack = {
+                                navController.navigateUp()
+                            }
                         )
                     }
                 }
