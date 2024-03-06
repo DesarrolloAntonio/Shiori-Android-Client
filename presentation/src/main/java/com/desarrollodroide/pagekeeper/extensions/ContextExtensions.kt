@@ -26,7 +26,7 @@ fun Context.openUrlInBrowser(url: String) {
     }
 }
 
-fun Context.shareEpubFile( file: File) {
+fun Context.shareEpubFile(file: File) {
     val uri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", file)
 
     val intent = Intent().apply {

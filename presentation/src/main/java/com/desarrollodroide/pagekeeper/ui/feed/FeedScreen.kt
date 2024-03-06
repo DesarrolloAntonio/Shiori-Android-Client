@@ -137,7 +137,7 @@ fun FeedScreen(
             feedViewModel.updateBookmark(
                 keepOldTitle = keepOldTitle,
                 updateEbook = updateEbook,
-                updateArchive = updateArchive
+                updateArchive = updateArchive,
             )
         }
     )

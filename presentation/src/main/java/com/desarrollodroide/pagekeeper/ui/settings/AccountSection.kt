@@ -13,9 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 
 @Composable
 fun AccountSection(
@@ -23,11 +21,6 @@ fun AccountSection(
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit
 ) {
-    val privacyPolicyUrl =
-        "https://www.dropbox.com/scl/fi/lsukil03brxd28edmpiyi/Pagekeeper-Privacy-Policy.md?rlkey=5qfuu6drer4nbnt18fq0mbsxx&dl=0"
-    val termsOfUseUrl =
-        "https://www.dropbox.com/scl/fi/w425yshv0a5wp167zcbie/TOS-Pagekeeper.md?rlkey=hxi7kdm4opzyhplcykfpwvs1r&dl=0"
-    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()

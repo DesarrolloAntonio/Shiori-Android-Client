@@ -192,12 +192,14 @@ fun BookmarkEditorPreview() {
     val tag1 = Tag(
         id = 1,
         name = "tag1",
-        selected = true
+        selected = true,
+        nBookmarks = 0
     )
     val tag2 = Tag(
         id = 2,
         name = "tag2",
-        selected = false
+        selected = false,
+        nBookmarks = 0
     )
     val assignedTags = remember { mutableStateOf(listOf<Tag>(tag1, tag2)) }
     val newTag = remember { mutableStateOf("")}

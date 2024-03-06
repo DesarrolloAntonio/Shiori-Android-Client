@@ -13,6 +13,7 @@ class SettingsRepositoryImpl(
 ): SettingsRepository {
     override suspend fun getUser() = settingsPreferenceDataSource.userDataStream.map {
         User(
+            token = it.token,
             session = it.session,
             account = Account(
                 id = it.account.id,

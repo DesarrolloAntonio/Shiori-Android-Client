@@ -55,13 +55,15 @@ class LoginViewModel(
         }
     }
 
+    private fun isLegacyApi() = livenessUiState.value.data?.ok != true
+
     fun sendLogin() {
         viewModelScope.launch {
             loginUseCase.invoke(
                 username = userName.value,
                 password = password.value,
                 serverUrl = serverUrl.value,
-                isLegacyApi = livenessUiState.value.data?.ok != true
+                isLegacyApi = isLegacyApi()
             )
                 .collect { result ->
                     when (result) {

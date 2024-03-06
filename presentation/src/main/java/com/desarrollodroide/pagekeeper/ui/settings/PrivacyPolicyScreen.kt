@@ -30,7 +30,7 @@ fun PrivacyPolicyScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Terms of Use") },
+                title = { Text("Privacy policy") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(

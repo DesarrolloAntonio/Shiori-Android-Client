@@ -33,6 +33,7 @@ class SettingsPreferencesDataSourceImpl(
     override val userDataStream = protoDataStore.data
         .map {
             User(
+                token = it.token,
                 session = it.session,
                 account = Account(
                     id = it.id,
@@ -52,6 +53,7 @@ class SettingsPreferencesDataSourceImpl(
             }
             .map { preference ->
                 User(
+                    token = preference.token,
                     session = preference.session,
                     account = Account(
                         id = preference.id,
@@ -77,6 +79,8 @@ class SettingsPreferencesDataSourceImpl(
                 this.password = password
                 this.session = session.session
                 this.url = serverUrl
+                this.token = session.token
+                this.isLegacyApi = session.isLegacyApi
             }
         }
     }
@@ -129,11 +133,15 @@ class SettingsPreferencesDataSourceImpl(
 
     override suspend fun getSession(): String = getUser().first().session
 
+    override suspend fun getToken(): String = getUser().first().token
+
+    override suspend fun getIsLegacyApi(): Boolean = getUser().first().account.isLegacyApi
+
     override suspend fun resetUser() {
         saveUser(
             password = "",
-            session = SessionDTO(null, null).toProtoEntity(),
-            serverUrl = ""
+            session = SessionDTO(null, null, null).toProtoEntity(),
+            serverUrl = "",
         )
     }
 

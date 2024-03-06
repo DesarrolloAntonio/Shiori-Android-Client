@@ -38,4 +38,10 @@ interface BookmarksRepository {
     serverUrl: String,
     updateCachePayload: UpdateCachePayload
   ): Flow<Result<Bookmark>>
+
+  fun updateBookmarkCacheV1(
+    token: String,
+    serverUrl: String,
+    updateCachePayload: UpdateCachePayload
+  ): Flow<Result<Bookmark>>
 }

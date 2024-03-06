@@ -9,6 +9,7 @@ import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
+import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.UpdateCachePayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
@@ -124,6 +125,27 @@ class BookmarksRepositoryImpl(
         override fun fetchResult(data: List<BookmarkDTO>): Flow<Bookmark> {
             return flow {
                 data.firstOrNull()?.let {
+                    emit(it.toDomainModel())
+                }
+            }
+        }
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun updateBookmarkCacheV1(
+        token: String,
+        serverUrl: String,
+        updateCachePayload: UpdateCachePayload
+    ) = object :
+        NetworkNoCacheResource<BookmarkResponseDTO, Bookmark>(errorHandler = errorHandler) {
+        override suspend fun fetchFromRemote(): Response<BookmarkResponseDTO> = apiService.updateBookmarksCacheV1(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/cache",
+            authorization = "Bearer $token",
+            body = updateCachePayload.toV1DTO().toJson()
+        )
+
+        override fun fetchResult(data: BookmarkResponseDTO): Flow<Bookmark> {
+            return flow {
+                data.message?.firstOrNull()?.let {
                     emit(it.toDomainModel())
                 }
             }

@@ -43,6 +43,7 @@ class FeedViewModel(
     private var hasLoadedFeed = false
     private var serverUrl = ""
     private var xSessionId = ""
+    private var token = ""
     private var bookmarksJob: Job? = null
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
@@ -97,6 +98,7 @@ class FeedViewModel(
     fun refreshData() {
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
+            token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
         }
     }
@@ -109,7 +111,7 @@ class FeedViewModel(
     fun updateBookmark(
         keepOldTitle: Boolean,
         updateArchive: Boolean,
-        updateEbook: Boolean
+        updateEbook: Boolean,
     ) {
         val updateCachePayload = UpdateCachePayload(
             ids = listOf(bookmarkToUpdateCache.value?.id ?: -1),
@@ -123,6 +125,8 @@ class FeedViewModel(
             updateBookmarkCacheUseCase.invoke(
                 serverUrl = serverUrl,
                 xSession = settingsPreferenceDataSource.getSession(),
+                token = token,
+                isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi(),
                 updateCachePayload = updateCachePayload
             )
                 .collect { result ->
@@ -157,7 +161,7 @@ class FeedViewModel(
         viewModelScope.launch {
             settingsPreferenceDataSource.saveUser(
                 password = "",
-                session = SessionDTO(null, null).toProtoEntity(),
+                session = SessionDTO(null, null, null).toProtoEntity(),
                 serverUrl = ""
             )
         }

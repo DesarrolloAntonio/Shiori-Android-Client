@@ -17,5 +17,9 @@ interface AuthRepository {
     xSession: String
   ): Flow<Result<String?>>
 
-  fun sendLoginV1(username: String, password: String, serverUrl: String): Flow<Result<User?>>
+  fun sendLoginV1(
+    username: String,
+    password: String,
+    serverUrl: String
+  ): Flow<Result<User?>>
 }

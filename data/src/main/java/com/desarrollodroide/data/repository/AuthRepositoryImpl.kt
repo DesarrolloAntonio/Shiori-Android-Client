@@ -32,7 +32,7 @@ class AuthRepositoryImpl(
             settingsPreferenceDataSource.saveUser(
                 password = password,
                 session = response.toProtoEntity(),
-                serverUrl = serverUrl
+                serverUrl = serverUrl,
             )
         }
         override fun fetchFromLocal() = settingsPreferenceDataSource.getUser()
@@ -81,7 +81,7 @@ class AuthRepositoryImpl(
             settingsPreferenceDataSource.saveUser(
                 password = password,
                 session = response.toProtoEntity(username),
-                serverUrl = serverUrl
+                serverUrl = serverUrl,
             )
         }
         override fun fetchFromLocal() = settingsPreferenceDataSource.getUser()

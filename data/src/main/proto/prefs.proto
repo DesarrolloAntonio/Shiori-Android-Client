@@ -13,6 +13,7 @@ message UserPreferences {
   string url = 6;
   bool rememberPassword = 7;
   bool isLegacyApi = 8;
+  string token = 9;
 
 }
 

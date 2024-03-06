@@ -6,6 +6,7 @@ import com.desarrollodroide.model.*
 import com.desarrollodroide.network.model.*
 
 fun SessionDTO.toDomainModel() = User(
+    token = token?:"",
     session = session?:"",
     account = account?.toDomainModel()?:Account()
 )
@@ -54,7 +55,8 @@ fun BookmarksDTO.toDomainModel(serverUrl: String) = Bookmarks(
 fun TagDTO.toDomainModel() = Tag(
     id = id?:0,
     name = name?:"",
-    selected = false
+    selected = false,
+    nBookmarks = nBookmarks?:0
 )
 
 fun Account.toRequestBody() =
@@ -104,6 +106,14 @@ fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(
     keepMetadata = keepMetadata,
 )
 
+fun UpdateCachePayload.toV1DTO() = UpdateCachePayloadV1DTO(
+    createArchive = createArchive,
+    createEbook = createEbook,
+    ids = ids,
+    keepMetadata = keepMetadata,
+    skipExist = skipExist
+)
+
 fun LivenessResponseDTO.toDomainModel() = LivenessResponse(
     ok = ok?:false,
     message = message?.toDomainModel()
@@ -121,6 +131,8 @@ fun LoginResponseDTO.toProtoEntity(
 ): UserPreferences = UserPreferences.newBuilder()
     .setSession(message?.session?:"")
     .setUsername(userName)
+    .setToken(message?.token?:"")
+    .setIsLegacyApi(false)
     .build()
 
 fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(

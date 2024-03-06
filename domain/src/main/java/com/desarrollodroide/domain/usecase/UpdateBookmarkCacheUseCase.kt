@@ -14,12 +14,22 @@ class UpdateBookmarkCacheUseCase(
     operator fun invoke(
         serverUrl: String,
         xSession: String,
-        updateCachePayload: UpdateCachePayload
-    ): Flow<Result<Bookmark?>> {
-        return bookmarksRepository.updateBookmarkCache(
-            xSession = xSession,
-            serverUrl = serverUrl,
-            updateCachePayload = updateCachePayload
-        ).flowOn(Dispatchers.IO)
+        token: String,
+        updateCachePayload: UpdateCachePayload,
+        isLegacyApi: Boolean,
+        ): Flow<Result<Bookmark?>> {
+
+        return if (isLegacyApi)
+            bookmarksRepository.updateBookmarkCache(
+                xSession = xSession,
+                serverUrl = serverUrl,
+                updateCachePayload = updateCachePayload
+            ).flowOn(Dispatchers.IO)
+        else
+            bookmarksRepository.updateBookmarkCacheV1(
+                token = token,
+                serverUrl = serverUrl,
+                updateCachePayload = updateCachePayload
+            ).flowOn(Dispatchers.IO)
     }
 }

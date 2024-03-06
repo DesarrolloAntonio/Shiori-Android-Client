@@ -25,6 +25,7 @@ interface SettingsPreferenceDataSource {
 
     suspend fun getUrl(): String
     suspend fun getSession(): String
+    suspend fun getToken(): String
     suspend fun resetUser()
     suspend fun resetRememberUser()
     fun setTheme(mode: ThemeMode)
@@ -35,4 +36,5 @@ interface SettingsPreferenceDataSource {
     suspend fun setCreateEbook(newValue: Boolean)
     suspend fun getCreateArchive(): Boolean
     suspend fun setCreateArchive(newValue: Boolean)
+    suspend fun getIsLegacyApi(): Boolean
 }
