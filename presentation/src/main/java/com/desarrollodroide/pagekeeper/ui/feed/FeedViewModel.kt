@@ -25,6 +25,7 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 class FeedViewModel(
@@ -44,6 +45,7 @@ class FeedViewModel(
     private var serverUrl = ""
     private var xSessionId = ""
     private var token = ""
+    private var isLegacyApi = false
     private var bookmarksJob: Job? = null
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
@@ -100,6 +102,7 @@ class FeedViewModel(
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
+            isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
         }
     }
 
@@ -154,6 +157,7 @@ class FeedViewModel(
                 }
         }
     }
+
 
     fun resetData() {
         _bookmarksUiState.idle(true)
@@ -228,4 +232,12 @@ class FeedViewModel(
 
     fun getServerUrl() = serverUrl
     fun getSession(): String = xSessionId
+
+    fun getToken(): String = runBlocking {
+        settingsPreferenceDataSource.getToken()
+    }
+
+    fun isLegacyApi(): Boolean = runBlocking {
+        settingsPreferenceDataSource.getIsLegacyApi()
+    }
 }

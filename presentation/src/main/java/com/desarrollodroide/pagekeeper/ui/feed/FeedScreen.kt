@@ -87,6 +87,8 @@ fun FeedScreen(
             feedViewModel.showSyncDialog.value = true
         },
         shareEpubFile = shareEpubFile,
+        isLegacyApi = feedViewModel.isLegacyApi(),
+        token = feedViewModel.getToken()
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -157,6 +159,8 @@ private fun FeedContent(
     onClearError: () -> Unit,
     serverURL: String,
     xSessionId: String,
+    isLegacyApi: Boolean,
+    token: String,
     bookmarksUiState: UiState<List<Bookmark>>,
     downloadUiState: UiState<File>,
     shareEpubFile: (File) -> Unit,
@@ -202,6 +206,8 @@ private fun FeedContent(
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
                             xSessionId = xSessionId,
+                            isLegacyApi = isLegacyApi,
+                            token = token,
                             onRefreshFeed = onRefreshFeed,
                             onDeleteBookmark = onDeleteBookmark,
                             onEditBookmark = onEditBookmark,

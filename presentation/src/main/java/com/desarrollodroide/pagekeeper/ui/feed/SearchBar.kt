@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.isContainer
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.items
@@ -27,9 +26,6 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.MutableState
@@ -37,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.window.DialogProperties
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
@@ -58,6 +53,8 @@ fun DockedSearchBarWithCategories(
     onClickSync: (Bookmark) -> Unit,
     serverURL: String,
     xSessionId: String,
+    isLegacyApi: Boolean,
+    token: String,
     uniqueCategories: MutableState<List<Tag>>,
 ) {
     val searchTextState = rememberSaveable { mutableStateOf("") }
@@ -113,6 +110,8 @@ fun DockedSearchBarWithCategories(
                     bookmark = it,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
+                    token = token,
+                    isLegacyApi = isLegacyApi,
                     onClickEdit = onEditBookmark,
                     onClickDelete = onDeleteBookmark,
                     onClickShare = onShareBookmark,

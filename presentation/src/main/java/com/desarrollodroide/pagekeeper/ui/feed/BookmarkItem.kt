@@ -48,6 +48,8 @@ fun BookmarkItem(
     bookmark: Bookmark,
     serverURL: String,
     xSessionId: String,
+    isLegacyApi: Boolean,
+    token: String,
     onClickEdit: (Bookmark) -> Unit,
     onClickDelete: (Bookmark) -> Unit,
     onClickShare: (Bookmark) -> Unit,
@@ -66,17 +68,25 @@ fun BookmarkItem(
         )
     ) {
         Column {
+            val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
+            Log.v("BookmarkItem", "imageUrl: $imageUrl")
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 contentScale = ContentScale.FillWidth,
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data("${serverURL.removeTrailingSlash()}${bookmark.imageURL}")
+                    .data(imageUrl)
                     .headers(
-                        Headers.Builder()
-                            .add("X-Session-Id", xSessionId)
-                            .build()
+                        if (isLegacyApi){
+                            Headers.Builder()
+                                .add("X-Session-Id", xSessionId)
+                                .build()
+                        } else {
+                            Headers.Builder()
+                                .add("Authorization", "Bearer $token")
+                                .build()
+                        }
                     )
                     .build(),
                 contentDescription = "ImageRequest example",
@@ -235,6 +245,8 @@ fun PreviewPost() {
             bookmark = bookmark,
             serverURL = "",
             xSessionId = "",
+            isLegacyApi = false,
+            token = "",
             onClickEdit = {},
             onClickDelete = {},
             onClickShare = {},
