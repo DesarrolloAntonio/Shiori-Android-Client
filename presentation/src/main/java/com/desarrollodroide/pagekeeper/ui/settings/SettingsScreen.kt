@@ -17,8 +17,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.data.helpers.ThemeMode
+import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -62,6 +65,7 @@ fun SettingsContent(
     themeMode: ThemeMode,
     goToLogin: () -> Unit
 ) {
+    val context = LocalContext.current
     if (settingsUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
         Log.v("SettingsContent!!", "settingsUiState.isLoading")
@@ -102,7 +106,10 @@ fun SettingsContent(
         AccountSection(
             onLogout = onLogout,
             onNavigateToTermsOfUse = onNavigateToTermsOfUse,
-            onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+            onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+            onNavigateToSeverSettings = {
+                context.openUrlInBrowser(SHIORI_GITHUB_URL)
+            }
         )
     }
 }

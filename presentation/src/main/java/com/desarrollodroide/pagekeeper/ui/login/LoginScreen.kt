@@ -23,7 +23,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
+import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.model.LivenessResponse
+import com.desarrollodroide.pagekeeper.ui.settings.LinkableText
 
 @Composable
 fun LoginScreen(
@@ -196,6 +198,18 @@ private fun ContentViews(
                 checked = checked,
                 onCheckedChange = onCheckedRememberSessionChange
             )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                ,
+                contentAlignment = Alignment.Center
+            ){
+                LinkableText(
+                    text = "Server Setup Guide",
+                    url = SHIORI_GITHUB_URL
+                )
+            }
         }
     }
 }

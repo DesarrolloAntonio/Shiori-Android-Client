@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Security
@@ -19,7 +20,8 @@ import androidx.compose.ui.unit.dp
 fun AccountSection(
     onLogout: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
-    onNavigateToPrivacyPolicy: () -> Unit
+    onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToSeverSettings: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -32,7 +34,12 @@ fun AccountSection(
                 text = "Account",
                 style = MaterialTheme.typography.titleSmall
             )
-
+            ClickableOption(
+                Item(
+                    title = "Server Settings Guide",
+                    icon = Icons.Filled.Dns,
+                    onClick =  onNavigateToSeverSettings)
+            )
             ClickableOption(
                 Item(
                     title = "Terms of Use",
