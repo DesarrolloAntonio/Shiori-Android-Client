@@ -68,7 +68,8 @@ fun BookmarkItem(
         )
     ) {
         Column {
-            val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
+            // Append 'lastUpdated' query to image URL for cache busting. Forces retrieval of updated images.
+            val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
             Log.v("BookmarkItem", "imageUrl: $imageUrl")
             SubcomposeAsyncImage(
                 modifier = Modifier
