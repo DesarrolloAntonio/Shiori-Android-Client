@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper
 
-import android.content.pm.PackageManager
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,17 +9,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.navigation.Navigation
 import org.koin.android.ext.android.inject
-import android.Manifest
-import android.app.DownloadManager
-import android.content.Intent
 import com.desarrollodroide.pagekeeper.extensions.shareEpubFile
-
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -27,6 +23,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //val context = this.updateLocale(Locale("iw"))
         setContent {
             ComposeSetup(themeManager = themeManager) {
                 Surface(
@@ -47,5 +44,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+fun Context.updateLocale(locale: Locale): Context {
+    Locale.setDefault(locale)
+    val resources = this.resources
+    val config = resources.configuration
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        config.setLocale(locale)
+        return this.createConfigurationContext(config)
+    } else {
+        config.locale = locale
+        resources.updateConfiguration(config, resources.displayMetrics)
+        return this
     }
 }

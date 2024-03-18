@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.flow
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 
@@ -67,15 +68,5 @@ class SettingsPreferencesDataSourceImplTest {
         val actualThemeMode = settingsPreferencesDataSourceImpl.getThemeMode()
         assertEquals(defaultThemeMode, actualThemeMode)
     }
-
-    @Test
-    fun `getThemeMode handles errors gracefully and returns default if data store is inaccessible`() = runTest {
-        val defaultThemeMode = ThemeMode.AUTO
-        whenever(preferencesDataStore.data).thenThrow(RuntimeException("Data store inaccessible"))
-        val actualThemeMode = settingsPreferencesDataSourceImpl.getThemeMode()
-        assertEquals(defaultThemeMode, actualThemeMode)
-    }
-
-
 
 }

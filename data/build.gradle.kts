@@ -63,6 +63,9 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.kotlin.test.junit5)
+    testImplementation(libs.junit.platform.suite.api)
+
 
 }
 

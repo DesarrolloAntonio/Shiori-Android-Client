@@ -3,7 +3,9 @@
 compileSdkVersion = "33"
 datastorePreferences = "1.0.0"
 junitJupiter = "5.8.1"
+junitPlatformSuiteApi = "1.8.1"
 koinAndroidxCompose = "3.4.2"
+kotlinTestJunit5 = "1.6.10"
 kotlinxCoroutinesTest = "1.7.1"
 minSdkVersion = "21"
 mockitoCore = "3.9.0"
@@ -53,7 +55,6 @@ compose-animation-animation = { module = "androidx.compose.animation:animation",
 compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "compose" }
 compose-maps = "com.google.maps.android:maps-compose:2.7.2"
 
-
 snapper = "dev.chrisbanes.snapper:snapper:0.2.2"
 
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "gradlePlugin" }
@@ -71,6 +72,7 @@ kotlin-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.
 
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 
 protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobuf" }
@@ -114,6 +116,7 @@ androidx-test-orchestrator = "androidx.test:orchestrator:1.4.1"
 androidx-test-uiAutomator = "androidx.test.uiautomator:uiautomator:2.2.0"
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
+junit-platform-suite-api = { module = "org.junit.platform:junit-platform-suite-api", version.ref = "junitPlatformSuiteApi" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 
