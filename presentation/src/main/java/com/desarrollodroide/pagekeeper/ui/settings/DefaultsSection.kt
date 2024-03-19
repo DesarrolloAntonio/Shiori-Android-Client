@@ -1,7 +1,9 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
@@ -28,7 +30,8 @@ fun DefaultsSection(
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
         ) {
-            Text(text = "Defaults", style = MaterialTheme.typography.titleSmall)
+            Text(text = "Defaults", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(5.dp))
             val items = listOf(
                 Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
                 Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),

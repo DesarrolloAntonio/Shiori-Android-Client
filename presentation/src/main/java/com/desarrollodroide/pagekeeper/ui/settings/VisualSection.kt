@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.HdrAuto
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,10 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.helpers.ThemeMode
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun VisualSection(
     themeMode: ThemeMode,
+    compactView: MutableStateFlow<Boolean>,
+    onCompactViewChanged: MutableStateFlow<Boolean>,
     onThemeChanged: (ThemeMode) -> Unit
 ) {
     Card(
@@ -39,8 +44,8 @@ fun VisualSection(
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
         ) {
-            Text(text = "Visual", style = MaterialTheme.typography.titleSmall)
-
+            Text(text = "Visual", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(5.dp))
             ThemeOption(
                 item = Item("Theme", Icons.Filled.Palette, onClick = {
                     val newMode = when (themeMode) {
@@ -51,6 +56,15 @@ fun VisualSection(
                     onThemeChanged(newMode)
                 }),
                 initialThemeMode = themeMode
+            )
+            val compatViewItem = Item(
+                title ="Compact view",
+                icon = Icons.Filled.ViewCompactAlt,
+                switchState = onCompactViewChanged
+            )
+            SwitchOption(
+                item = compatViewItem,
+                switchState = compactView
             )
         }
 

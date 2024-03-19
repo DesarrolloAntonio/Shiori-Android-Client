@@ -47,8 +47,10 @@ fun SettingsScreen(
         makeArchivePublic = settingsViewModel.makeArchivePublic,
         createEbook = settingsViewModel.createEbook,
         createArchive = settingsViewModel.createArchive,
+        compatView = settingsViewModel.compactView,
         onNavigateToTermsOfUse = onNavigateToTermsOfUse,
-        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy
+        onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+        onCompactViewChanged = settingsViewModel.compactView
     )
 }
 
@@ -58,6 +60,8 @@ fun SettingsContent(
     makeArchivePublic: MutableStateFlow<Boolean>,
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
+    compatView: MutableStateFlow<Boolean>,
+    onCompactViewChanged: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
@@ -96,7 +100,9 @@ fun SettingsContent(
         Divider(Modifier.fillMaxWidth(), color = Color.Black, thickness = 1.dp)
         VisualSection(
             themeMode = themeMode,
-            onThemeChanged = onThemeChanged
+            compactView = compatView,
+            onThemeChanged = onThemeChanged,
+            onCompactViewChanged = onCompactViewChanged
         )
         DefaultsSection(
             makeArchivePublic = makeArchivePublic,
@@ -134,6 +140,8 @@ fun SettingsScreenPreview() {
         createArchive = remember { MutableStateFlow(false) },
         createEbook = remember { MutableStateFlow(false) },
         onNavigateToTermsOfUse = {},
-        onNavigateToPrivacyPolicy = {}
+        onNavigateToPrivacyPolicy = {},
+        onCompactViewChanged = remember { MutableStateFlow(false) },
+        compatView = remember { MutableStateFlow(false) }
     )
 }

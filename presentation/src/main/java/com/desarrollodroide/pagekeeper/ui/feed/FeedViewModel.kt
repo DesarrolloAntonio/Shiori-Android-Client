@@ -53,6 +53,7 @@ class FeedViewModel(
     val bookmarkSelected = mutableStateOf<Bookmark?>(null)
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
+    val compactView = MutableStateFlow<Boolean>(false)
 
 
     fun getBookmarks() {
@@ -103,6 +104,7 @@ class FeedViewModel(
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
+            compactView.value = settingsPreferenceDataSource.getCompactView()
         }
     }
 
@@ -240,4 +242,5 @@ class FeedViewModel(
     fun isLegacyApi(): Boolean = runBlocking {
         settingsPreferenceDataSource.getIsLegacyApi()
     }
+
 }

@@ -33,12 +33,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextOverflow
+import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.rememberPullRefreshState
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkActions
+import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 @Composable
@@ -51,6 +54,7 @@ fun DockedSearchBarWithCategories(
     onBookmarkEpub: (Bookmark) -> Unit,
     onShareBookmark: (Bookmark) -> Unit,
     onClickSync: (Bookmark) -> Unit,
+    viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
     isLegacyApi: Boolean,
@@ -82,7 +86,7 @@ fun DockedSearchBarWithCategories(
     Box(Modifier.wrapContentHeight()) {
         LazyColumn(
             modifier = Modifier
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                .padding(start = 10.dp, top = 8.dp, end = 10.dp)
                 .pullRefresh(state = refreshState)
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -112,12 +116,15 @@ fun DockedSearchBarWithCategories(
                     xSessionId = xSessionId,
                     token = token,
                     isLegacyApi = isLegacyApi,
-                    onClickEdit = onEditBookmark,
-                    onClickDelete = onDeleteBookmark,
-                    onClickShare = onShareBookmark,
-                    onClickBookmark = onBookmarkSelect,
-                    onClickEpub = onBookmarkEpub,
-                    onClickCategory = { category ->
+                    viewType = viewType,
+                    actions = BookmarkActions(
+                        onClickEdit = { onEditBookmark(it) },
+                        onClickDelete = { onDeleteBookmark(it) },
+                        onClickShare = { onShareBookmark(it) },
+                        onClickBookmark = { onBookmarkSelect(it) },
+                        onClickEpub = { onBookmarkEpub(it) },
+                        onClickSync = { onClickSync(it) },
+                        onClickCategory = { category ->
                         setCategoriesVisible(true)
                         it.tags.firstOrNull() { it.name == category.name }?.apply {
                             if (selectedTags.value.contains(category)){
@@ -126,8 +133,7 @@ fun DockedSearchBarWithCategories(
                                 selectedTags.value = selectedTags.value + category
                             }
                         }
-                    },
-                    onClickSync = onClickSync
+                    }),
                 )
             }
         }

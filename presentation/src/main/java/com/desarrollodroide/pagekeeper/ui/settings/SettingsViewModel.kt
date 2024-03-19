@@ -30,6 +30,7 @@ class SettingsViewModel(
     val makeArchivePublic = MutableStateFlow<Boolean>(false)
     val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
+    val compactView = MutableStateFlow<Boolean>(false)
 
     init {
         loadSettings()
@@ -72,6 +73,7 @@ class SettingsViewModel(
             makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
             createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
+            compactView.value = settingsPreferenceDataSource.getCompactView()
         }
     }
 
@@ -89,6 +91,11 @@ class SettingsViewModel(
         viewModelScope.launch {
             createArchive.collect { newValue ->
                 settingsPreferenceDataSource.setCreateArchive(newValue)
+            }
+        }
+        viewModelScope.launch {
+            compactView.collect { newValue ->
+                settingsPreferenceDataSource.setCompactView(newValue)
             }
         }
     }

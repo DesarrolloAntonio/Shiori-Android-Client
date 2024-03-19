@@ -28,6 +28,7 @@ class SettingsPreferencesDataSourceImpl(
 ) : SettingsPreferenceDataSource {
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
+    val COMPACT_VIEW = booleanPreferencesKey("compact_view")
 
     // Use with stateIn
     override val userDataStream = protoDataStore.data
@@ -168,6 +169,20 @@ class SettingsPreferencesDataSourceImpl(
             ThemeMode.valueOf(modeName)
         }
     }
+
+    override suspend fun setCompactView(isCompactView: Boolean) {
+        runBlocking {
+            dataStore.edit { preferences ->
+                preferences[COMPACT_VIEW] = isCompactView
+            }
+        }
+    }
+    override suspend fun getCompactView(): Boolean {
+        return runBlocking {
+            val preferences = dataStore.data.firstOrNull()
+            preferences?.get(COMPACT_VIEW) ?: false
+        }
+    }
     override suspend fun getMakeArchivePublic(): Boolean {
         return rememberUserProtoDataStore.data.map { it.makeArchivePublic }.first()
     }
@@ -197,5 +212,7 @@ class SettingsPreferencesDataSourceImpl(
             preferences.toBuilder().setCreateArchive(newValue).build()
         }
     }
+
+
 
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.pagekeeper.extensions.shareText
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
@@ -48,7 +49,6 @@ fun FeedScreen(
         feedViewModel.refreshData()
         feedViewModel.getBookmarks()
     }
-
     FeedContent(
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
         downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
@@ -88,7 +88,10 @@ fun FeedScreen(
         },
         shareEpubFile = shareEpubFile,
         isLegacyApi = feedViewModel.isLegacyApi(),
-        token = feedViewModel.getToken()
+        token = feedViewModel.getToken(),
+        viewType = feedViewModel.compactView.collectAsState().value.let { isCompactView ->
+            if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
+        },
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -157,6 +160,7 @@ private fun FeedContent(
     onShareBookmark: (Bookmark) -> Unit,
     onClickSync: (Bookmark) -> Unit,
     onClearError: () -> Unit,
+    viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
     isLegacyApi: Boolean,
@@ -208,6 +212,7 @@ private fun FeedContent(
                             xSessionId = xSessionId,
                             isLegacyApi = isLegacyApi,
                             token = token,
+                            viewType = viewType,
                             onRefreshFeed = onRefreshFeed,
                             onDeleteBookmark = onDeleteBookmark,
                             onEditBookmark = onEditBookmark,

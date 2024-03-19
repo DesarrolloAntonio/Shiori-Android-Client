@@ -37,4 +37,6 @@ interface SettingsPreferenceDataSource {
     suspend fun getCreateArchive(): Boolean
     suspend fun setCreateArchive(newValue: Boolean)
     suspend fun getIsLegacyApi(): Boolean
+    suspend fun getCompactView(): Boolean
+    suspend fun setCompactView(isCompactView: Boolean)
 }
