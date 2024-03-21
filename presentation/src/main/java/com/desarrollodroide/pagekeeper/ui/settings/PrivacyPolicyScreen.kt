@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,12 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivacyPolicyScreen(onBack: () -> Unit) {
+fun PrivacyPolicyScreen(
+    onBack: () -> Unit
+) {
+    BackHandler {
+        onBack()
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(

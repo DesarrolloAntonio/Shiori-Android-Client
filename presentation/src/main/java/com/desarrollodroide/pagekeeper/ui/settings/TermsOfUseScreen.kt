@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +19,11 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TermsOfUseScreen(
-    onBack: () -> Unit) {
+    onBack: () -> Unit
+) {
+    BackHandler {
+        onBack()
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(

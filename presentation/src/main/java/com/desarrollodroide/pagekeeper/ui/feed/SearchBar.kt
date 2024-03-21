@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.ListItemDefaults
@@ -44,6 +44,7 @@ import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkActions
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 @Composable
 fun DockedSearchBarWithCategories(
     bookmarks: List<Bookmark>,
@@ -60,10 +61,11 @@ fun DockedSearchBarWithCategories(
     isLegacyApi: Boolean,
     token: String,
     uniqueCategories: MutableState<List<Tag>>,
+    isCategoriesVisible: Boolean,
+    isSearchBarVisible: Boolean
 ) {
     val searchTextState = rememberSaveable { mutableStateOf("") }
     val isActive = rememberSaveable { mutableStateOf(false) }
-    val (isCategoriesVisible, setCategoriesVisible) = rememberSaveable { mutableStateOf(true) }
     val selectedTags = remember { mutableStateOf<List<Tag>>(listOf()) }
 
     val filteredBookmarks = if (selectedTags.value.isEmpty()) {
@@ -81,31 +83,31 @@ fun DockedSearchBarWithCategories(
         delay(1500)
         isRefreshing = false
     }
+
     val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
 
     Box(Modifier.wrapContentHeight()) {
         LazyColumn(
             modifier = Modifier
-                .padding(start = 10.dp, top = 8.dp, end = 10.dp)
+                .padding(horizontal = 10.dp)
                 .pullRefresh(state = refreshState)
                 .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             item {
-                SearchBarWithFilters(
-                    searchText = searchTextState,
-                    isActive = isActive,
-                    setCategoriesVisible = setCategoriesVisible,
-                    isCategoriesVisible = isCategoriesVisible,
-                    bookmarks = bookmarks,
-                    onBookmarkClick = onBookmarkSelect,
-                    onRefresh = onRefreshFeed
-                )
+                AnimatedVisibility(isSearchBarVisible) {
+                    SearchBarWithFilters(
+                        searchText = searchTextState,
+                        isActive = isActive,
+                        bookmarks = bookmarks,
+                        onBookmarkClick = onBookmarkSelect,
+                    )
+                }
             }
             item {
                 Categories(
                     showCategories = isCategoriesVisible,
-                    uniqueCategories =  uniqueCategories ,
+                    uniqueCategories = uniqueCategories,
                     selectedTags = selectedTags
                 )
             }
@@ -125,15 +127,14 @@ fun DockedSearchBarWithCategories(
                         onClickEpub = { onBookmarkEpub(it) },
                         onClickSync = { onClickSync(it) },
                         onClickCategory = { category ->
-                        setCategoriesVisible(true)
-                        it.tags.firstOrNull() { it.name == category.name }?.apply {
-                            if (selectedTags.value.contains(category)){
-                                selectedTags.value = selectedTags.value - category
-                            } else {
-                                selectedTags.value = selectedTags.value + category
+                            it.tags.firstOrNull() { it.name == category.name }?.apply {
+                                if (selectedTags.value.contains(category)) {
+                                    selectedTags.value = selectedTags.value - category
+                                } else {
+                                    selectedTags.value = selectedTags.value + category
+                                }
                             }
-                        }
-                    }),
+                        }),
                 )
             }
         }
@@ -151,13 +152,11 @@ fun DockedSearchBarWithCategories(
 private fun SearchBarWithFilters(
     searchText: MutableState<String>,
     isActive: MutableState<Boolean>,
-    setCategoriesVisible: (Boolean) -> Unit,
-    isCategoriesVisible: Boolean,
     onBookmarkClick: (Bookmark) -> Unit,
     bookmarks: List<Bookmark>,
-    onRefresh: () -> Unit,
 ) {
-    val filteredBookmarks = bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
+    val filteredBookmarks =
+        bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
     Box(Modifier
         .semantics { isContainer = true }
         .zIndex(1f)
@@ -175,13 +174,8 @@ private fun SearchBarWithFilters(
             leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
             trailingIcon = {
                 Row() {
-                    Box(modifier = Modifier.clickable {
-                        setCategoriesVisible(!isCategoriesVisible)
-                    }) {
-                        Icon(Icons.Filled.FilterList, contentDescription = null)
-                    }
                     Box(modifier = Modifier
-                        .padding(horizontal = 8.dp)
+                        .padding(end = 8.dp)
                         .clickable {
                             searchText.value = ""
                         }) {

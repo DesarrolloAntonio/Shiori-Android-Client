@@ -43,6 +43,8 @@ fun FeedScreen(
     goToLogin: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
+    isCategoriesVisible: Boolean,
+    isSearchBarVisible: Boolean
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -92,6 +94,8 @@ fun FeedScreen(
         viewType = feedViewModel.compactView.collectAsState().value.let { isCompactView ->
             if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
         },
+        isCategoriesVisible = isCategoriesVisible,
+        isSearchBarVisible = isSearchBarVisible
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -168,6 +172,8 @@ private fun FeedContent(
     bookmarksUiState: UiState<List<Bookmark>>,
     downloadUiState: UiState<File>,
     shareEpubFile: (File) -> Unit,
+    isCategoriesVisible: Boolean,
+    isSearchBarVisible: Boolean,
 ) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -219,6 +225,8 @@ private fun FeedContent(
                             onShareBookmark = onShareBookmark,
                             onBookmarkEpub = onBookmarkEpub,
                             onClickSync = onClickSync,
+                            isCategoriesVisible = isCategoriesVisible,
+                            isSearchBarVisible = isSearchBarVisible
                         )
                     }
                 }
