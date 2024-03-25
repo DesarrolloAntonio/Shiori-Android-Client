@@ -49,12 +49,13 @@ class FeedViewModel(
     private var bookmarksJob: Job? = null
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
+    val showEpubOptionsDialog = mutableStateOf(false)
     val showSyncDialog = mutableStateOf(false)
     val bookmarkSelected = mutableStateOf<Bookmark?>(null)
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
     val compactView = MutableStateFlow<Boolean>(false)
-
+    val isCategoriesVisible = MutableStateFlow<Boolean>(true)
 
     fun getBookmarks() {
         bookmarksJob?.cancel()
@@ -105,6 +106,7 @@ class FeedViewModel(
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
             compactView.value = settingsPreferenceDataSource.getCompactView()
+            isCategoriesVisible.value = settingsPreferenceDataSource.getCategoriesVisible()
         }
     }
 
@@ -223,14 +225,13 @@ class FeedViewModel(
             try {
                 val downloadedFile = downloadFileUseCase.execute(getEpubUrl(bookmark), bookmark.title, sessionId)
                 _downloadUiState.value = UiState(data = downloadedFile)
+                showEpubOptionsDialog.value = true
             } catch (e: Exception) {
                 Log.e("DownloadFile", "Error al descargar el archivo: ${e.message}")
                 _downloadUiState.value = UiState(error = e.message)
             }
         }
     }
-
-
 
     fun getServerUrl() = serverUrl
     fun getSession(): String = xSessionId
@@ -241,6 +242,16 @@ class FeedViewModel(
 
     fun isLegacyApi(): Boolean = runBlocking {
         settingsPreferenceDataSource.getIsLegacyApi()
+    }
+
+    fun getCategoriesVisible(): Boolean = runBlocking {
+        settingsPreferenceDataSource.getCategoriesVisible()
+    }
+
+    fun saveCategoriesVisibilityState(visible: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCategoriesVisible(visible)
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ fun HomeScreen(
     val navController = rememberNavController()
     val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(true) }
     val (isSearchBarVisible, setSearchBarVisible) = remember { mutableStateOf(false) }
+    val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
 
     BackHandler {
         onFinish()
@@ -66,14 +68,16 @@ fun HomeScreen(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    TopBar(
-                        toggleCategoryVisibility = { setCategoriesVisible(!isCategoriesVisible) },
-                        toggleSearchBarVisibility = { setSearchBarVisible(!isSearchBarVisible) },
-                        onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
-                        isSearchActive = isSearchBarVisible,
-                        isFilterActive = isCategoriesVisible,
-                        scrollBehavior = scrollBehavior
-                    )
+                    AnimatedVisibility (showTopBar) {
+                        TopBar(
+                            toggleCategoryVisibility = { setCategoriesVisible(!isCategoriesVisible) },
+                            toggleSearchBarVisibility = { setSearchBarVisible(!isSearchBarVisible) },
+                            onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
+                            isSearchActive = isSearchBarVisible,
+                            isFilterActive = isCategoriesVisible,
+                            scrollBehavior = scrollBehavior
+                        )
+                    }
                 }
             ) { paddingValues ->
                 Box(
@@ -86,7 +90,8 @@ fun HomeScreen(
                         goToLogin = goToLogin,
                         openUrlInBrowser = openUrlInBrowser,
                         shareEpubFile = shareEpubFile,
-                        isSearchBarVisible = isSearchBarVisible
+                        isSearchBarVisible = isSearchBarVisible,
+                        setShowTopBar = setShowTopBar
                     )
                 }
 

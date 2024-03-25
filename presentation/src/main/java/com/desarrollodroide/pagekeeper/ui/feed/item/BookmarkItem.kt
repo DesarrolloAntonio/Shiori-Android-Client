@@ -40,14 +40,17 @@ fun BookmarkItem(
 ) {
     Box(modifier = Modifier
         .padding(horizontal = 6.dp,)
-        .padding(bottom = 6.dp)
+        .padding(bottom = if (viewType == BookmarkViewType.FULL) 16.dp else 6.dp)
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { actions.onClickBookmark(bookmark) },
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            shape = RoundedCornerShape(8.dp)
+            elevation = if (viewType == BookmarkViewType.FULL) {
+                CardDefaults.cardElevation(defaultElevation = 4.dp)
+            } else {
+                CardDefaults.cardElevation(defaultElevation = 0.dp)
+            },            shape = RoundedCornerShape(8.dp)
         ) {
             val imageUrl =
                 "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"

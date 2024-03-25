@@ -39,4 +39,6 @@ interface SettingsPreferenceDataSource {
     suspend fun getIsLegacyApi(): Boolean
     suspend fun getCompactView(): Boolean
     suspend fun setCompactView(isCompactView: Boolean)
+    suspend fun getCategoriesVisible(): Boolean
+    suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
 }

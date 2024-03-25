@@ -29,6 +29,7 @@ class SettingsPreferencesDataSourceImpl(
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     val COMPACT_VIEW = booleanPreferencesKey("compact_view")
+    val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
 
     // Use with stateIn
     override val userDataStream = protoDataStore.data
@@ -177,12 +178,21 @@ class SettingsPreferencesDataSourceImpl(
             }
         }
     }
-    override suspend fun getCompactView(): Boolean {
-        return runBlocking {
-            val preferences = dataStore.data.firstOrNull()
-            preferences?.get(COMPACT_VIEW) ?: false
+    override suspend fun getCompactView(): Boolean = runBlocking {
+        dataStore.data.firstOrNull()?.get(COMPACT_VIEW) ?: false
+    }
+
+    override suspend fun setCategoriesVisible(isCategoriesVisible: Boolean) {
+        runBlocking {
+            dataStore.edit { preferences ->
+                preferences[CATEGORIES_VISIBLE] = isCategoriesVisible
+            }
         }
     }
+    override suspend fun getCategoriesVisible(): Boolean = runBlocking {
+        dataStore.data.firstOrNull()?.get(CATEGORIES_VISIBLE) ?: false
+    }
+
     override suspend fun getMakeArchivePublic(): Boolean {
         return rememberUserProtoDataStore.data.map { it.makeArchivePublic }.first()
     }
@@ -212,7 +222,5 @@ class SettingsPreferencesDataSourceImpl(
             preferences.toBuilder().setCreateArchive(newValue).build()
         }
     }
-
-
 
 }

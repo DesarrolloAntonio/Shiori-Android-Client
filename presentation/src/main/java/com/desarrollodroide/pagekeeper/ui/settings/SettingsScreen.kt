@@ -5,8 +5,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -132,31 +135,33 @@ fun SettingsContent(
             goToLogin()
         }
     }
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+    LazyColumn(
+        modifier = Modifier.padding(16.dp)
     ) {
-//        Text(text = "Settings", style = MaterialTheme.typography.titleLarge)
-//        Divider(Modifier.fillMaxWidth(), color = Color.Black, thickness = 1.dp)
-        VisualSection(
-            themeMode = themeMode,
-            compactView = compatView,
-            onThemeChanged = onThemeChanged,
-            onCompactViewChanged = onCompactViewChanged
-        )
-        DefaultsSection(
-            makeArchivePublic = makeArchivePublic,
-            createEbook = createEbook,
-            createArchive = createArchive
-        )
-        AccountSection(
-            onLogout = onLogout,
-            onNavigateToTermsOfUse = onNavigateToTermsOfUse,
-            onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
-            onNavigateToSeverSettings = {
-                context.openUrlInBrowser(SHIORI_GITHUB_URL)
-            }
-        )
+        item {
+            VisualSection(
+                themeMode = themeMode,
+                compactView = compatView,
+                onThemeChanged = onThemeChanged,
+                onCompactViewChanged = onCompactViewChanged
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            DefaultsSection(
+                makeArchivePublic = makeArchivePublic,
+                createEbook = createEbook,
+                createArchive = createArchive
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            AccountSection(
+                onLogout = onLogout,
+                onNavigateToTermsOfUse = onNavigateToTermsOfUse,
+                onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+                onNavigateToSeverSettings = {
+                    context.openUrlInBrowser(SHIORI_GITHUB_URL)
+                }
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+        }
     }
 }
 

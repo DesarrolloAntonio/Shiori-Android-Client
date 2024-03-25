@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,8 +44,13 @@ fun FeedScreen(
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: Boolean,
-    isSearchBarVisible: Boolean
+    isSearchBarVisible: Boolean,
+    setShowTopBar: (Boolean) -> Unit
 ) {
+    val isCategoriesVisible2 = feedViewModel.isCategoriesVisible.collectAsState().value
+    LaunchedEffect(isCategoriesVisible2) {
+        feedViewModel.saveCategoriesVisibilityState(isCategoriesVisible2)
+    }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         feedViewModel.refreshData()
@@ -95,8 +100,9 @@ fun FeedScreen(
             if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
         },
         isCategoriesVisible = isCategoriesVisible,
-        isSearchBarVisible = isSearchBarVisible
-    )
+        isSearchBarVisible = isSearchBarVisible,
+        showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
+        )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
             modifier = Modifier
@@ -106,14 +112,17 @@ fun FeedScreen(
                 }
         ) {
             feedViewModel.bookmarkSelected.value?.let {
+                setShowTopBar(false)
                 BookmarkEditorScreen(
                     title = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,
                     onBackClick = {
+                        setShowTopBar(true)
                         feedViewModel.showBookmarkEditorScreen.value = false
                     },
                     updateBookmark = { bookMark ->
+                        setShowTopBar(true)
                         feedViewModel.showBookmarkEditorScreen.value = false
                         feedViewModel.refreshFeed()
                     }
@@ -152,7 +161,6 @@ fun FeedScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedContent(
     goToLogin: () -> Unit,
@@ -174,7 +182,8 @@ private fun FeedContent(
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: Boolean,
     isSearchBarVisible: Boolean,
-) {
+    showEpubOptionsDialog: MutableState<Boolean>,
+    ) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
@@ -258,7 +267,7 @@ private fun FeedContent(
         )
     }
 
-    if (downloadUiState.data != null) {
+    if (downloadUiState.data != null && showEpubOptionsDialog.value) {
         val context = LocalContext.current
         MediaScannerConnection.scanFile(context, arrayOf(downloadUiState.data.absolutePath),null) { path, uri -> }
         EpubOptionsDialog(
@@ -274,6 +283,7 @@ private fun FeedContent(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true
             ),
+            showDialog = showEpubOptionsDialog
         )
     }
 }

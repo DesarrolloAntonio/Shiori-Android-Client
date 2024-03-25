@@ -243,12 +243,12 @@ fun EpubOptionsDialog(
     icon: ImageVector? = null,
     onClickOption: ((Int) -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
+    showDialog: MutableState<Boolean>
 ) {
-    val openDialog = remember { mutableStateOf(true) }
-    if (openDialog.value) {
+    if (showDialog.value) {
         AlertDialog(
             onDismissRequest = {
-                openDialog.value = false
+                showDialog.value = false
             },
             icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
             title = {
@@ -275,18 +275,14 @@ fun EpubOptionsDialog(
                     modifier = Modifier.padding(all = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TextButton(onClick = { openDialog.value = false }) {
+                    TextButton(onClick = {
+                        showDialog.value = false
+                    }) {
                         Text("Cancel")
                     }
                     Spacer(modifier = Modifier.weight(1f))
-//                    TextButton(onClick = {
-//                        openDialog.value = false
-//                        onClickOption?.invoke(1)
-//                    }) {
-//                        Text("Open folder")
-//                    }
                     TextButton(onClick = {
-                        openDialog.value = false
+                        showDialog.value = false
                         onClickOption?.invoke(2)
                     }) {
                         Text("Share")

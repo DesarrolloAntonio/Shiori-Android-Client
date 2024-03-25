@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Label
@@ -113,20 +115,20 @@ fun BookmarkEditorView(
         )
         Divider(modifier = Modifier.padding(vertical = 10.dp))
         Text(text = "All Tags")
-        TagsSelectorView(
-            availableTags = availableTags.value,
-            onTagSelected = {
-                if (!assignedTags.value.contains(it)) {
-                    assignedTags.value = assignedTags.value + it
-                }
-            }
-        )
-        Spacer(
-            modifier = Modifier
+        Column(
+            Modifier
                 .weight(1f)
-                .fillMaxHeight()
-        )
-
+                .verticalScroll(rememberScrollState())
+        ) {
+            TagsSelectorView(
+                availableTags = availableTags.value,
+                onTagSelected = {
+                    if (!assignedTags.value.contains(it)) {
+                        assignedTags.value = assignedTags.value + it
+                    }
+                }
+            )
+        }
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {
                 Checkbox(

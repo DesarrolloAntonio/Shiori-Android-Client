@@ -30,7 +30,8 @@ fun FullBookmarkView(
             isLegacyApi = isLegacyApi,
             token = token,
             modifier = Modifier.fillMaxWidth(),
-            contentScale = ContentScale.FillWidth
+            contentScale = ContentScale.FillWidth,
+            loadAsThumbnail = false
         )
         Column(
             modifier = Modifier.padding(16.dp)
