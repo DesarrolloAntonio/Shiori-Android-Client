@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,9 @@ fun RememberSessionSection(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                onCheckedChange(!checked.value)
+            }
             .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

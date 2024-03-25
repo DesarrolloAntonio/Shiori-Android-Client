@@ -27,7 +27,7 @@ fun SwitchOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { item.onClick() },
+            .clickable { switchState.value = !switchValue },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
