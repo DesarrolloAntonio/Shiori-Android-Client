@@ -46,7 +46,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packagingOptions {
         resources {
@@ -91,12 +91,17 @@ dependencies {
     implementation (libs.compose.material.iconsext)
     implementation (libs.compose.runtime.livedata)
 
-    // implementation (libs.bundles.koin)
     implementation (libs.bundles.retrofit)
     implementation (libs.accompanist.permissions)
 
-    implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
-    implementation ("androidx.datastore:datastore-preferences:1.0.0")
-    implementation ("io.coil-kt:coil-compose:2.5.0")
+    implementation (libs.koin.androidx.compose)
+    implementation (libs.androidx.datastore.preferences)
+    implementation (libs.coil.compose)
 
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
 }

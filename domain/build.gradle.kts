@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.domain"
-    compileSdk = 33
+    compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
+        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -43,10 +43,14 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":common"))
 
-
     // coroutines
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
-//    implementation ("javax.inject:javax.inject:1")
+    implementation (libs.kotlinx.coroutines.android)
+    testImplementation (libs.kotlinx.coroutines.android)
+    testImplementation (libs.kotlin.coroutines.test)
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
 }

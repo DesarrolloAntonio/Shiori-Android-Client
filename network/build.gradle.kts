@@ -35,23 +35,11 @@ android {
         jvmTarget = "1.8"
     }
 }
-//
-//android {
-//    buildFeatures {
-//        buildConfig = true
-//    }
-//    namespace = "com.shiori.network"
-//    testOptions {
-//        unitTests {
-//            isIncludeAndroidResources = true
-//        }
-//    }
-//}
 
 dependencies {
-    //implementation(project(":domain"))
+
     implementation(project(":common"))
     implementation (libs.bundles.retrofit)
-    implementation ("io.insert-koin:koin-androidx-compose:3.4.1")
+    implementation (libs.koin.androidx.compose)
 
 }
