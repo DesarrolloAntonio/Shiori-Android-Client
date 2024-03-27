@@ -47,14 +47,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DockedSearchBarWithCategories(
+    actions: FeedActions,
     bookmarks: List<Bookmark>,
-    onBookmarkSelect: (Bookmark) -> Unit,
-    onRefreshFeed: () -> Unit,
-    onEditBookmark: (Bookmark) -> Unit,
-    onDeleteBookmark: (Bookmark) -> Unit,
-    onBookmarkEpub: (Bookmark) -> Unit,
-    onShareBookmark: (Bookmark) -> Unit,
-    onClickSync: (Bookmark) -> Unit,
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
@@ -62,11 +56,11 @@ fun DockedSearchBarWithCategories(
     token: String,
     uniqueCategories: MutableState<List<Tag>>,
     isCategoriesVisible: Boolean,
-    isSearchBarVisible: Boolean
+    isSearchBarVisible: Boolean,
+    selectedTags: MutableState<List<Tag>>,
 ) {
     val searchTextState = rememberSaveable { mutableStateOf("") }
     val isActive = rememberSaveable { mutableStateOf(false) }
-    val selectedTags = remember { mutableStateOf<List<Tag>>(listOf()) }
 
     val filteredBookmarks = if (selectedTags.value.isEmpty()) {
         bookmarks
@@ -78,7 +72,7 @@ fun DockedSearchBarWithCategories(
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
     fun refreshBookmarks() = refreshCoroutineScope.launch {
-        onRefreshFeed.invoke()
+        actions.onRefreshFeed.invoke()
         isRefreshing = true
         delay(1500)
         isRefreshing = false
@@ -100,7 +94,7 @@ fun DockedSearchBarWithCategories(
                         searchText = searchTextState,
                         isActive = isActive,
                         bookmarks = bookmarks,
-                        onBookmarkClick = onBookmarkSelect,
+                        onBookmarkClick = actions.onBookmarkSelect,
                     )
                 }
             }
@@ -108,7 +102,8 @@ fun DockedSearchBarWithCategories(
                 Categories(
                     showCategories = isCategoriesVisible,
                     uniqueCategories = uniqueCategories,
-                    selectedTags = selectedTags
+                    selectedTags = selectedTags,
+                    onCategoriesSelectedChanged = actions.onCategoriesSelectedChanged
                 )
             }
             items(filteredBookmarks) {
@@ -120,12 +115,12 @@ fun DockedSearchBarWithCategories(
                     isLegacyApi = isLegacyApi,
                     viewType = viewType,
                     actions = BookmarkActions(
-                        onClickEdit = { onEditBookmark(it) },
-                        onClickDelete = { onDeleteBookmark(it) },
-                        onClickShare = { onShareBookmark(it) },
-                        onClickBookmark = { onBookmarkSelect(it) },
-                        onClickEpub = { onBookmarkEpub(it) },
-                        onClickSync = { onClickSync(it) },
+                        onClickEdit = { actions.onEditBookmark(it) },
+                        onClickDelete = { actions.onDeleteBookmark(it) },
+                        onClickShare = { actions.onShareBookmark(it) },
+                        onClickBookmark = { actions.onBookmarkSelect(it) },
+                        onClickEpub = { actions.onBookmarkEpub(it) },
+                        onClickSync = { actions.onClickSync(it) },
                         onClickCategory = { category ->
                             it.tags.firstOrNull() { it.name == category.name }?.apply {
                                 if (selectedTags.value.contains(category)) {
@@ -234,3 +229,4 @@ private fun BookmarkSuggestions(
         }
     }
 }
+

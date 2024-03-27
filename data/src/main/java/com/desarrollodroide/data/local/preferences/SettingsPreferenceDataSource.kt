@@ -41,4 +41,6 @@ interface SettingsPreferenceDataSource {
     suspend fun setCompactView(isCompactView: Boolean)
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
+    suspend fun setSelectedCategories(categories: List<String>)
+    suspend fun getSelectedCategories(): List<String>
 }

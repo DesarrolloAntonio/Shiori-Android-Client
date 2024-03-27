@@ -28,12 +28,13 @@ enum class CategoriesType {
     SELECTABLES, REMOVEABLES
 }
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 fun Categories(
     categoriesType: CategoriesType = CategoriesType.SELECTABLES,
     showCategories: Boolean,
     uniqueCategories: MutableState<List<Tag>>,
-    selectedTags: MutableState<List<Tag>> = mutableStateOf(emptyList<Tag>())
+    selectedTags: MutableState<List<Tag>> = mutableStateOf(emptyList<Tag>()),
+    onCategoriesSelectedChanged: (List<Tag>) -> Unit
 ) {
     AnimatedVisibility(showCategories) {
         Column() {
@@ -69,6 +70,7 @@ fun Categories(
                                     uniqueCategories.value = uniqueCategories.value.filter { it != category }
                                 }
                             }
+                            onCategoriesSelectedChanged(selectedTags.value)
                         },
                         leadingIcon = {
                             when(categoriesType){

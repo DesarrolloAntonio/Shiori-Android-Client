@@ -112,6 +112,7 @@ fun BookmarkEditorView(
             categoriesType = CategoriesType.REMOVEABLES,
             showCategories = true,
             uniqueCategories = assignedTags,
+            onCategoriesSelectedChanged = {}
         )
         Divider(modifier = Modifier.padding(vertical = 10.dp))
         Text(text = "All Tags")

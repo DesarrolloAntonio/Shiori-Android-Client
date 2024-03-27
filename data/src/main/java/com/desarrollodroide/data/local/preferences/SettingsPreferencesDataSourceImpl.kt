@@ -30,6 +30,7 @@ class SettingsPreferencesDataSourceImpl(
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     val COMPACT_VIEW = booleanPreferencesKey("compact_view")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
+    val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
 
     // Use with stateIn
     override val userDataStream = protoDataStore.data
@@ -222,5 +223,17 @@ class SettingsPreferencesDataSourceImpl(
             preferences.toBuilder().setCreateArchive(newValue).build()
         }
     }
+
+    override suspend fun setSelectedCategories(categories: List<String>) {
+        dataStore.edit { preferences ->
+            val categoriesString = categories.joinToString(",")
+            preferences[SELECTED_CATEGORIES_KEY] = categoriesString
+        }
+    }
+
+    override suspend fun getSelectedCategories(): List<String> = runBlocking {
+        dataStore.data.firstOrNull()?.get(SELECTED_CATEGORIES_KEY)?.split(",") ?: emptyList()
+    }
+
 
 }

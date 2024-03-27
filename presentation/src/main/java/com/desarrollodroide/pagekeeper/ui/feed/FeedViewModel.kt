@@ -22,6 +22,7 @@ import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DownloadFileUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,8 +55,19 @@ class FeedViewModel(
     val bookmarkSelected = mutableStateOf<Bookmark?>(null)
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
-    val compactView = MutableStateFlow<Boolean>(false)
+    val isCompactView = MutableStateFlow<Boolean>(false)
     val isCategoriesVisible = MutableStateFlow<Boolean>(true)
+    val selectedCategories = mutableStateOf<List<Tag>>(emptyList())
+    val uniqueCategories =  mutableStateOf<List<Tag>>(emptyList())
+
+    init {
+        viewModelScope.launch {
+            _bookmarksUiState.collect { state ->
+                uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
+                loadSelectedCategories()
+            }
+        }
+    }
 
     fun getBookmarks() {
         bookmarksJob?.cancel()
@@ -99,13 +111,13 @@ class FeedViewModel(
         }
     }
 
-    fun refreshData() {
+    fun loadInitialData() {
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
-            compactView.value = settingsPreferenceDataSource.getCompactView()
+            isCompactView.value = settingsPreferenceDataSource.getCompactView()
             isCategoriesVisible.value = settingsPreferenceDataSource.getCategoriesVisible()
         }
     }
@@ -244,13 +256,22 @@ class FeedViewModel(
         settingsPreferenceDataSource.getIsLegacyApi()
     }
 
-    fun getCategoriesVisible(): Boolean = runBlocking {
-        settingsPreferenceDataSource.getCategoriesVisible()
-    }
-
     fun saveCategoriesVisibilityState(visible: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCategoriesVisible(visible)
+        }
+    }
+
+    fun saveSelectedCategories(categories: List<Tag>) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setSelectedCategories(categories.map { it.name } )
+        }
+    }
+
+    private fun loadSelectedCategories() {
+        viewModelScope.launch {
+            val selectedCategoryNames = settingsPreferenceDataSource.getSelectedCategories()
+            selectedCategories.value = uniqueCategories.value .filter { it.name in selectedCategoryNames }
         }
     }
 

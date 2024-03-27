@@ -33,6 +33,7 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.EpubOptionsDialog
 import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
 import java.io.File
@@ -47,28 +48,25 @@ fun FeedScreen(
     isSearchBarVisible: Boolean,
     setShowTopBar: (Boolean) -> Unit
 ) {
-    val isCategoriesVisible2 = feedViewModel.isCategoriesVisible.collectAsState().value
-    LaunchedEffect(isCategoriesVisible2) {
-        feedViewModel.saveCategoriesVisibilityState(isCategoriesVisible2)
+    val categoriesVisibilityState = feedViewModel.isCategoriesVisible.collectAsState().value
+
+    LaunchedEffect(categoriesVisibilityState) {
+        feedViewModel.saveCategoriesVisibilityState(categoriesVisibilityState)
     }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        feedViewModel.refreshData()
+        feedViewModel.loadInitialData()
         feedViewModel.getBookmarks()
     }
-    FeedContent(
-        bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
-        downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
+    val actions = FeedActions(
         goToLogin = {
             feedViewModel.resetData()
-            goToLogin.invoke()
+            goToLogin()
         },
-        onBookmarkSelect = {
-            Log.v("FeedContent", feedViewModel.getUrl(it))
-            openUrlInBrowser.invoke(feedViewModel.getUrl(it))
+        onBookmarkSelect = { bookmark ->
+            Log.v("FeedContent", feedViewModel.getUrl(bookmark))
+            openUrlInBrowser(feedViewModel.getUrl(bookmark))
         },
-        serverURL = feedViewModel.getServerUrl(),
-        xSessionId = feedViewModel.getSession(),
         onRefreshFeed = {
             feedViewModel.refreshFeed()
         },
@@ -76,32 +74,44 @@ fun FeedScreen(
             feedViewModel.bookmarkSelected.value = bookmark
             feedViewModel.showBookmarkEditorScreen.value = true
         },
-        onDeleteBookmark = {
-            feedViewModel.bookmarkToDelete.value = it
+        onDeleteBookmark = { bookmark ->
+            feedViewModel.bookmarkToDelete.value = bookmark
             feedViewModel.showDeleteConfirmationDialog.value = true
         },
-        onShareBookmark = {
-            context.shareText(it.url)
+        onShareBookmark = { bookmark ->
+            context.shareText(bookmark.url)
+        },
+        onBookmarkEpub = { bookmark ->
+            feedViewModel.downloadFile(bookmark)
+        },
+        onClickSync = { bookmark ->
+            feedViewModel.bookmarkToUpdateCache.value = bookmark
+            feedViewModel.showSyncDialog.value = true
         },
         onClearError = {
             feedViewModel.resetData()
         },
-        onBookmarkEpub = {
-            feedViewModel.downloadFile(it)
-        },
-        onClickSync = {
-            feedViewModel.bookmarkToUpdateCache.value = it
-            feedViewModel.showSyncDialog.value = true
-        },
+        onCategoriesSelectedChanged = { categories ->
+            feedViewModel.saveSelectedCategories(categories)
+        }
+    )
+    FeedContent(
+        actions = actions,
+        bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
+        downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
+        selectedTags = feedViewModel.selectedCategories,
+        serverURL = feedViewModel.getServerUrl(),
+        xSessionId = feedViewModel.getSession(),
         shareEpubFile = shareEpubFile,
         isLegacyApi = feedViewModel.isLegacyApi(),
         token = feedViewModel.getToken(),
-        viewType = feedViewModel.compactView.collectAsState().value.let { isCompactView ->
+        viewType = feedViewModel.isCompactView.collectAsState().value.let { isCompactView ->
             if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
         },
         isCategoriesVisible = isCategoriesVisible,
         isSearchBarVisible = isSearchBarVisible,
         showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
+        uniqueCategories = feedViewModel.uniqueCategories,
         )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -163,15 +173,7 @@ fun FeedScreen(
 
 @Composable
 private fun FeedContent(
-    goToLogin: () -> Unit,
-    onBookmarkSelect: (Bookmark) -> Unit,
-    onRefreshFeed: () -> Unit,
-    onEditBookmark: (Bookmark) -> Unit,
-    onDeleteBookmark: (Bookmark) -> Unit,
-    onBookmarkEpub: (Bookmark) -> Unit,
-    onShareBookmark: (Bookmark) -> Unit,
-    onClickSync: (Bookmark) -> Unit,
-    onClearError: () -> Unit,
+    actions: FeedActions,
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
@@ -183,6 +185,8 @@ private fun FeedContent(
     isCategoriesVisible: Boolean,
     isSearchBarVisible: Boolean,
     showEpubOptionsDialog: MutableState<Boolean>,
+    selectedTags: MutableState<List<Tag>>,
+    uniqueCategories: MutableState<List<Tag>>,
     ) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -194,8 +198,8 @@ private fun FeedContent(
             content = bookmarksUiState.error,
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
-                onClearError()
-                goToLogin.invoke()
+                actions.onClearError()
+                actions.goToLogin.invoke()
             },
             properties = DialogProperties(
                 dismissOnClickOutside = false,
@@ -214,13 +218,8 @@ private fun FeedContent(
                             .wrapContentHeight()
                             .nestedScroll(rememberNestedScrollInteropConnection()),
                     ) {
-                        val uniqueCategories = remember {
-                            mutableStateOf(bookmarksUiState.data.flatMap { it.tags }.distinct())
-                        }
                         DockedSearchBarWithCategories(
-                            onBookmarkSelect = {
-                                onBookmarkSelect.invoke(it)
-                            },
+                            actions = actions,
                             bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
@@ -228,14 +227,9 @@ private fun FeedContent(
                             isLegacyApi = isLegacyApi,
                             token = token,
                             viewType = viewType,
-                            onRefreshFeed = onRefreshFeed,
-                            onDeleteBookmark = onDeleteBookmark,
-                            onEditBookmark = onEditBookmark,
-                            onShareBookmark = onShareBookmark,
-                            onBookmarkEpub = onBookmarkEpub,
-                            onClickSync = onClickSync,
                             isCategoriesVisible = isCategoriesVisible,
-                            isSearchBarVisible = isSearchBarVisible
+                            isSearchBarVisible = isSearchBarVisible,
+                            selectedTags = selectedTags,
                         )
                     }
                 }
@@ -247,7 +241,7 @@ private fun FeedContent(
                         modifier = Modifier
                             .padding(top = 100.dp)
                             .align(Alignment.Center),
-                        onRefresh = onRefreshFeed
+                        onRefresh = actions.onRefreshFeed
                     )
                 }
             }
@@ -288,3 +282,15 @@ private fun FeedContent(
     }
 }
 
+data class FeedActions(
+    val goToLogin: () -> Unit,
+    val onBookmarkSelect: (Bookmark) -> Unit,
+    val onRefreshFeed: () -> Unit,
+    val onEditBookmark: (Bookmark) -> Unit,
+    val onDeleteBookmark: (Bookmark) -> Unit,
+    val onShareBookmark: (Bookmark) -> Unit,
+    val onBookmarkEpub: (Bookmark) -> Unit,
+    val onClickSync: (Bookmark) -> Unit,
+    val onClearError: () -> Unit,
+    val onCategoriesSelectedChanged: (List<Tag>) -> Unit
+)

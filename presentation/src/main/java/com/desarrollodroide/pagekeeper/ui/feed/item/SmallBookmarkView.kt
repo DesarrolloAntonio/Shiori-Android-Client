@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
@@ -88,7 +90,6 @@ fun SmallBookmarkView(
                 )
             }
             Column {
-
                 val expanded = remember { mutableStateOf(false) }
                 IconButton(onClick = {
                     expanded.value = true
@@ -130,19 +131,21 @@ fun SmallBookmarkView(
                                 contentDescription = null
                             )
                         })
-                    DropdownMenuItem(
-                        text = { Text("Epub") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickEpub(bookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_book),
-                                contentDescription = "Epub",
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                        })
+                    if (bookmark.hasEbook){
+                        DropdownMenuItem(
+                            text = { Text("Epub") },
+                            onClick = {
+                                expanded.value = false
+                                actions.onClickEpub(bookmark)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_book),
+                                    contentDescription = "Epub",
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                            })
+                    }
                     DropdownMenuItem(
                         text = { Text("Share") },
                         onClick = {
@@ -152,6 +155,18 @@ fun SmallBookmarkView(
                         leadingIcon = {
                             Icon(
                                 Icons.Outlined.Share,
+                                contentDescription = null
+                            )
+                        })
+                    DropdownMenuItem(
+                        text = { Text("Update") },
+                        onClick = {
+                            expanded.value = false
+                            actions.onClickSync(bookmark)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Outlined.CloudUpload,
                                 contentDescription = null
                             )
                         })
