@@ -234,17 +234,10 @@ private fun FeedContent(
                     }
                 }
             } else {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    NoContentView(
-                        modifier = Modifier
-                            .padding(top = 100.dp)
-                            .align(Alignment.Center),
-                        onRefresh = actions.onRefreshFeed
-                    )
-                }
+                EmptyView(actions)
             }
+        } else {
+            EmptyView(actions)
         }
 
     if (!downloadUiState.error.isNullOrEmpty()) {
@@ -278,6 +271,20 @@ private fun FeedContent(
                 dismissOnBackPress = true
             ),
             showDialog = showEpubOptionsDialog
+        )
+    }
+}
+
+@Composable
+private fun EmptyView(actions: FeedActions) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        NoContentView(
+            modifier = Modifier
+                .padding(top = 100.dp)
+                .align(Alignment.Center),
+            onRefresh = actions.onRefreshFeed
         )
     }
 }

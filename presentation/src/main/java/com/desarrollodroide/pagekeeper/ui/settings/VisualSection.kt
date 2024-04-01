@@ -42,7 +42,9 @@ fun VisualSection(
             .fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 5.dp)
         ) {
             Text(text = "Visual", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(5.dp))

@@ -8,17 +8,13 @@ import coil.compose.SubcomposeAsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import coil.size.Scale
-import coil.transform.Transformation
 import okhttp3.Headers
 import android.graphics.Bitmap
-import coil.size.Size
-import androidx.compose.ui.platform.LocalContext
-import coil.request.CachePolicy
-import coil.request.Options
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BrokenImage
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 
 @Composable
 fun BookmarkImageView(
@@ -30,12 +26,12 @@ fun BookmarkImageView(
     contentScale: ContentScale,
     loadAsThumbnail: Boolean
 ) {
-    val finalImageUrl = if (loadAsThumbnail) "$imageUrl?thumbnail=true" else imageUrl
-
+    //val finalImageUrl = if (loadAsThumbnail) "$imageUrl?thumbnail=true" else imageUrl
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
-            .data(finalImageUrl)
-            .crossfade(true)
+            .data(imageUrl)
+            .bitmapConfig(Bitmap.Config.ARGB_8888)
+            //.crossfade(true)
             .apply {
                 if (loadAsThumbnail) {
                     //size(10)
@@ -55,62 +51,13 @@ fun BookmarkImageView(
             .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
             .fillMaxWidth(),
         loading = {
-
+            //CircularProgressIndicator()
         },
         error = {
-
-        }
-    )
-}
-
-@Composable
-fun BookmarkImageView3(
-    imageUrl: String,
-    xSessionId: String,
-    isLegacyApi: Boolean,
-    token: String,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale,
-    loadAsThumbnail: Boolean
-) {
-    val transformation = if (loadAsThumbnail) {
-        listOf(object : Transformation {
-            override val cacheKey: String
-                get() = "thumbnailTransformation"
-
-            override suspend fun transform(input: Bitmap, size: Size): Bitmap {
-                val width = (input.width * 0.1).toInt()
-                val height = (input.height * 0.1).toInt()
-                return Bitmap.createScaledBitmap(input, width, height, true)
-            }
-        })
-    } else {
-        emptyList()
-    }
-
-    SubcomposeAsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .crossfade(true)
-            .transformations(transformation)
-            .apply {
-                if (isLegacyApi) {
-                    headers(Headers.Builder().add("X-Session-Id", xSessionId).build())
-                } else {
-                    headers(Headers.Builder().add("Authorization", "Bearer $token").build())
-                }
-            }
-            .build(),
-        contentDescription = "Bookmark image",
-        contentScale = contentScale,
-        modifier = modifier
-            .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
-            .fillMaxWidth(),
-        loading = {
-            // Add your loading UI here
-        },
-        error = {
-            // Add your error UI here
+            Icon(
+                imageVector = Icons.Outlined.BrokenImage,
+                contentDescription = "Error loading image"
+            )
         }
     )
 }

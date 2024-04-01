@@ -101,7 +101,7 @@ class FeedViewModel(
 
                         is Result.Success -> {
                             Log.v("FeedViewModel", "Success: ${result.data}")
-                            if (result.data?.isNotEmpty() == true) {
+                            if (result.data != null) {
                                 _bookmarksUiState.success(result.data)
                                 hasLoadedFeed = true
                             }

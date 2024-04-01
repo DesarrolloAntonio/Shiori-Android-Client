@@ -2,9 +2,7 @@ package com.desarrollodroide.pagekeeper.ui.settings
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,9 +14,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.data.helpers.ThemeMode
@@ -39,6 +36,8 @@ import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.desarrollodroide.pagekeeper.BuildConfig
+import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,9 +135,10 @@ fun SettingsContent(
         }
     }
     LazyColumn(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         item {
+            Spacer(modifier = Modifier.height(18.dp))
             VisualSection(
                 themeMode = themeMode,
                 compactView = compatView,
@@ -158,7 +158,17 @@ fun SettingsContent(
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSeverSettings = {
                     context.openUrlInBrowser(SHIORI_GITHUB_URL)
+                },
+                onSendFeedbackEmail = {
+                    context.sendFeedbackEmail()
                 }
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            Text(
+                textAlign = TextAlign.End,
+                modifier = Modifier.fillMaxWidth(),
+                text = "Version ${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.labelMedium
             )
             Spacer(modifier = Modifier.height(18.dp))
         }

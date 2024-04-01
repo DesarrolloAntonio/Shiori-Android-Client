@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Security
@@ -21,14 +22,17 @@ fun AccountSection(
     onLogout: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
-    onNavigateToSeverSettings: () -> Unit
+    onNavigateToSeverSettings: () -> Unit,
+    onSendFeedbackEmail: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 5.dp)
         ) {
             Text(
                 text = "Account",
@@ -39,6 +43,13 @@ fun AccountSection(
                     title = "Server Settings Guide",
                     icon = Icons.Filled.Dns,
                     onClick =  onNavigateToSeverSettings)
+            )
+            ClickableOption(
+                Item(
+                    title = "Send Feedback",
+                    icon = Icons.Filled.Feedback,
+                    onClick = onSendFeedbackEmail
+                )
             )
             ClickableOption(
                 Item(

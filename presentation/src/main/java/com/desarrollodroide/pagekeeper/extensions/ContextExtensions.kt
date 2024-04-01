@@ -35,8 +35,16 @@ fun Context.shareEpubFile(file: File) {
         type = "application/epub+zip"
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-
     startActivity(Intent.createChooser(intent, "Share EPUB"))
+}
+
+fun Context.sendFeedbackEmail() {
+    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:")
+        putExtra(Intent.EXTRA_EMAIL, arrayOf("desarrollodroide@gmail.com"))
+    }
+    val chooserIntent = Intent.createChooser(emailIntent, "Choose an email app:")
+    startActivity(chooserIntent)
 }
 
 
