@@ -52,25 +52,23 @@ fun BookmarkItem(
                 CardDefaults.cardElevation(defaultElevation = 0.dp)
             },            shape = RoundedCornerShape(8.dp)
         ) {
-            val imageUrl =
-                "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
             when (viewType) {
                 BookmarkViewType.FULL -> FullBookmarkView(
-                    bookmark,
-                    imageUrl,
-                    xSessionId,
-                    isLegacyApi,
-                    token,
-                    actions
+                    bookmark = bookmark,
+                    serverURL = serverURL,
+                    xSessionId = xSessionId,
+                    isLegacyApi = isLegacyApi,
+                    token = token,
+                    actions = actions
                 )
 
                 BookmarkViewType.SMALL -> SmallBookmarkView(
-                    bookmark,
-                    imageUrl,
-                    xSessionId,
-                    isLegacyApi,
-                    token,
-                    actions
+                    bookmark = bookmark,
+                    serverURL = serverURL,
+                    xSessionId = xSessionId,
+                    isLegacyApi = isLegacyApi,
+                    token = token,
+                    actions = actions
                 )
             }
         }

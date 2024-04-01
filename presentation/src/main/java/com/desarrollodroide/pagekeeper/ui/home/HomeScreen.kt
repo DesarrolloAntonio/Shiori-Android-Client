@@ -57,6 +57,7 @@ fun HomeScreen(
     val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(true) }
     val (isSearchBarVisible, setSearchBarVisible) = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
+    val hasCategories = feedViewModel.uniqueCategories.value.isNotEmpty()
 
     BackHandler {
         onFinish()
@@ -75,8 +76,9 @@ fun HomeScreen(
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             isSearchActive = isSearchBarVisible,
                             isFilterActive = isCategoriesVisible,
-                            scrollBehavior = scrollBehavior
-                        )
+                            scrollBehavior = scrollBehavior,
+                            hasCategories = hasCategories,
+                            )
                     }
                 }
             ) { paddingValues ->
@@ -138,6 +140,7 @@ fun TopBar(
     isSearchActive: Boolean,
     isFilterActive: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
+    hasCategories: Boolean,
 ) {
     TopAppBar(
         scrollBehavior = scrollBehavior,
@@ -174,18 +177,20 @@ fun TopBar(
                         .padding(6.dp)
                 )
             }
-            IconButton(onClick = { toggleCategoryVisibility() }) {
-                Icon(
-                    imageVector = Icons.Filled.FilterList,
-                    contentDescription = "Filter",
-                    tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier
-                        .background(
-                            if (isFilterActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                            shape = CircleShape
-                        )
-                        .padding(6.dp)
-                )
+            if (hasCategories){
+                IconButton(onClick = { toggleCategoryVisibility() }) {
+                    Icon(
+                        imageVector = Icons.Filled.FilterList,
+                        contentDescription = "Filter",
+                        tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .background(
+                                if (isFilterActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .padding(6.dp)
+                    )
+                }
             }
             IconButton(onClick = onSettingsClick ) {
                 Icon(

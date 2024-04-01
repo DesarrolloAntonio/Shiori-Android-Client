@@ -34,18 +34,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
 
 @Composable
 fun SmallBookmarkView(
     bookmark: Bookmark,
-    imageUrl: String,
+    serverURL: String,
     xSessionId: String,
     isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
+    val imageUrl =
+        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
     Row(
         modifier = Modifier
             .padding(vertical = 8.dp)

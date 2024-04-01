@@ -12,27 +12,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 
 @Composable
 fun FullBookmarkView(
     bookmark: Bookmark,
-    imageUrl: String,
+    serverURL: String,
     xSessionId: String,
     isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
+    val imageUrl =
+        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
     Column {
-        BookmarkImageView(
-            imageUrl = imageUrl,
-            xSessionId = xSessionId,
-            isLegacyApi = isLegacyApi,
-            token = token,
-            modifier = Modifier.fillMaxWidth(),
-            contentScale = ContentScale.FillWidth,
-            loadAsThumbnail = false
-        )
+        if (bookmark.imageURL.isNotEmpty()){
+            BookmarkImageView(
+                imageUrl = imageUrl,
+                xSessionId = xSessionId,
+                isLegacyApi = isLegacyApi,
+                token = token,
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth,
+                loadAsThumbnail = false
+            )
+        }
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
