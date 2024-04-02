@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudUpload
@@ -47,28 +48,30 @@ fun SmallBookmarkView(
     token: String,
     actions: BookmarkActions
 ) {
-    val imageUrl =
-        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+    val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+    val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(vertical = 8.dp)
             .padding(start = 8.dp)
-            .height(75.dp)
     ) {
-        BookmarkImageView(
-            imageUrl = imageUrl,
-            xSessionId = xSessionId,
-            isLegacyApi = isLegacyApi,
-            token = token,
-            modifier = Modifier
-                .aspectRatio(1f)
-                .clip(
-                    RoundedCornerShape(8.dp)
-                ),
-            contentScale = ContentScale.Crop,
-            loadAsThumbnail = true
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        if (bookmark.imageURL.isNotEmpty()) {
+            BookmarkImageView(
+                imageUrl = imageUrl,
+                xSessionId = xSessionId,
+                isLegacyApi = isLegacyApi,
+                token = token,
+                modifier = Modifier
+                    .aspectRatio(1f)
+                    .clip(
+                        RoundedCornerShape(8.dp)
+                    ),
+                contentScale = ContentScale.Crop,
+                loadAsThumbnail = true
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Spacer(modifier = Modifier.width(8.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()

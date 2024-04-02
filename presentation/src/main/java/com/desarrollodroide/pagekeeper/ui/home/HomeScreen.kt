@@ -58,6 +58,7 @@ fun HomeScreen(
     val (isSearchBarVisible, setSearchBarVisible) = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasCategories = feedViewModel.uniqueCategories.value.isNotEmpty()
+    val hasBookmarks = feedViewModel.bookmarksUiState.collectAsState().value.data?.isNotEmpty() == true
 
     BackHandler {
         onFinish()
@@ -78,6 +79,7 @@ fun HomeScreen(
                             isFilterActive = isCategoriesVisible,
                             scrollBehavior = scrollBehavior,
                             hasCategories = hasCategories,
+                            hasBookmarks = hasBookmarks
                             )
                     }
                 }
@@ -141,6 +143,7 @@ fun TopBar(
     isFilterActive: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
     hasCategories: Boolean,
+    hasBookmarks: Boolean,
 ) {
     TopAppBar(
         scrollBehavior = scrollBehavior,
@@ -149,7 +152,9 @@ fun TopBar(
                 Text(
                     color = MaterialTheme.colorScheme.primary,
                     text = "PageKeeper",
-                    modifier = Modifier.align(Alignment.CenterStart).padding(bottom = 4.dp),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(bottom = 4.dp),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)
                 )
             }
@@ -164,18 +169,20 @@ fun TopBar(
             )
         },
         actions = {
-            IconButton(onClick = { toggleSearchBarVisibility() }) {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search",
-                    tint = if (isSearchActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier
-                        .background(
-                            if (isSearchActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                            shape = CircleShape
-                        )
-                        .padding(6.dp)
-                )
+            if (hasBookmarks) {
+                IconButton(onClick = { toggleSearchBarVisibility() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search",
+                        tint = if (isSearchActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .background(
+                                if (isSearchActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .padding(6.dp)
+                    )
+                }
             }
             if (hasCategories){
                 IconButton(onClick = { toggleCategoryVisibility() }) {

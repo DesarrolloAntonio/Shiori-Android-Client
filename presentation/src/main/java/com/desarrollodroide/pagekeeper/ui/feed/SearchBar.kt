@@ -80,7 +80,7 @@ fun DockedSearchBarWithCategories(
 
     val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
 
-    Box(Modifier.wrapContentHeight()) {
+    Box(Modifier.fillMaxHeight()) {
         LazyColumn(
             modifier = Modifier
                 .padding(horizontal = 10.dp)
