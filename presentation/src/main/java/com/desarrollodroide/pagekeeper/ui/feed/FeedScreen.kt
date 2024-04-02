@@ -48,11 +48,6 @@ fun FeedScreen(
     isSearchBarVisible: Boolean,
     setShowTopBar: (Boolean) -> Unit
 ) {
-    val categoriesVisibilityState = feedViewModel.isCategoriesVisible.collectAsState().value
-
-    LaunchedEffect(categoriesVisibilityState) {
-        feedViewModel.saveCategoriesVisibilityState(categoriesVisibilityState)
-    }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()

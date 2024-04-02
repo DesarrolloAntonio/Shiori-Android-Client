@@ -3,7 +3,6 @@ package com.desarrollodroide.data.extensions
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import org.junit.jupiter.api.Assertions.*
-
 import org.junit.jupiter.api.Test
 
 class BookmarkExtensionTest {

@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
@@ -88,25 +87,9 @@ fun PreviewPost() {
             onClickEpub = {},
             onClickSync = {}
         )
-        val bookmark = Bookmark(
-            id = -1,
-            url = "url",
-            title = "Bookmark title",
-            excerpt = "Bookmark content",
-            author = "",
-            public = 1,
-            modified = "",
-            imageURL = "",
-            hasContent = true,
-            hasArchive = true,
-            hasEbook = false,
-            createArchive = true,
-            createEbook = true,
-            tags = listOf(Tag("tag1"), Tag("tag2")),
-        )
         Column {
             BookmarkItem(
-                bookmark = bookmark,
+                bookmark = Bookmark.mock(),
                 serverURL = "",
                 xSessionId = "",
                 isLegacyApi = false,
@@ -115,7 +98,7 @@ fun PreviewPost() {
                 viewType = BookmarkViewType.FULL
             )
             BookmarkItem(
-                bookmark = bookmark,
+                bookmark = Bookmark.mock(),
                 serverURL = "",
                 xSessionId = "",
                 isLegacyApi = false,

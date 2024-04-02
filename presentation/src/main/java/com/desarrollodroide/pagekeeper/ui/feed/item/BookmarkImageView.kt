@@ -11,10 +11,13 @@ import androidx.compose.ui.layout.ContentScale
 import coil.request.ImageRequest
 import okhttp3.Headers
 import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BrokenImage
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
+import com.desarrollodroide.pagekeeper.R
 
 @Composable
 fun BookmarkImageView(
@@ -27,38 +30,47 @@ fun BookmarkImageView(
     loadAsThumbnail: Boolean
 ) {
     //val finalImageUrl = if (loadAsThumbnail) "$imageUrl?thumbnail=true" else imageUrl
-    SubcomposeAsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .bitmapConfig(Bitmap.Config.ARGB_8888)
-            //.crossfade(true)
-            .apply {
-                if (loadAsThumbnail) {
-                    //size(10)
+    if (LocalInspectionMode.current) {
+        Image(
+            painter = painterResource(id = R.drawable.bookmark_preview1),
+            contentDescription = "Placeholder image",
+            modifier = modifier,
+            contentScale = contentScale
+        )
+    } else {
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(imageUrl)
+                .bitmapConfig(Bitmap.Config.ARGB_8888)
+                //.crossfade(true)
+                .apply {
+                    if (loadAsThumbnail) {
+                        //size(10)
+                    }
                 }
+                .headers(
+                    if (isLegacyApi) {
+                        Headers.Builder().add("X-Session-Id", xSessionId).build()
+                    } else {
+                        Headers.Builder().add("Authorization", "Bearer $token").build()
+                    }
+                )
+                .build(),
+            contentDescription = "Bookmark image",
+            contentScale = contentScale,
+            modifier = modifier
+                .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
+                .fillMaxWidth(),
+            loading = {
+                //CircularProgressIndicator()
+            },
+            error = {
+                Icon(
+                    imageVector = Icons.Outlined.BrokenImage,
+                    contentDescription = "Error loading image"
+                )
             }
-            .headers(
-                if (isLegacyApi) {
-                    Headers.Builder().add("X-Session-Id", xSessionId).build()
-                } else {
-                    Headers.Builder().add("Authorization", "Bearer $token").build()
-                }
-            )
-            .build(),
-        contentDescription = "Bookmark image",
-        contentScale = contentScale,
-        modifier = modifier
-            .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
-            .fillMaxWidth(),
-        loading = {
-            //CircularProgressIndicator()
-        },
-        error = {
-            Icon(
-                imageVector = Icons.Outlined.BrokenImage,
-                contentDescription = "Error loading image"
-            )
-        }
-    )
+        )
+    }
 }
 

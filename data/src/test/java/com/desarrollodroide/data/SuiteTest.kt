@@ -9,8 +9,7 @@ import org.junit.platform.suite.api.Suite
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suite
 @SelectClasses(
-    BookmarkExtensionTest::class, SettingsPreferencesDataSourceImplTest::class,
+    BookmarkExtensionTest::class,
+    SettingsPreferencesDataSourceImplTest::class
 )
 class SuiteTest
-{
-}

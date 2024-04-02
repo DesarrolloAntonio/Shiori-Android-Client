@@ -54,7 +54,7 @@ fun HomeScreen(
     shareEpubFile: (File) -> Unit,
 ) {
     val navController = rememberNavController()
-    val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(true) }
+    val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(feedViewModel.isCategoriesVisible()) }
     val (isSearchBarVisible, setSearchBarVisible) = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasCategories = feedViewModel.uniqueCategories.value.isNotEmpty()
@@ -72,7 +72,10 @@ fun HomeScreen(
                 topBar = {
                     AnimatedVisibility (showTopBar) {
                         TopBar(
-                            toggleCategoryVisibility = { setCategoriesVisible(!isCategoriesVisible) },
+                            toggleCategoryVisibility = {
+                                setCategoriesVisible(!isCategoriesVisible)
+                                feedViewModel.saveCategoriesVisibilityState(!isCategoriesVisible)
+                            },
                             toggleSearchBarVisibility = { setSearchBarVisible(!isSearchBarVisible) },
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             isSearchActive = isSearchBarVisible,

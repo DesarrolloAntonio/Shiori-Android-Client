@@ -38,4 +38,23 @@ data class Bookmark (
         createArchive = createArchive,
         createEbook = createEbook,
     )
+
+    companion object {
+        fun mock() = Bookmark(
+            id = -1,
+            url = "url",
+            title = "Bookmark title",
+            excerpt = "A detailed description of the bookmark, explaining its significance, context, and why it was saved.",
+            author = "John Doe",
+            public = 1,
+            modified = "2024-03-19 15:44:40",
+            imageURL = "https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w",
+            hasContent = true,
+            hasArchive = true,
+            hasEbook = false,
+            createArchive = true,
+            createEbook = true,
+            tags = listOf(Tag("tag1"), Tag("tag2")),
+        )
+    }
 }
