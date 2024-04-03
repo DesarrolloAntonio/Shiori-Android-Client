@@ -47,6 +47,7 @@ class SettingsViewModel(
                         Log.v("SettingsViewModel", "Error: ${result.error?.throwable?.message}")
                         _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
                         settingsPreferenceDataSource.resetUser()
+                        bookmarksRepository.deleteAllLocalBookmarks()
                     }
                     is Result.Loading -> {
                         Log.v("SettingsViewModel", "Loading: ${result.data}")
