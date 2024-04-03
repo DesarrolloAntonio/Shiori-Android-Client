@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.desarrollodroide.network"
-    compileSdk = 33
+    compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 33
+        minSdk = (findProperty("minSdkVersion") as String).toInt()
+        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

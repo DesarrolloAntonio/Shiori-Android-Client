@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +64,7 @@ fun AccountSection(
             )
             ClickableOption(
                 Item("Logout",
-                    icon =  Icons.Filled.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     onClick = onLogout),
                 color = Color.Red
             )

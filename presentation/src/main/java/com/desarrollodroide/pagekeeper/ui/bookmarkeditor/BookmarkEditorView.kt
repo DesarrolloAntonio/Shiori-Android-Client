@@ -1,6 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,20 +10,20 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +34,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,7 +63,8 @@ fun BookmarkEditorView(
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.inverseOnSurface)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -70,7 +72,7 @@ fun BookmarkEditorView(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
 
             Text(
@@ -79,57 +81,13 @@ fun BookmarkEditorView(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(CenterVertically)
             )
-            Spacer(modifier = Modifier.width(56.dp))
-        }
-
-        Row {
-            OutlinedTextField(
-                modifier = Modifier.weight(1f),
-                value = newTag.value,
-                onValueChange = { newTag.value = it },
-                label = { Text("Add Tag") },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Label, contentDescription = "Tag")
-                }
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Button(
-                modifier = Modifier
-                    .align(CenterVertically),
-                onClick = {
-                    if (newTag.value.isNotBlank() && !assignedTags.value.map { it.name }.contains(newTag.value)) {
-                        assignedTags.value = assignedTags.value + Tag(newTag.value)
-                        newTag.value = ""
-                    }
-                }
-            ) {
-                Text(text = "Add")
+            IconButton(onClick = {
+                saveBookmark(bookmarkEditorType)
+            }) {
+                Icon(Icons.Outlined.Save, contentDescription = "Save")
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Categories(
-            categoriesType = CategoriesType.REMOVEABLES,
-            showCategories = true,
-            uniqueCategories = assignedTags,
-            onCategoriesSelectedChanged = {}
-        )
-        Divider(modifier = Modifier.padding(vertical = 10.dp))
-        Text(text = "All Tags")
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-        ) {
-            TagsSelectorView(
-                availableTags = availableTags.value,
-                onTagSelected = {
-                    if (!assignedTags.value.contains(it)) {
-                        assignedTags.value = assignedTags.value + it
-                    }
-                }
-            )
-        }
+
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {
                 Checkbox(
@@ -153,14 +111,74 @@ fun BookmarkEditorView(
             )
             Text("Make bookmark publicly available")
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(
-            modifier = Modifier.align(CenterHorizontally),
-            onClick = {
-                saveBookmark(bookmarkEditorType)
+
+        Row {
+            OutlinedTextField(
+                modifier = Modifier
+                    .weight(1f)
+                    .align(CenterVertically),
+                value = newTag.value,
+                onValueChange = { newTag.value = it },
+                label = { Text("Add Tag") },
+                singleLine = true,
+                leadingIcon = {
+                    Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Tag")
+                }
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(
+                modifier = Modifier
+                    .align(CenterVertically)
+                    .padding(top = 4.dp),
+                onClick = {
+                    if (newTag.value.isNotBlank() && !assignedTags.value.map { it.name }.contains(newTag.value)) {
+                        assignedTags.value = assignedTags.value + Tag(newTag.value)
+                        newTag.value = ""
+                    }
+                }
+            ) {
+                Text(text = "Add")
             }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Column(
+            Modifier
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .heightIn(max = 145.dp)
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    RoundedCornerShape(4.dp)
+                )
+                .padding(horizontal = 6.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Text("Save Bookmark")
+            Categories(
+                categoriesType = CategoriesType.REMOVEABLES,
+                showCategories = true,
+                uniqueCategories = assignedTags,
+                onCategoriesSelectedChanged = {}
+            )
+        }
+        Spacer(modifier = Modifier.heightIn(10.dp))
+        Text(
+            style = MaterialTheme.typography.titleMedium,
+            text = "All Tags"
+        )
+        Spacer(modifier = Modifier.heightIn(5.dp))
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            TagsSelectorView(
+                availableTags = availableTags.value,
+                onTagSelected = {
+                    if (!assignedTags.value.contains(it)) {
+                        assignedTags.value = assignedTags.value + it
+                    }
+                }
+            )
         }
     }
 }
@@ -210,7 +228,7 @@ fun BookmarkEditorPreview() {
     BookmarkEditorView(
         title = "Add",
         bookmarkEditorType = BookmarkEditorType.ADD,
-        assignedTags = assignedTags,
+        assignedTags = remember { mutableStateOf(generateRandomTags(100)) },
         saveBookmark = {},
         availableTags = assignedTags,
         newTag = newTag,
@@ -219,4 +237,18 @@ fun BookmarkEditorPreview() {
         createArchive = remember { mutableStateOf(false) },
         createEbook = remember { mutableStateOf(false) }
     )
+
+}
+
+private fun generateRandomTagName(length: Int): String {
+    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+    return (1..length)
+        .map { allowedChars.random() }
+        .joinToString("")
+}
+
+private fun generateRandomTags(count: Int): List<Tag> {
+    return List(count) {
+        Tag(name = generateRandomTagName(10))
+    }
 }

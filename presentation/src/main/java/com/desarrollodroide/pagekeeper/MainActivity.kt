@@ -51,12 +51,6 @@ fun Context.updateLocale(locale: Locale): Context {
     Locale.setDefault(locale)
     val resources = this.resources
     val config = resources.configuration
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-        config.setLocale(locale)
-        return this.createConfigurationContext(config)
-    } else {
-        config.locale = locale
-        resources.updateConfiguration(config, resources.displayMetrics)
-        return this
-    }
+    config.setLocale(locale)
+    return this.createConfigurationContext(config)
 }
