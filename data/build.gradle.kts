@@ -33,7 +33,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
 }
 
 java {
@@ -90,4 +89,8 @@ protobuf {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+    }
 }
