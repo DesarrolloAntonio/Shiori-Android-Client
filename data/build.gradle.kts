@@ -1,8 +1,9 @@
 plugins {
     id ("com.android.library")
     id ("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp") version "1.9.23-1.0.19"
+    id ("com.google.devtools.ksp") version "1.9.23-1.0.19"
     id ("com.google.protobuf") version "0.9.4"
+    id ("de.mannodermaus.android-junit5")
 }
 
 android {
@@ -33,6 +34,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    // JUnit 5 will bundle in files with identical paths, exclude them
+    packagingOptions {
+        exclude("META-INF/LICENSE*")
+    }
 }
 
 java {
@@ -42,31 +47,48 @@ java {
 }
 
 dependencies {
-
+    // Project module dependencies
     implementation(project(":network"))
     implementation(project(":model"))
     implementation(project(":common"))
 
-    implementation (libs.bundles.retrofit)
-    implementation (libs.koin.androidx.compose)
-    implementation (libs.androidx.core)
-    implementation (libs.androidx.datastore.preferences)
-    implementation (libs.androidx.datastore.core)
-    implementation(libs.protobuf.kotlin.lite)
-    implementation(libs.androidx.room)
-    ksp(libs.androidx.room.compiler)
+    // Retrofit for HTTP requests and networking
+    implementation (libs.bundles.retrofit) // Retrofit with logging, Gson, and scalar converters for REST API communication.
 
-    // Test
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.kotlin)
-    testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(libs.kotlin.test.junit5)
-    testImplementation(libs.junit.platform.suite.api)
+    // Koin for dependency injection, specifically tailored for use with Jetpack Compose
+    implementation (libs.koin.androidx.compose) // Koin library for dependency injection within Android Compose applications.
 
+    // AndroidX core libraries for fundamental functionality
+    implementation (libs.androidx.core) // Core utility functions and backward-compatible versions of Android framework components.
+    implementation (libs.androidx.datastore.preferences) // DataStore for storing key-value pairs asynchronously and transactionally.
+    implementation (libs.androidx.datastore.core) // Core DataStore functionality.
+
+    // Protocol Buffers for efficient serialization of structured data
+    implementation(libs.protobuf.kotlin.lite) // Protocol Buffers Lite for Kotlin, for efficient data serialization.
+
+    // Room for abstracting SQLite database access and providing compile-time checks of SQL queries
+    implementation(libs.androidx.room) // Room for database access, abstracting SQLite and providing LiveData support.
+    ksp(libs.androidx.room.compiler) // Kotlin Symbol Processing (KSP) for Room to generate database access code at compile time.
+
+    // Testing libraries
+    testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
+    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.
+    testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
+    testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
+    testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
+    testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
+    testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
+
+    // Android Testing libraries
+    androidTestImplementation ("androidx.test:core:1.5.0") // Core testing library for Android, providing API for test infrastructure.
+    androidTestImplementation ("androidx.test:runner:1.5.0") // Android Test Runner for running instrumented tests.
+    androidTestImplementation ("androidx.test:rules:1.5.0") // Android Test Rules for defining complex test cases.
+    androidTestImplementation(libs.androidx.room.testing) // Room Testing support for testing Room databases.
+    androidTestImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing coroutines in Android tests.
+    androidTestImplementation("de.mannodermaus.junit5:android-test-core:1.2.2") // Android support for JUnit 5 tests.
+    androidTestRuntimeOnly("de.mannodermaus.junit5:android-test-runner:1.2.2") // JUnit 5 Runner for running Android tests with JUnit 5.
 }
+
 
 // Setup protobuf configuration, generating lite Java and Kotlin classes
 protobuf {
