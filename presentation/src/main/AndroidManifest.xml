@@ -33,7 +33,6 @@
         </activity>
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
             android:label="Save in PageKeeper"
-            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:exported="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">

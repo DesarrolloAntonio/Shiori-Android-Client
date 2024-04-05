@@ -61,7 +61,7 @@ class BookmarkViewModel(
         makeArchivePublic: Boolean,
         createEbook: Boolean
     ) = viewModelScope.launch {
-        Log.v("Add BookmarkViewModel", "createArchive: ${createArchive} makeArchivePublic: ${makeArchivePublic}")
+        Log.v("Add BookmarkViewModel", "createArchive: $createArchive makeArchivePublic: $makeArchivePublic")
 
         viewModelScope.launch {
             bookmarkAdditionUseCase.invoke(
@@ -79,7 +79,7 @@ class BookmarkViewModel(
                     when (result) {
                         is Result.Error -> {
                             Log.v("Add BookmarkViewModel", result.error?.message ?: "")
-                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "" )
+                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "Unknown error" )
                         }
 
                         is Result.Loading -> {

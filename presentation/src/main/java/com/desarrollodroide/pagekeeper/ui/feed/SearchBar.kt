@@ -83,6 +83,7 @@ fun DockedSearchBarWithCategories(
     Box(Modifier.fillMaxHeight()) {
         LazyColumn(
             modifier = Modifier
+                .fillMaxHeight()
                 .padding(horizontal = 10.dp)
                 .pullRefresh(state = refreshState)
                 .animateContentSize(),

@@ -73,16 +73,19 @@ abstract class NetworkNoCacheResource<RequestType, ResultType>(
 ) {
     fun asFlow() = flow {
         emit(Result.Loading(null)) // start loading state immediately
-
         try {
             val apiResponse = fetchFromRemote()
             val remoteResponse = apiResponse.body()
             if (apiResponse.isSuccessful && remoteResponse != null) {
                 emitAll(fetchResult(remoteResponse).map { Result.Success(it) })
             } else {
-                emit(Result.Error(errorHandler.getApiError(apiResponse.code()), null))
+                emit(Result.Error(errorHandler.getApiError(
+                    statusCode = apiResponse.code(),
+                    throwable = null,
+                    message = apiResponse.errorBody()?.string())))
             }
         } catch (e: Exception) {
+            Log.v("NetworkNoCacheResource", "Error: ${e.message}")
             emit(Result.Error(errorHandler.getError(e), null))
         }
     }
