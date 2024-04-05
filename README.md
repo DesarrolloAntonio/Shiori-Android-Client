@@ -1,12 +1,50 @@
-# PageKeeper
+<h1 align="center">
+  <img src="images/page_keeper_logo.png" width="120" alt="EhViewer">
+  <br>PageKeeper<br>
+</h1>
 
-## Introduction
+<p align="center">
+  <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/actions">
+    <img src="https://github.com/DesarrolloAntonio/Shiori-Android-Client/actions/workflows/ci.yml/badge.svg" alt="GitHub Actions">
+  </a>
+  <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/DesarrolloAntonio/Shiori-Android-Client" alt="License">
+  </a>
+  <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/releases">
+    <img src="https://img.shields.io/github/v/release/DesarrolloAntonio/Shiori-Android-Client" alt="Release">
+  </a>
+  <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/issues">
+    <img src="https://img.shields.io/github/issues/DesarrolloAntonio/Shiori-Android-Client" alt="Issues">
+  </a>
+ <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/commits">
+    <img src="https://img.shields.io/github/commit-activity/m/DesarrolloAntonio/Shiori-Android-Client" alt="Commit Activity">
+  </a>
+</p>
+
+<div align="center">
+  <h3>
+    <a href="#description">Description</a>
+    <span> | </span>
+    <a href="#screenshot">Screenshot</a>
+    <span> | </span>
+    <a href="#features">Features</a>
+    <span> | </span>
+    <a href="#technologies-used">Technologies Used</a>
+    <span> | </span>
+    <a href="#download">Download</a>
+    <span> | </span>
+    <a href="#license">License</a>
+  </h3>
+</div>
+
+## Description
 PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), PageKeeper offers a seamless experience across all devices.
 
-|                                               |                                               |                                               |
-|:---------------------------------------------:|:---------------------------------------------:|:---------------------------------------------:|
-| ![Screenshot 1](screenshots/Screenshot_1.png) | ![Screenshot 2](screenshots/Screenshot_2.png) | ![Screenshot 3](screenshots/Screenshot_3.png) |
-| ![Screenshot 4](screenshots/Screenshot_4.png) | ![Screenshot 5](screenshots/Screenshot_5.png) |                                               |
+## Screenshot
+|                                                      |                                                      |                                                      |
+|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|
+| ![Screenshot 1](images/screenshots/Screenshot_1.png) | ![Screenshot 2](images/screenshots/Screenshot_2.png) | ![Screenshot 3](images/screenshots/Screenshot_3.png) |
+| ![Screenshot 4](images/screenshots/Screenshot_4.png) | ![Screenshot 5](images/screenshots/Screenshot_5.png) |                                                      |
 
 
 ## Features
@@ -24,24 +62,21 @@ PageKeeper is built using a variety of modern and robust technologies to ensure 
 - **Repository Pattern**: For efficient data handling and abstraction.
 - **Protobuf (Proto)**: For efficient data serialization.
 
-## Tests
-Tests are a crucial aspect of software development. The test suite for PageKeeper is currently in the planning stages, with implementation scheduled for a future date.
+## Download
 
-## Available on Google Play
-PageKeeper is available for download on Google Play. 
+PageKeeper is available for download on various platforms:
 
-<a href="https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper">
-  <img alt="Get Pagekeeper on Google Play" vspace="20"
-       src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height="60" />
-</a>
-
-## Available on IzzyOnDroid
-PageKeeper is also available on IzzyOnDroid.
-
-<a href="https://apt.izzysoft.de/packages/com.desarrollodroide.pagekeeper">
-  <img alt="Get Pagekeeper on IzzyOnDroid"
-       src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="60" />
-</a>
+<p>
+  <a href="https://github.com/z-huang/InnerTune/releases/latest">
+    <img src="images/badge_github.png" alt="Get it on GitHub" height="80">
+  </a>
+  <a href="https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper">
+    <img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get Pagekeeper on Google Play" height="80">
+  </a>
+  <a href="https://apt.izzysoft.de/fdroid/index/apk/com.desarrollodroide.pagekeeper">
+    <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get Pagekeeper on IzzyOnDroid" height="80">
+  </a>
+</p>
 
 ## License
 This project is licensed under the Apache License - see the [LICENSE](LICENSE) file for details.
