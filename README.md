@@ -67,7 +67,7 @@ PageKeeper is built using a variety of modern and robust technologies to ensure 
 PageKeeper is available for download on various platforms:
 
 <p>
-  <a href="https://github.com/z-huang/InnerTune/releases/latest">
+  <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/releases/latest">
     <img src="images/badge_github.png" alt="Get it on GitHub" height="80">
   </a>
   <a href="https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper">
