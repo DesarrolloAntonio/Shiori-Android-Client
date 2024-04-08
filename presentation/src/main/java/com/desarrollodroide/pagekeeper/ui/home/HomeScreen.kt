@@ -64,10 +64,14 @@ fun HomeScreen(
         onFinish()
     }
 
-    NavHost(navController, startDestination = NavItem.HomeNavItem.route) {
+    NavHost(
+        navController = navController,
+        startDestination = NavItem.HomeNavItem.route
+    ) {
         composable(NavItem.HomeNavItem.route) {
             val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
             Scaffold(
+                containerColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     AnimatedVisibility (showTopBar) {
@@ -209,6 +213,13 @@ fun TopBar(
                     tint = MaterialTheme.colorScheme.secondary
                 )
             }
-        }
+        },
+        colors = TopAppBarDefaults.smallTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.onPrimary, // Sets the background color of the TopAppBar
+            titleContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the title color if needed
+            navigationIconContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the navigation icon color if needed
+            actionIconContentColor = MaterialTheme.colorScheme.primary // Optional: Set the action icons color if needed
+        )
     )
+
 }

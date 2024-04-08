@@ -23,7 +23,10 @@ fun ComposeSetup(
     ShioriTheme(
         darkTheme = isDarkTheme
     ) {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
             content()
         }
     }

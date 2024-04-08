@@ -37,8 +37,9 @@ fun FullBookmarkView(
                 token = token,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(top = 16.dp)
                     .clip(
-                        RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                        RoundedCornerShape(12.dp)
                     ),
                 contentScale = ContentScale.FillWidth,
                 loadAsThumbnail = false

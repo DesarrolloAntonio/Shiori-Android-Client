@@ -39,17 +39,18 @@ fun BookmarkItem(
 ) {
     Box(modifier = Modifier
         .padding(horizontal = 6.dp,)
-        .padding(bottom = if (viewType == BookmarkViewType.FULL) 16.dp else 6.dp)
+        .padding(bottom = if (viewType == BookmarkViewType.FULL) 0.dp else 6.dp)
     ) {
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { actions.onClickBookmark(bookmark) },
-            elevation = if (viewType == BookmarkViewType.FULL) {
-                CardDefaults.cardElevation(defaultElevation = 4.dp)
-            } else {
-                CardDefaults.cardElevation(defaultElevation = 0.dp)
-            },            shape = RoundedCornerShape(8.dp)
+//            elevation = if (viewType == BookmarkViewType.FULL) {
+//                CardDefaults.cardElevation(defaultElevation = 4.dp)
+//            } else {
+//                CardDefaults.cardElevation(defaultElevation = 0.dp)
+//            },
+//            shape = RoundedCornerShape(8.dp)
         ) {
             when (viewType) {
                 BookmarkViewType.FULL -> FullBookmarkView(

@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         //val context = this.updateLocale(Locale("iw"))
         setContent {
             ComposeSetup(themeManager = themeManager) {

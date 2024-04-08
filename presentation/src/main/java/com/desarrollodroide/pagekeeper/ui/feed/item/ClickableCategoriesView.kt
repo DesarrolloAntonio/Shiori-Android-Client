@@ -28,7 +28,7 @@ fun ClickableCategoriesView(
                 modifier = Modifier
                     .padding(5.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
                     .clickable { onClickCategory(category) }
                     .padding(vertical = 8.dp, horizontal = 16.dp),
                 text = category.name

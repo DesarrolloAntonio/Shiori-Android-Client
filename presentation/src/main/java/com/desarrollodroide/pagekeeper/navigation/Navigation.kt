@@ -44,6 +44,7 @@ fun Navigation(
                 feedViewModel = feedViewModel,
                 goToLogin = {
                     loginViewModel.clearState()
+                    feedViewModel.resetData()
                     navController.navigate(NavItem.LoginNavItem.route) {
                         popUpTo(NavItem.HomeNavItem.route) { inclusive = true }
                     }

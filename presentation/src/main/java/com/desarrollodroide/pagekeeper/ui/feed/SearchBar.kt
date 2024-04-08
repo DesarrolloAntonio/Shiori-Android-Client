@@ -23,9 +23,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.MutableState
@@ -107,33 +109,44 @@ fun DockedSearchBarWithCategories(
                     onCategoriesSelectedChanged = actions.onCategoriesSelectedChanged
                 )
             }
-            items(filteredBookmarks) {
-                BookmarkItem(
-                    bookmark = it,
-                    serverURL = serverURL,
-                    xSessionId = xSessionId,
-                    token = token,
-                    isLegacyApi = isLegacyApi,
-                    viewType = viewType,
-                    actions = BookmarkActions(
-                        onClickEdit = { actions.onEditBookmark(it) },
-                        onClickDelete = { actions.onDeleteBookmark(it) },
-                        onClickShare = { actions.onShareBookmark(it) },
-                        onClickBookmark = { actions.onBookmarkSelect(it) },
-                        onClickEpub = { actions.onBookmarkEpub(it) },
-                        onClickSync = { actions.onClickSync(it) },
-                        onClickCategory = { category ->
-                            it.tags.firstOrNull() { it.name == category.name }?.apply {
-                                if (selectedTags.value.contains(category)) {
-                                    selectedTags.value = selectedTags.value - category
-                                } else {
-                                    selectedTags.value = selectedTags.value + category
+            itemsIndexed(filteredBookmarks) { index, bookmark ->
+                Column {
+                    BookmarkItem(
+                        bookmark = bookmark,
+                        serverURL = serverURL,
+                        xSessionId = xSessionId,
+                        token = token,
+                        isLegacyApi = isLegacyApi,
+                        viewType = viewType,
+                        actions = BookmarkActions(
+                            onClickEdit = { actions.onEditBookmark(bookmark) },
+                            onClickDelete = { actions.onDeleteBookmark(bookmark) },
+                            onClickShare = { actions.onShareBookmark(bookmark) },
+                            onClickBookmark = { actions.onBookmarkSelect(bookmark) },
+                            onClickEpub = { actions.onBookmarkEpub(bookmark) },
+                            onClickSync = { actions.onClickSync(bookmark) },
+                            onClickCategory = { category ->
+                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
+                                    if (selectedTags.value.contains(category)) {
+                                        selectedTags.value = selectedTags.value - category
+                                    } else {
+                                        selectedTags.value = selectedTags.value + category
+                                    }
                                 }
-                            }
-                        }),
-                )
+                            }),
+                    )
+                    if (index < filteredBookmarks.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .padding(horizontal = 6.dp,),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        )
+                    }
+                }
             }
         }
+
 
         PullRefreshIndicator(
             modifier = Modifier.align(alignment = Alignment.TopCenter),
