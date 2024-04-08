@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,28 +22,28 @@ fun DefaultsSection(
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>
 ) {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 12.dp, bottom = 5.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 12.dp, bottom = 5.dp)
-        ) {
-            Text(text = "Defaults", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(5.dp))
-            val items = listOf(
-                Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
-                Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
-                Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook)
+        Text(text = "Defaults", style = MaterialTheme.typography.titleSmall)
+        Spacer(modifier = Modifier.height(5.dp))
+        val items = listOf(
+            Item(
+                "Make bookmark publicly available",
+                icon = Icons.Filled.Public,
+                switchState = makeArchivePublic
+            ),
+            Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
+            Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook)
+        )
+        items.forEach { item ->
+            SwitchOption(
+                item = item,
+                switchState = item.switchState
             )
-            items.forEach { item ->
-                SwitchOption(
-                    item = item,
-                    switchState = item.switchState
-                )
-            }
         }
     }
 }

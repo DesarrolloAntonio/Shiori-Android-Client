@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.HdrAuto
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.ViewCompactAlt
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,39 +36,34 @@ fun VisualSection(
     onCompactViewChanged: MutableStateFlow<Boolean>,
     onThemeChanged: (ThemeMode) -> Unit
 ) {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 12.dp, bottom = 5.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 12.dp, bottom = 5.dp)
-        ) {
-            Text(text = "Visual", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(5.dp))
-            ThemeOption(
-                item = Item("Theme", Icons.Filled.Palette, onClick = {
-                    val newMode = when (themeMode) {
-                        ThemeMode.DARK -> ThemeMode.LIGHT
-                        ThemeMode.LIGHT -> ThemeMode.AUTO
-                        ThemeMode.AUTO -> ThemeMode.DARK
-                    }
-                    onThemeChanged(newMode)
-                }),
-                initialThemeMode = themeMode
-            )
-            val compatViewItem = Item(
-                title ="Compact view",
-                icon = Icons.Filled.ViewCompactAlt,
-                switchState = onCompactViewChanged
-            )
-            SwitchOption(
-                item = compatViewItem,
-                switchState = compactView
-            )
-        }
-
+        Text(text = "Visual", style = MaterialTheme.typography.titleSmall)
+        Spacer(modifier = Modifier.height(5.dp))
+        ThemeOption(
+            item = Item("Theme", Icons.Filled.Palette, onClick = {
+                val newMode = when (themeMode) {
+                    ThemeMode.DARK -> ThemeMode.LIGHT
+                    ThemeMode.LIGHT -> ThemeMode.AUTO
+                    ThemeMode.AUTO -> ThemeMode.DARK
+                }
+                onThemeChanged(newMode)
+            }),
+            initialThemeMode = themeMode
+        )
+        val compatViewItem = Item(
+            title = "Compact view",
+            icon = Icons.Filled.ViewCompactAlt,
+            switchState = onCompactViewChanged
+        )
+        SwitchOption(
+            item = compatViewItem,
+            switchState = compactView
+        )
     }
 }
 

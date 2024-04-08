@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +46,7 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToSourceCode: () -> Unit,
     goToLogin: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -55,7 +57,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings") },
+                title = { Text("Settings", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -65,11 +67,11 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.onPrimary
     ) { paddingValues ->
 
         Box(
@@ -90,7 +92,8 @@ fun SettingsScreen(
                 compatView = settingsViewModel.compactView,
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
-                onCompactViewChanged = settingsViewModel.compactView
+                onCompactViewChanged = settingsViewModel.compactView,
+                onNavigateToSourceCode = onNavigateToSourceCode
             )
         }
     }
@@ -105,6 +108,7 @@ fun SettingsContent(
     compatView: MutableStateFlow<Boolean>,
     onCompactViewChanged: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
+    onNavigateToSourceCode: () -> Unit ,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onThemeChanged: (ThemeMode) -> Unit,
@@ -138,19 +142,21 @@ fun SettingsContent(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             VisualSection(
                 themeMode = themeMode,
                 compactView = compatView,
                 onThemeChanged = onThemeChanged,
                 onCompactViewChanged = onCompactViewChanged
             )
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
                 createEbook = createEbook,
                 createArchive = createArchive
             )
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             AccountSection(
                 onLogout = onLogout,
@@ -161,7 +167,8 @@ fun SettingsContent(
                 },
                 onSendFeedbackEmail = {
                     context.sendFeedbackEmail()
-                }
+                },
+                onNavigateToSourceCode = onNavigateToSourceCode
             )
             Spacer(modifier = Modifier.height(18.dp))
             Text(
@@ -173,6 +180,16 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(18.dp))
         }
     }
+}
+
+@Composable
+private fun HorizontalDivider(){
+    HorizontalDivider(
+        modifier = Modifier
+            .height(1.dp)
+            .padding(horizontal = 6.dp,),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+    )
 }
 
 data class Item(
@@ -197,6 +214,7 @@ fun SettingsScreenPreview() {
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
         onCompactViewChanged = remember { MutableStateFlow(false) },
-        compatView = remember { MutableStateFlow(false) }
+        compatView = remember { MutableStateFlow(false) },
+        onNavigateToSourceCode = {}
     )
 }

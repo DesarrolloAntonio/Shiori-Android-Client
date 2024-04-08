@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
 import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
@@ -120,6 +121,9 @@ fun HomeScreen(
                 },
                 onBack = {
                     navController.navigateUp()
+                },
+                onNavigateToSourceCode = {
+                    openUrlInBrowser.invoke(SHIORI_ANDROID_CLIENT_GITHUB_URL)
                 }
             )
         }
