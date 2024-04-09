@@ -31,6 +31,7 @@ class SettingsPreferencesDataSourceImpl(
     val COMPACT_VIEW = booleanPreferencesKey("compact_view")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
     val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
+    val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
 
     // Use with stateIn
     override val userDataStream = protoDataStore.data
@@ -235,5 +236,17 @@ class SettingsPreferencesDataSourceImpl(
         dataStore.data.firstOrNull()?.get(SELECTED_CATEGORIES_KEY)?.split(",") ?: emptyList()
     }
 
+
+    override  fun getUseDynamicColors(): Boolean = runBlocking {
+        dataStore.data.firstOrNull()?.get(USE_DYNAMIC_COLORS) ?: false
+    }
+
+    override fun setUseDynamicColors(newValue: Boolean) {
+        runBlocking {
+            dataStore.edit { preferences ->
+                preferences[USE_DYNAMIC_COLORS] = newValue
+            }
+        }
+    }
 
 }

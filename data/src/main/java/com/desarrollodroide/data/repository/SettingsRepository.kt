@@ -11,4 +11,7 @@ interface SettingsRepository {
     val userDataStream: Flow<User>
     fun getThemeMode(): ThemeMode
     suspend fun setThemeMode(themeMode: ThemeMode)
+
+    fun getUseDynamicColors(): Boolean
+    suspend fun setUseDynamicColors(useDynamicColors: Boolean)
 }

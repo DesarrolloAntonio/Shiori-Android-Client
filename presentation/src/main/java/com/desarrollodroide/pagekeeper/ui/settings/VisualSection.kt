@@ -19,10 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,10 +29,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun VisualSection(
-    themeMode: ThemeMode,
+    themeMode: MutableStateFlow<ThemeMode>,
     compactView: MutableStateFlow<Boolean>,
-    onCompactViewChanged: MutableStateFlow<Boolean>,
-    onThemeChanged: (ThemeMode) -> Unit
+    dynamicColors: MutableStateFlow<Boolean>,
 ) {
     Column(
         modifier = Modifier
@@ -46,23 +43,31 @@ fun VisualSection(
         Spacer(modifier = Modifier.height(5.dp))
         ThemeOption(
             item = Item("Theme", Icons.Filled.Palette, onClick = {
-                val newMode = when (themeMode) {
+                val newMode = when (themeMode.value) {
                     ThemeMode.DARK -> ThemeMode.LIGHT
                     ThemeMode.LIGHT -> ThemeMode.AUTO
                     ThemeMode.AUTO -> ThemeMode.DARK
                 }
-                onThemeChanged(newMode)
             }),
             initialThemeMode = themeMode
         )
         val compatViewItem = Item(
             title = "Compact view",
             icon = Icons.Filled.ViewCompactAlt,
-            switchState = onCompactViewChanged
+            switchState = compactView
+        )
+        val dynamicColorItem = Item(
+            title = "Use dynamic colors",
+            icon = Icons.Filled.Palette,
+            switchState = dynamicColors
         )
         SwitchOption(
             item = compatViewItem,
             switchState = compactView
+        )
+        SwitchOption(
+            item = dynamicColorItem,
+            switchState = dynamicColors
         )
     }
 }
@@ -70,19 +75,20 @@ fun VisualSection(
 @Composable
 fun ThemeOption(
     item: Item,
-    initialThemeMode: ThemeMode,
+    initialThemeMode: MutableStateFlow<ThemeMode>,
 ) {
-    var themeMode by remember { mutableStateOf(initialThemeMode) }
+    val themeMode by initialThemeMode.collectAsState()
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                themeMode = when (themeMode) {
+                val newMode = when (themeMode) {
                     ThemeMode.DARK -> ThemeMode.LIGHT
                     ThemeMode.LIGHT -> ThemeMode.AUTO
                     ThemeMode.AUTO -> ThemeMode.DARK
                 }
+                initialThemeMode.value = newMode
                 item.onClick()
             },
         verticalAlignment = Alignment.CenterVertically,
@@ -101,7 +107,6 @@ fun ThemeOption(
             ThemeMode.LIGHT -> Icons.Filled.LightMode
             ThemeMode.AUTO -> Icons.Filled.HdrAuto
         }
-        Icon(themeIcon, contentDescription = "Change theme")
+        Icon(themeIcon, contentDescription = "Current theme icon")
     }
 }
-

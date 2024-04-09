@@ -62,7 +62,7 @@ fun BookmarkEditorView(
 ) {
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.onPrimary)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp)
     ) {

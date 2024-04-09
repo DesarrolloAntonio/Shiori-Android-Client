@@ -36,4 +36,9 @@ class SettingsRepositoryImpl(
     }
     override fun getThemeMode() = settingsPreferenceDataSource.getThemeMode()
 
+    override fun getUseDynamicColors() = settingsPreferenceDataSource.getUseDynamicColors()
+    override suspend fun setUseDynamicColors(useDynamicColors: Boolean) {
+        settingsPreferenceDataSource.setUseDynamicColors(useDynamicColors)
+    }
+
 }

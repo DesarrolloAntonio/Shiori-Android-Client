@@ -21,6 +21,7 @@ fun ComposeSetup(
         ThemeMode.AUTO -> isSystemInDarkTheme()
     }
     ShioriTheme(
+        dynamicColor = themeManager.useDynamicColors.value,
         darkTheme = isDarkTheme
     ) {
         Surface(

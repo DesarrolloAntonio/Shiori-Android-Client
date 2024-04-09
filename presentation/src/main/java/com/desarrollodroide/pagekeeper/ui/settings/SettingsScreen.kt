@@ -67,11 +67,11 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.onPrimary
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
 
         Box(
@@ -82,18 +82,15 @@ fun SettingsScreen(
                 settingsUiState = settingsUiState,
                 onLogout = { settingsViewModel.logout() },
                 goToLogin = goToLogin,
-                themeMode = settingsViewModel.getThemeMode(),
-                onThemeChanged = { newMode ->
-                    settingsViewModel.setTheme(newMode)
-                },
+                themeMode = settingsViewModel.themeMode,
                 makeArchivePublic = settingsViewModel.makeArchivePublic,
                 createEbook = settingsViewModel.createEbook,
                 createArchive = settingsViewModel.createArchive,
                 compatView = settingsViewModel.compactView,
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
-                onCompactViewChanged = settingsViewModel.compactView,
-                onNavigateToSourceCode = onNavigateToSourceCode
+                onNavigateToSourceCode = onNavigateToSourceCode,
+                useDynamicColors = settingsViewModel.useDynamicColors
             )
         }
     }
@@ -106,14 +103,13 @@ fun SettingsContent(
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
     compatView: MutableStateFlow<Boolean>,
-    onCompactViewChanged: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit ,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
-    onThemeChanged: (ThemeMode) -> Unit,
-    themeMode: ThemeMode,
-    goToLogin: () -> Unit
+    themeMode: MutableStateFlow<ThemeMode>,
+    goToLogin: () -> Unit,
+    useDynamicColors: MutableStateFlow<Boolean>,
 ) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
@@ -146,8 +142,7 @@ fun SettingsContent(
             VisualSection(
                 themeMode = themeMode,
                 compactView = compatView,
-                onThemeChanged = onThemeChanged,
-                onCompactViewChanged = onCompactViewChanged
+                dynamicColors = useDynamicColors
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
@@ -205,16 +200,16 @@ fun SettingsScreenPreview() {
     SettingsContent(
         onLogout = {},
         goToLogin = {},
-        onThemeChanged = {},
         settingsUiState = UiState(isLoading = false),
-        themeMode = ThemeMode.AUTO,
+        themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         makeArchivePublic = remember { MutableStateFlow(false) },
         createArchive = remember { MutableStateFlow(false) },
         createEbook = remember { MutableStateFlow(false) },
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
-        onCompactViewChanged = remember { MutableStateFlow(false) },
+        //onCompactViewChanged = remember { MutableStateFlow(false) },
         compatView = remember { MutableStateFlow(false) },
-        onNavigateToSourceCode = {}
+        onNavigateToSourceCode = {},
+        useDynamicColors = remember { MutableStateFlow(false) }
     )
 }

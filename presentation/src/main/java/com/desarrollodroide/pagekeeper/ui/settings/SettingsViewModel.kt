@@ -31,6 +31,8 @@ class SettingsViewModel(
     val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
     val compactView = MutableStateFlow<Boolean>(false)
+    val useDynamicColors = MutableStateFlow<Boolean>(false)
+    val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
 
     init {
         loadSettings()
@@ -63,11 +65,6 @@ class SettingsViewModel(
             }
         }
     }
-    fun getThemeMode() = themeManager.themeMode.value
-    fun setTheme(newMode: ThemeMode) {
-        settingsPreferenceDataSource.setTheme(newMode)
-        themeManager.themeMode.value = newMode
-    }
 
     private fun loadSettings() {
         viewModelScope.launch {
@@ -75,6 +72,8 @@ class SettingsViewModel(
             createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
             compactView.value = settingsPreferenceDataSource.getCompactView()
+            useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
+            themeMode.value = settingsPreferenceDataSource.getThemeMode()
         }
     }
 
@@ -97,6 +96,18 @@ class SettingsViewModel(
         viewModelScope.launch {
             compactView.collect { newValue ->
                 settingsPreferenceDataSource.setCompactView(newValue)
+            }
+        }
+        viewModelScope.launch {
+            useDynamicColors.collect { newValue ->
+                settingsPreferenceDataSource.setUseDynamicColors(newValue)
+                themeManager.useDynamicColors.value = newValue
+            }
+        }
+        viewModelScope.launch {
+            themeMode.collect { newValue ->
+                settingsPreferenceDataSource.setTheme(newValue)
+                themeManager.themeMode.value = newValue
             }
         }
     }

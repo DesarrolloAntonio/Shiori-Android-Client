@@ -5,4 +5,5 @@ import com.desarrollodroide.data.helpers.ThemeMode
 
 interface ThemeManager {
     var themeMode: MutableState<ThemeMode>
+    var useDynamicColors: MutableState<Boolean>
 }

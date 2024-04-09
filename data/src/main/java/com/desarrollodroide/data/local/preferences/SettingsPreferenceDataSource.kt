@@ -43,4 +43,7 @@ interface SettingsPreferenceDataSource {
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
     suspend fun setSelectedCategories(categories: List<String>)
     suspend fun getSelectedCategories(): List<String>
+
+    fun getUseDynamicColors(): Boolean
+    fun setUseDynamicColors(newValue: Boolean)
 }
