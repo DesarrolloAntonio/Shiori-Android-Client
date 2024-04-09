@@ -40,11 +40,11 @@
 ## Description
 PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), PageKeeper offers a seamless experience across all devices.
 
-## Screenshot
-|                                                      |                                                      |                                                      |
-|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|
-| ![Screenshot 1](images/screenshots/Screenshot_1.png) | ![Screenshot 2](images/screenshots/Screenshot_2.png) | ![Screenshot 3](images/screenshots/Screenshot_3.png) |
-| ![Screenshot 4](images/screenshots/Screenshot_4.png) | ![Screenshot 5](images/screenshots/Screenshot_5.png) |                                                      |
+## Screenshots
+|                                                      |                                                      |                                                      |                                                      |
+|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|
+| ![Screenshot 1](images/screenshots/Screenshot_1.png) | ![Screenshot 2](images/screenshots/Screenshot_2.png) | ![Screenshot 3](images/screenshots/Screenshot_3.png) | ![Screenshot 4](images/screenshots/Screenshot_4.png) |
+| ![Screenshot 5](images/screenshots/Screenshot_5.png) | ![Screenshot 6](images/screenshots/Screenshot_6.png) | ![Screenshot 7](images/screenshots/Screenshot_7.png) | ![Screenshot 8](images/screenshots/Screenshot_8.png) |
 
 
 ## Features
