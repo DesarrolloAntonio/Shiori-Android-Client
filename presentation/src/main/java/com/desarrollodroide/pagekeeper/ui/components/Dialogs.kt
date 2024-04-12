@@ -1,5 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +11,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -180,6 +184,7 @@ fun ErrorDialog(
 
 @Composable
 fun UpdateCacheDialog(
+    isLoading: Boolean,
     showDialog: MutableState<Boolean>,
     onConfirm: (keepOldTitle: Boolean, updateArchive: Boolean, updateEbook: Boolean) -> Unit,
 ) {
@@ -188,6 +193,14 @@ fun UpdateCacheDialog(
         var updateArchiveChecked by remember { mutableStateOf(false) }
         var updateEbookChecked by remember { mutableStateOf(false) }
 
+        val wasLoading = remember { mutableStateOf(isLoading) }
+        LaunchedEffect(isLoading) {
+            if (wasLoading.value && !isLoading) {
+                showDialog.value = false
+            }
+            wasLoading.value = isLoading
+        }
+
         AlertDialog(
             onDismissRequest = { },
             title = { Text("Update cache for selected bookmark? This action is irreversible.") },
@@ -195,6 +208,7 @@ fun UpdateCacheDialog(
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
+                            enabled = !isLoading,
                             checked = keepOldTitleChecked,
                             onCheckedChange = { keepOldTitleChecked = it })
                         Text(
@@ -204,12 +218,14 @@ fun UpdateCacheDialog(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
+                            enabled = !isLoading,
                             checked = updateArchiveChecked,
                             onCheckedChange = { updateArchiveChecked = it })
                         Text("Update archive as well", modifier = Modifier.padding(start = 8.dp))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
+                            enabled = !isLoading,
                             checked = updateEbookChecked,
                             onCheckedChange = { updateEbookChecked = it })
                         Text("Update Ebook as well", modifier = Modifier.padding(start = 8.dp))
@@ -217,18 +233,25 @@ fun UpdateCacheDialog(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    showDialog.value = false
-                    onConfirm(keepOldTitleChecked, updateArchiveChecked, updateEbookChecked)
-                }) {
-                    Text("Update")
-                }
+                LoadingButton(
+                    text = "Update",
+                    onClick = {
+                        onConfirm(keepOldTitleChecked, updateArchiveChecked, updateEbookChecked)
+                    },
+                    loading = isLoading)
             },
+
             dismissButton = {
-                Button(onClick = {
-                    showDialog.value = false
-                }) {
-                    Text("Cancel")
+                AnimatedVisibility (
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    visible = !isLoading
+                ){
+                    Button(onClick = {
+                        showDialog.value = false
+                    }) {
+                        Text("Cancel")
+                    }
                 }
             },
             properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)

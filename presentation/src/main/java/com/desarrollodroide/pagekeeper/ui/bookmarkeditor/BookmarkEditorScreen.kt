@@ -82,6 +82,7 @@ fun BookmarkEditorScreen(
             createArchive = createArchive,
             makeArchivePublic = makeArchivePublic,
             createEbook = createEbook,
+            url = bookmark.url
         )
 
     if (bookmarkUiState.data != null) {

@@ -24,6 +24,7 @@ import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
+import com.desarrollodroide.pagekeeper.ui.components.isUpdating
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -160,7 +161,7 @@ class FeedViewModel(
 
                         is Result.Loading -> {
                             Log.v("FeedViewModel", "updating bookmark...")
-                            _bookmarksUiState.isLoading(true)
+                            _bookmarksUiState.isUpdating(true)
                         }
 
                         is Result.Success -> {

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +51,7 @@ enum class BookmarkEditorType { ADD, EDIT }
 @Composable
 fun BookmarkEditorView(
     title: String,
+    url: String,
     bookmarkEditorType: BookmarkEditorType,
     newTag: MutableState<String>,
     assignedTags: MutableState<List<Tag>>,
@@ -87,6 +89,16 @@ fun BookmarkEditorView(
                 Icon(Icons.Outlined.Save, contentDescription = "Save")
             }
         }
+        Text(
+            text = url,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(8.dp),
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis //
+        )
 
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {
@@ -227,6 +239,7 @@ fun BookmarkEditorPreview() {
 
     BookmarkEditorView(
         title = "Add",
+        url = "http://www.google.com",
         bookmarkEditorType = BookmarkEditorType.ADD,
         assignedTags = remember { mutableStateOf(generateRandomTags(100)) },
         saveBookmark = {},

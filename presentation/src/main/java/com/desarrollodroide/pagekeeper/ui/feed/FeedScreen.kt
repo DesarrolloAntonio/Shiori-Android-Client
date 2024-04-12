@@ -110,7 +110,7 @@ fun FeedScreen(
         isSearchBarVisible = isSearchBarVisible,
         showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
         uniqueCategories = feedViewModel.uniqueCategories,
-        )
+    )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
             modifier = Modifier
@@ -157,16 +157,17 @@ fun FeedScreen(
             )
         )
     }
+    val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
     UpdateCacheDialog(
-        showDialog = feedViewModel.showSyncDialog,
-        onConfirm = { keepOldTitle, updateArchive, updateEbook ->
-            feedViewModel.updateBookmark(
-                keepOldTitle = keepOldTitle,
-                updateEbook = updateEbook,
-                updateArchive = updateArchive,
-            )
-        }
-    )
+        isLoading = isUpdating,
+        showDialog = feedViewModel.showSyncDialog
+    ) { keepOldTitle, updateArchive, updateEbook ->
+        feedViewModel.updateBookmark(
+            keepOldTitle = keepOldTitle,
+            updateEbook = updateEbook,
+            updateArchive = updateArchive,
+        )
+    }
 }
 
 @Composable
@@ -185,7 +186,7 @@ private fun FeedContent(
     showEpubOptionsDialog: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
     uniqueCategories: MutableState<List<Tag>>,
-    ) {
+) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
@@ -230,13 +231,12 @@ private fun FeedContent(
                         )
                     }
                 }
-            } else {
+            } else  if (!bookmarksUiState.isLoading){
                 EmptyView(actions)
             }
-        } else {
+        } else if (!bookmarksUiState.isLoading){
             EmptyView(actions)
         }
-
     if (!downloadUiState.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,
