@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,18 +17,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.isContainer
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,8 +47,9 @@ import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DockedSearchBarWithCategories(
+fun FeedContent(
     actions: FeedActions,
     bookmarks: List<Bookmark>,
     viewType: BookmarkViewType,
@@ -58,12 +59,14 @@ fun DockedSearchBarWithCategories(
     token: String,
     uniqueCategories: MutableState<List<Tag>>,
     isCategoriesVisible: Boolean,
-    isSearchBarVisible: Boolean,
+    isSearchBarVisible: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
 ) {
     val searchTextState = rememberSaveable { mutableStateOf("") }
-    val isActive = rememberSaveable { mutableStateOf(false) }
-
+    val isActive = rememberSaveable { mutableStateOf(true) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
     val filteredBookmarks = if (selectedTags.value.isEmpty()) {
         bookmarks
     } else {
@@ -91,16 +94,6 @@ fun DockedSearchBarWithCategories(
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            item {
-                AnimatedVisibility(isSearchBarVisible) {
-                    SearchBarWithFilters(
-                        searchText = searchTextState,
-                        isActive = isActive,
-                        bookmarks = bookmarks,
-                        onBookmarkClick = actions.onBookmarkSelect,
-                    )
-                }
-            }
             item {
                 Categories(
                     showCategories = isCategoriesVisible,
@@ -154,6 +147,24 @@ fun DockedSearchBarWithCategories(
             state = refreshState,
         )
     }
+
+    if (isSearchBarVisible.value) {
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxSize(),
+            shape = BottomSheetDefaults.ExpandedShape,
+            onDismissRequest = {
+                isSearchBarVisible.value = false
+            },
+            sheetState = sheetState
+        ) {
+            SearchBarWithFilters(
+                searchText = searchTextState,
+                isActive = isActive,
+                bookmarks = bookmarks,
+                onBookmarkClick = actions.onBookmarkSelect,
+            )
+        }
+    }
 }
 
 @Composable
@@ -167,10 +178,8 @@ private fun SearchBarWithFilters(
     val filteredBookmarks =
         bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
     Box(Modifier
-        .semantics { isContainer = true }
-        .zIndex(1f)
-        .fillMaxWidth()) {
-        androidx.compose.material3.DockedSearchBar(
+        .fillMaxSize()) {
+        SearchBar(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 8.dp),
@@ -209,7 +218,7 @@ private fun BookmarkSuggestions(
     onClickSuggestion: (Bookmark) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.wrapContentHeight(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -238,7 +247,7 @@ private fun BookmarkSuggestions(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
-                leadingContent = { Icon(Icons.Rounded.Star, contentDescription = null) },
+                leadingContent = { Icon(Icons.Rounded.Bookmark, contentDescription = null) },
             )
         }
     }

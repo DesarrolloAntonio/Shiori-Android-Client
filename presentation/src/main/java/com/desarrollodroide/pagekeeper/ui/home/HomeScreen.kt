@@ -56,10 +56,11 @@ fun HomeScreen(
 ) {
     val navController = rememberNavController()
     val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(feedViewModel.isCategoriesVisible()) }
-    val (isSearchBarVisible, setSearchBarVisible) = remember { mutableStateOf(false) }
+    val isSearchBarVisible = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasCategories = feedViewModel.uniqueCategories.value.isNotEmpty()
     val hasBookmarks = feedViewModel.bookmarksUiState.collectAsState().value.data?.isNotEmpty() == true
+    val clickSearch: ( () -> Unit) = {}
 
     BackHandler {
         onFinish()
@@ -81,13 +82,14 @@ fun HomeScreen(
                                 setCategoriesVisible(!isCategoriesVisible)
                                 feedViewModel.saveCategoriesVisibilityState(!isCategoriesVisible)
                             },
-                            toggleSearchBarVisibility = { setSearchBarVisible(!isSearchBarVisible) },
+                            toggleSearchBarVisibility = { isSearchBarVisible.value = !isSearchBarVisible.value },
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
-                            isSearchActive = isSearchBarVisible,
+                            //isSearchActive = isSearchBarVisible,
                             isFilterActive = isCategoriesVisible,
                             scrollBehavior = scrollBehavior,
                             hasCategories = hasCategories,
-                            hasBookmarks = hasBookmarks
+                            hasBookmarks = hasBookmarks,
+                            onSearchClicked = clickSearch
                             )
                     }
                 }
@@ -103,7 +105,7 @@ fun HomeScreen(
                         openUrlInBrowser = openUrlInBrowser,
                         shareEpubFile = shareEpubFile,
                         isSearchBarVisible = isSearchBarVisible,
-                        setShowTopBar = setShowTopBar
+                        setShowTopBar = setShowTopBar,
                     )
                 }
 
@@ -150,7 +152,8 @@ fun TopBar(
     toggleCategoryVisibility: () -> Unit,
     toggleSearchBarVisibility: () -> Unit,
     onSettingsClick: () -> Unit,
-    isSearchActive: Boolean,
+    onSearchClicked: () -> Unit,
+//    isSearchActive: Boolean,
     isFilterActive: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
     hasCategories: Boolean,
@@ -185,13 +188,13 @@ fun TopBar(
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
-                        tint = if (isSearchActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier
-                            .background(
-                                if (isSearchActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .padding(6.dp)
+                        tint =  MaterialTheme.colorScheme.secondary,
+//                        modifier = Modifier
+//                            .background(
+//                                if (isSearchActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+//                                shape = CircleShape
+//                            )
+//                            .padding(6.dp)
                     )
                 }
             }

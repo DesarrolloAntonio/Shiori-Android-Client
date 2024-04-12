@@ -2,17 +2,13 @@ package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.media.MediaScannerConnection
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -21,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -48,8 +43,8 @@ fun FeedScreen(
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: Boolean,
-    isSearchBarVisible: Boolean,
-    setShowTopBar: (Boolean) -> Unit
+    isSearchBarVisible: MutableState<Boolean>,
+    setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -63,6 +58,7 @@ fun FeedScreen(
         },
         onBookmarkSelect = { bookmark ->
             Log.v("FeedContent", feedViewModel.getUrl(bookmark))
+            isSearchBarVisible.value = false
             openUrlInBrowser(feedViewModel.getUrl(bookmark))
         },
         onRefreshFeed = {
@@ -93,7 +89,7 @@ fun FeedScreen(
             feedViewModel.saveSelectedCategories(categories)
         }
     )
-    FeedContent(
+    FeedView(
         actions = actions,
         bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
         downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
@@ -171,7 +167,7 @@ fun FeedScreen(
 }
 
 @Composable
-private fun FeedContent(
+private fun FeedView(
     actions: FeedActions,
     viewType: BookmarkViewType,
     serverURL: String,
@@ -182,7 +178,7 @@ private fun FeedContent(
     downloadUiState: UiState<File>,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: Boolean,
-    isSearchBarVisible: Boolean,
+    isSearchBarVisible: MutableState<Boolean>,
     showEpubOptionsDialog: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
     uniqueCategories: MutableState<List<Tag>>,
@@ -216,7 +212,7 @@ private fun FeedContent(
                             .fillMaxSize()
                             .nestedScroll(rememberNestedScrollInteropConnection()),
                     ) {
-                        DockedSearchBarWithCategories(
+                        FeedContent(
                             actions = actions,
                             bookmarks = bookmarksUiState.data.reversed(),
                             uniqueCategories = uniqueCategories,
