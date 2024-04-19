@@ -2,6 +2,7 @@ package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -59,6 +60,8 @@ class FeedViewModel(
     val isCompactView = MutableStateFlow<Boolean>(false)
     val selectedCategories = mutableStateOf<List<Tag>>(emptyList())
     val uniqueCategories =  mutableStateOf<List<Tag>>(emptyList())
+    val searchTextState =  mutableStateOf("")
+    val isActive =  mutableStateOf(true)
 
     init {
         viewModelScope.launch {

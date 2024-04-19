@@ -58,7 +58,6 @@ fun FeedScreen(
         },
         onBookmarkSelect = { bookmark ->
             Log.v("FeedContent", feedViewModel.getUrl(bookmark))
-            isSearchBarVisible.value = false
             openUrlInBrowser(feedViewModel.getUrl(bookmark))
         },
         onRefreshFeed = {

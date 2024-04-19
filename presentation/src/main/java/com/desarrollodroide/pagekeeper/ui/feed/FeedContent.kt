@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +36,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.pagekeeper.ui.components.Categories
@@ -63,8 +65,7 @@ fun FeedContent(
     isSearchBarVisible: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
 ) {
-    val searchTextState = rememberSaveable { mutableStateOf("") }
-    val isActive = rememberSaveable { mutableStateOf(true) }
+
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -141,7 +142,6 @@ fun FeedContent(
             }
         }
 
-
         PullRefreshIndicator(
             modifier = Modifier.align(alignment = Alignment.TopCenter),
             refreshing = isRefreshing,
@@ -161,10 +161,8 @@ fun FeedContent(
             dragHandle = null
         ) {
             SearchBar(
-                searchText = searchTextState,
-                isActive = isActive,
                 bookmarks = bookmarks,
-                onBookmarkClick = actions.onBookmarkSelect,
+                onBookmarkClick =  actions.onBookmarkSelect,
                 onDismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -179,12 +177,13 @@ fun FeedContent(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SearchBar(
-    searchText: MutableState<String>,
-    isActive: MutableState<Boolean>,
     onBookmarkClick: (Bookmark) -> Unit,
     onDismiss: () -> Unit,
     bookmarks: List<Bookmark>,
 ) {
+    val searchText = rememberSaveable { mutableStateOf("") }
+    val isActive = rememberSaveable { mutableStateOf(true) }
+    val context = LocalContext.current
     val filteredBookmarks =
         bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
     Box(Modifier
@@ -194,7 +193,9 @@ private fun SearchBar(
                 .align(Alignment.TopCenter),
             query = searchText.value,
             onQueryChange = { searchText.value = it },
-            onSearch = { isActive.value = false },
+            onSearch = {
+                Toast.makeText(context, "Select bookmark from list", Toast.LENGTH_SHORT).show()
+            },
             active = isActive.value,
             onActiveChange = { isActive.value = it },
             placeholder = { Text("Search...") },
@@ -219,7 +220,6 @@ private fun SearchBar(
         ) {
             BookmarkSuggestions(
                 bookmarks = filteredBookmarks,
-                isActive = isActive,
                 onClickSuggestion = onBookmarkClick
             )
         }
@@ -229,7 +229,6 @@ private fun SearchBar(
 @Composable
 private fun BookmarkSuggestions(
     bookmarks: List<Bookmark>,
-    isActive: MutableState<Boolean>,
     onClickSuggestion: (Bookmark) -> Unit
 ) {
     LazyColumn(
@@ -245,7 +244,6 @@ private fun BookmarkSuggestions(
                 modifier = Modifier
                     .clickable {
                         onClickSuggestion(bookmark)
-                        isActive.value = false
                     }
                     .background(Color.Transparent),
                 headlineContent = {
