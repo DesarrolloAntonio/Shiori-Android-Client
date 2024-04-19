@@ -20,11 +20,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -149,19 +150,27 @@ fun FeedContent(
     }
 
     if (isSearchBarVisible.value) {
+        val scope = rememberCoroutineScope()
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             shape = BottomSheetDefaults.ExpandedShape,
             onDismissRequest = {
                 isSearchBarVisible.value = false
             },
-            sheetState = sheetState
+            sheetState = sheetState,
+            dragHandle = null
         ) {
-            SearchBarWithFilters(
+            SearchBar(
                 searchText = searchTextState,
                 isActive = isActive,
                 bookmarks = bookmarks,
                 onBookmarkClick = actions.onBookmarkSelect,
+                onDismiss = {
+                    scope.launch {
+                        sheetState.hide()
+                        isSearchBarVisible.value = false
+                    }
+                }
             )
         }
     }
@@ -169,10 +178,11 @@ fun FeedContent(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun SearchBarWithFilters(
+private fun SearchBar(
     searchText: MutableState<String>,
     isActive: MutableState<Boolean>,
     onBookmarkClick: (Bookmark) -> Unit,
+    onDismiss: () -> Unit,
     bookmarks: List<Bookmark>,
 ) {
     val filteredBookmarks =
@@ -181,15 +191,20 @@ private fun SearchBarWithFilters(
         .fillMaxSize()) {
         SearchBar(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 8.dp),
+                .align(Alignment.TopCenter),
             query = searchText.value,
             onQueryChange = { searchText.value = it },
             onSearch = { isActive.value = false },
             active = isActive.value,
             onActiveChange = { isActive.value = it },
             placeholder = { Text("Search...") },
-            leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+            leadingIcon = {
+                IconButton(onClick = {
+                    onDismiss()
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
+                }
+                          },
             trailingIcon = {
                 Row() {
                     Box(modifier = Modifier

@@ -3,6 +3,7 @@ package com.desarrollodroide.pagekeeper.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -206,28 +207,49 @@ fun UpdateCacheDialog(
             title = { Text("Update cache for selected bookmark? This action is irreversible.") },
             text = {
                 Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable(enabled = !isLoading) {
+                                keepOldTitleChecked = !keepOldTitleChecked
+                            }
+                            .padding(8.dp)
+                    ) {
                         Checkbox(
                             enabled = !isLoading,
                             checked = keepOldTitleChecked,
-                            onCheckedChange = { keepOldTitleChecked = it })
-                        Text(
-                            "Keep the old title and excerpt",
-                            modifier = Modifier.padding(start = 8.dp)
+                            onCheckedChange = null
                         )
+                        Text("Keep the old title and excerpt", modifier = Modifier.padding(start = 8.dp))
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable(enabled = !isLoading) {
+                                updateArchiveChecked = !updateArchiveChecked
+                            }
+                            .padding(8.dp)
+                    ) {
                         Checkbox(
                             enabled = !isLoading,
                             checked = updateArchiveChecked,
-                            onCheckedChange = { updateArchiveChecked = it })
+                            onCheckedChange = null
+                        )
                         Text("Update archive as well", modifier = Modifier.padding(start = 8.dp))
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable(enabled = !isLoading) {
+                                updateEbookChecked = !updateEbookChecked
+                            }
+                            .padding(8.dp)
+                    ) {
                         Checkbox(
                             enabled = !isLoading,
                             checked = updateEbookChecked,
-                            onCheckedChange = { updateEbookChecked = it })
+                            onCheckedChange = null
+                        )
                         Text("Update Ebook as well", modifier = Modifier.padding(start = 8.dp))
                     }
                 }
