@@ -76,6 +76,9 @@ PageKeeper is available for download on various platforms:
   <a href="https://apt.izzysoft.de/fdroid/index/apk/com.desarrollodroide.pagekeeper">
     <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get Pagekeeper on IzzyOnDroid" height="80">
   </a>
+  <a href="https://f-droid.org/en/packages/com.desarrollodroide.pagekeeper">
+    <img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">
+  </a>
 </p>
 
 ## License
