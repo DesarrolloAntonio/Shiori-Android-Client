@@ -55,16 +55,19 @@ fun FullBookmarkView(
                 maxLines = 2
             )
             Text(
-                text = bookmark.modified,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary,
-                maxLines = 1
-            )
-            Text(
+                modifier = Modifier.padding(top = 5.dp),
                 text = bookmark.excerpt,
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 3
+            )
+            Text(
+                modifier = Modifier.padding(top = 8.dp),
+                text = bookmark.modified,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.height(8.dp))
             ClickableCategoriesView(

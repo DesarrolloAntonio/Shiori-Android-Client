@@ -165,10 +165,9 @@ fun TopBar(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     color = MaterialTheme.colorScheme.primary,
-                    text = "PageKeeper",
+                    text = "Shiori",
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(bottom = 4.dp),
+                        .align(Alignment.CenterStart),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)
                 )
             }
@@ -189,12 +188,6 @@ fun TopBar(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
                         tint =  MaterialTheme.colorScheme.secondary,
-//                        modifier = Modifier
-//                            .background(
-//                                if (isSearchActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-//                                shape = CircleShape
-//                            )
-//                            .padding(6.dp)
                     )
                 }
             }

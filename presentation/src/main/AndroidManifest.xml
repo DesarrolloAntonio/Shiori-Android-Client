@@ -32,7 +32,7 @@
                 android:value="" />
         </activity>
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
-            android:label="Save in PageKeeper"
+            android:label="Save in Shiori"
             android:screenOrientation="portrait"
             android:exported="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">

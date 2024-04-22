@@ -55,7 +55,7 @@ android {
     }
 
     applicationVariants.all {
-        val outputFileName = "PageKeeper v$versionName.apk"
+        val outputFileName = "Shiori v$versionName.apk"
         outputs.all {
             val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
             output?.outputFileName = outputFileName

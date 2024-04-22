@@ -1,6 +1,6 @@
 <h1 align="center">
   <img src="images/page_keeper_logo.png" width="120" alt="EhViewer">
-  <br>PageKeeper<br>
+  <br>Shiori<br>
 </h1>
 
 <p align="center">
@@ -38,7 +38,7 @@
 </div>
 
 ## Description
-PageKeeper is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), PageKeeper offers a seamless experience across all devices.
+Shiori is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), Shiori offers a seamless experience across all devices.
 
 ## Screenshots
 |                                                      |                                                      |                                                      |                                                      |
@@ -54,7 +54,7 @@ PageKeeper is an innovative bookmark management application that revolutionizes 
 - **Intuitive Interface**: User-friendly navigation for a seamless experience.
 
 ## Technologies Used
-PageKeeper is built using a variety of modern and robust technologies to ensure scalability, maintainability, and performance:
+Shiori is built using a variety of modern and robust technologies to ensure scalability, maintainability, and performance:
 - **Clean Architecture**: Ensuring separation of concerns and modular design.
 - **Dependency Injection (DI)**: For managing dependencies effectively.
 - **Model-View-ViewModel (MVVM)**: For a responsive and powerful user interface.
@@ -64,17 +64,20 @@ PageKeeper is built using a variety of modern and robust technologies to ensure 
 
 ## Download
 
-PageKeeper is available for download on various platforms:
+Shiori is available for download on various platforms:
 
 <p>
   <a href="https://github.com/DesarrolloAntonio/Shiori-Android-Client/releases/latest">
     <img src="images/badge_github.png" alt="Get it on GitHub" height="80">
   </a>
   <a href="https://play.google.com/store/apps/details?id=com.desarrollodroide.pagekeeper">
-    <img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get Pagekeeper on Google Play" height="80">
+    <img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get Shiori on Google Play" height="80">
   </a>
   <a href="https://apt.izzysoft.de/fdroid/index/apk/com.desarrollodroide.pagekeeper">
-    <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get Pagekeeper on IzzyOnDroid" height="80">
+    <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get Shiori on IzzyOnDroid" height="80">
+  </a>
+  <a href="https://f-droid.org/en/packages/com.desarrollodroide.pagekeeper">
+    <img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">
   </a>
 </p>
 

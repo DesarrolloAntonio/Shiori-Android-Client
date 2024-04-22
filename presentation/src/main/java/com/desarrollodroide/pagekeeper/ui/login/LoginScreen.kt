@@ -142,7 +142,7 @@ private fun ContentViews(
         Image(
             painter = painterResource(id = R.drawable.curved_wave_top),
             contentDescription = null,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primaryContainer),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
@@ -155,12 +155,13 @@ private fun ContentViews(
             contentScale = ContentScale.FillHeight,
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = 10.dp)
                 .height(100.dp)
         )
         Image(
             painter = painterResource(id = R.drawable.curved_wave_bottom),
             contentDescription = null,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primaryContainer),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
