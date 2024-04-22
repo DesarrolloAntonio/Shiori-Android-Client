@@ -64,20 +64,20 @@ fun PrivacyPolicyScreen(
             ) {
                 val annotatedText = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Privacy Policy of PageKeeper\n\n")
+                        append("Privacy Policy of Shiori\n\n")
                     }
                     append("Effective as of [Insert Date Here].\n\n")
-                    append("This Privacy Policy outlines our policies and procedures on the collection, use, and disclosure of personal information. PageKeeper values your privacy and is committed to protecting it through our compliance with this policy. Our app is designed not to collect or store any personal data from our users, ensuring your privacy and security.\n\n")
+                    append("This Privacy Policy outlines our policies and procedures on the collection, use, and disclosure of personal information. Shiori values your privacy and is committed to protecting it through our compliance with this policy. Our app is designed not to collect or store any personal data from our users, ensuring your privacy and security.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                         append("Data Collection and Use\n\n")
                     }
-                    append("As a commitment to your privacy, PageKeeper does not gather, store, or process any personal data. This includes but is not limited to personal identifiers, contact details, usage data, and location information.\n\n")
+                    append("As a commitment to your privacy, Shiori does not gather, store, or process any personal data. This includes but is not limited to personal identifiers, contact details, usage data, and location information.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                         append("Third-Party Services\n\n")
                     }
-                    append("PageKeeper does not share any personal data with third parties as no personal data is collected. However, users should be aware that third-party services used by the app may collect their own data.\n\n")
+                    append("Shiori does not share any personal data with third parties as no personal data is collected. However, users should be aware that third-party services used by the app may collect their own data.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                         append("Security\n\n")
