@@ -79,9 +79,6 @@ Shiori is available for download on various platforms:
   <a href="https://f-droid.org/en/packages/com.desarrollodroide.pagekeeper">
     <img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">
   </a>
-  <a href="https://f-droid.org/en/packages/com.desarrollodroide.pagekeeper">
-    <img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">
-  </a>
 </p>
 
 ## License
