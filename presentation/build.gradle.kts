@@ -83,10 +83,11 @@ dependencies {
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
+    implementation (libs.androidx.paging.compose)
 
     implementation (libs.compose.ui.ui)
     implementation (libs.compose.ui.tooling.preview)
-    debugImplementation (libs.compose.ui.tooling)
+    implementation (libs.compose.ui.tooling)
     implementation (libs.compose.material3.material3)
     implementation (libs.compose.material.iconsext)
     implementation (libs.compose.runtime.livedata)

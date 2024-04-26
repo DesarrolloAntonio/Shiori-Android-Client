@@ -10,6 +10,7 @@ import com.desarrollodroide.pagekeeper.ui.components.success
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.AddBookmarkUseCase
 import com.desarrollodroide.domain.usecase.EditBookmarkUseCase
 import com.desarrollodroide.model.Bookmark
@@ -27,12 +28,14 @@ import kotlinx.coroutines.runBlocking
 class BookmarkViewModel(
     bookmarkDatabase: BookmarksDao,
     private val bookmarkAdditionUseCase: AddBookmarkUseCase,
+    private val bookmarksRepository: BookmarksRepository,
     private val editBookmarkUseCase: EditBookmarkUseCase,
     private val userPreferences: SettingsPreferenceDataSource,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     ) : ViewModel() {
 
     var backendUrl = ""
+    var sessionExpired = false
 
     private val _bookmarkUiState = MutableStateFlow(UiState<Bookmark>(idle = true))
     val bookmarkUiState = _bookmarkUiState.asStateFlow()
@@ -78,9 +81,18 @@ class BookmarkViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v("Add BookmarkViewModel", result.error?.message ?: "")
-                            _bookmarkUiState.error(errorMessage = result.error?.message ?: "Unknown error" )
-                        }
+                            if (result.error is Result.ErrorType.SessionExpired) {
+                                settingsPreferenceDataSource.resetUser()
+                                bookmarksRepository.deleteAllLocalBookmarks()
+                                sessionExpired = true
+                                _bookmarkUiState.error(
+                                    errorMessage = result.error?.message ?: ""
+                                )
+                            } else {
+                                Log.v("Add BookmarkViewModel", result.error?.message ?: "")
+                                _bookmarkUiState.error(errorMessage = result.error?.message ?: "Unknown error" )
+                            }
+                         }
 
                         is Result.Loading -> {
                             Log.v("Add BookmarkViewModel", "Loading")

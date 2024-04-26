@@ -49,7 +49,8 @@ class BookmarkEditorActivity : ComponentActivity() {
                                 createEbook = bookmarkViewModel.getCreateEbook()
                             ),
                             onBackClick = { finish() },
-                            updateBookmark = { }
+                            updateBookmark = { },
+                            startMainActivity = { startMainActivity() }
                         )
                     }
                 } else {

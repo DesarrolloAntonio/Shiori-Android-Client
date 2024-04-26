@@ -16,4 +16,15 @@ class Account(
         serverUrl = "",
         isLegacyApi = false
     )
+
+    companion object {
+        val mock = Account(
+            id = 1,
+            userName = "user@example.com",
+            password = "securePassword123",
+            owner = true,
+            serverUrl = "https://api.example.com",
+            isLegacyApi = false
+        )
+    }
 }

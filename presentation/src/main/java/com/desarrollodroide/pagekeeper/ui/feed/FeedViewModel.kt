@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.idle
@@ -21,6 +22,7 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DownloadFileUseCase
+import com.desarrollodroide.domain.usecase.GetPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
@@ -28,12 +30,15 @@ import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.pagekeeper.ui.components.isUpdating
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import androidx.paging.cachedIn
 
 class FeedViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getBookmarksUseCase: GetBookmarksUseCase,
+    private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
@@ -43,6 +48,9 @@ class FeedViewModel(
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
     val downloadUiState = _downloadUiState.asStateFlow()
+
+    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> = MutableStateFlow(value = PagingData.empty())
+    val bookmarksState: MutableStateFlow<PagingData<Bookmark>> get() = _bookmarksState
 
     private var hasLoadedFeed = false
     private var serverUrl = ""
@@ -65,6 +73,7 @@ class FeedViewModel(
 
     init {
         viewModelScope.launch {
+            //getPagingBookmarks()
             _bookmarksUiState.collect { state ->
                 uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
                 loadSelectedCategories()
@@ -114,6 +123,20 @@ class FeedViewModel(
         }
     }
 
+    suspend fun getPagingBookmarks() {
+        getPagingBookmarksUseCase.invoke(
+            serverUrl = serverUrl,
+            xSession = settingsPreferenceDataSource.getSession()
+        )
+            .distinctUntilChanged()
+            .cachedIn(viewModelScope)
+            .collect {
+                bookmarksState.value = it
+            }
+    }
+
+
+
     fun loadInitialData() {
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
@@ -125,8 +148,10 @@ class FeedViewModel(
     }
 
     fun refreshFeed() {
-        hasLoadedFeed = false
-        getBookmarks()
+        viewModelScope.launch {
+            hasLoadedFeed = false
+            getPagingBookmarks()
+        }
     }
 
     fun updateBookmark(

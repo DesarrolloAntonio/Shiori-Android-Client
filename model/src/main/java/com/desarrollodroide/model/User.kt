@@ -14,4 +14,17 @@ data class User(
         account = Account(),
         error = error
     )
+
+    companion object {
+        val mock = User(
+            session = "session123",
+            token = "token456",
+            account = Account.mock,
+            error = ""
+        )
+
+        val errorMock = User(
+            error = "Error occurred"
+        )
+    }
 }

@@ -20,6 +20,12 @@ interface RetrofitNetwork {
         @Url url: String
     ): Response<BookmarksDTO>
 
+    @GET()
+    suspend fun getPagingBookmarks(
+        @Header("X-Session-Id") xSessionId: String,
+        @Url url: String
+    ): BookmarksDTO
+
     @POST()
     suspend fun sendLogin(
         @Url url: String,

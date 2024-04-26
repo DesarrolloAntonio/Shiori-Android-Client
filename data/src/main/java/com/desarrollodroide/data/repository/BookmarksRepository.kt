@@ -1,10 +1,10 @@
 package com.desarrollodroide.data.repository
 
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.model.UpdateCachePayload
-import com.desarrollodroide.network.model.UpdateCachePayloadDTO
 
 interface BookmarksRepository {
 
@@ -12,6 +12,11 @@ interface BookmarksRepository {
     xSession: String,
     serverUrl: String
   ): Flow<Result<List<Bookmark>?>>
+
+  fun getPagingBookmarks(
+    xSession: String,
+    serverUrl: String
+  ): Flow<PagingData<Bookmark>>
 
   fun addBookmark(
     xSession: String,

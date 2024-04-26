@@ -1,11 +1,16 @@
 package com.desarrollodroide.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
+import com.desarrollodroide.data.repository.paging.MoviePagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
@@ -54,6 +59,22 @@ class BookmarksRepositoryImpl(
 
     }.asFlow().flowOn(Dispatchers.IO)
 
+    override fun getPagingBookmarks(
+        xSession: String,
+        serverUrl: String
+    ): Flow<PagingData<Bookmark>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
+            pagingSourceFactory = {
+                MoviePagingSource(
+                    remoteDataSource = apiService,
+                    bookmarksDao = bookmarksDao,
+                    serverUrl = serverUrl,
+                    xSessionId = xSession
+                )
+            }
+        ).flow
+    }
 
     override fun addBookmark(
         xSession: String,

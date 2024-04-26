@@ -45,12 +45,6 @@ fun BookmarkItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { actions.onClickBookmark(bookmark) },
-//            elevation = if (viewType == BookmarkViewType.FULL) {
-//                CardDefaults.cardElevation(defaultElevation = 4.dp)
-//            } else {
-//                CardDefaults.cardElevation(defaultElevation = 0.dp)
-//            },
-//            shape = RoundedCornerShape(8.dp)
         ) {
             when (viewType) {
                 BookmarkViewType.FULL -> FullBookmarkView(

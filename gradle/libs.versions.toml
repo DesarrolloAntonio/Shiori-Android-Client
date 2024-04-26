@@ -12,6 +12,7 @@ composeMaterial3 = "1.2.1"
 gradlePlugin = "7.3.1"
 kotlin = "1.7.20"
 coroutines = "1.7.3"
+pagingCompose = "3.2.1"
 protobuf = "3.21.9"
 coil = "2.5.0"
 koin = "3.3.3"
@@ -47,6 +48,8 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 androidx-datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "datastorePreferences" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidxnavigation" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }

@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,30 +13,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
@@ -64,6 +58,7 @@ fun FeedContent(
     isCategoriesVisible: Boolean,
     isSearchBarVisible: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
+    bookmarksPagingItems: LazyPagingItems<Bookmark>,
 ) {
 
     val sheetState = rememberModalBottomSheetState(
@@ -104,8 +99,47 @@ fun FeedContent(
                     onCategoriesSelectedChanged = actions.onCategoriesSelectedChanged
                 )
             }
-            itemsIndexed(filteredBookmarks) { index, bookmark ->
-                Column {
+//            itemsIndexed(filteredBookmarks) { index, bookmark ->
+//                Column {
+//                    BookmarkItem(
+//                        bookmark = bookmark,
+//                        serverURL = serverURL,
+//                        xSessionId = xSessionId,
+//                        token = token,
+//                        isLegacyApi = isLegacyApi,
+//                        viewType = viewType,
+//                        actions = BookmarkActions(
+//                            onClickEdit = { actions.onEditBookmark(bookmark) },
+//                            onClickDelete = { actions.onDeleteBookmark(bookmark) },
+//                            onClickShare = { actions.onShareBookmark(bookmark) },
+//                            onClickBookmark = { actions.onBookmarkSelect(bookmark) },
+//                            onClickEpub = { actions.onBookmarkEpub(bookmark) },
+//                            onClickSync = { actions.onClickSync(bookmark) },
+//                            onClickCategory = { category ->
+//                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
+//                                    if (selectedTags.value.contains(category)) {
+//                                        selectedTags.value = selectedTags.value - category
+//                                    } else {
+//                                        selectedTags.value = selectedTags.value + category
+//                                    }
+//                                }
+//                            }),
+//                    )
+//                    if (index < filteredBookmarks.lastIndex) {
+//                        HorizontalDivider(
+//                            modifier = Modifier
+//                                .height(1.dp)
+//                                .padding(horizontal = 6.dp,),
+//                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+//                        )
+//                    }
+//                }
+//            }
+
+            item { Spacer(modifier = Modifier.padding(4.dp)) }
+            items(bookmarksPagingItems.itemCount) { index ->
+                val bookmark = bookmarksPagingItems[index]
+                if (bookmark != null) {
                     BookmarkItem(
                         bookmark = bookmark,
                         serverURL = serverURL,
@@ -130,7 +164,7 @@ fun FeedContent(
                                 }
                             }),
                     )
-                    if (index < filteredBookmarks.lastIndex) {
+                    if (index < bookmarksPagingItems.itemCount) {
                         HorizontalDivider(
                             modifier = Modifier
                                 .height(1.dp)
@@ -140,6 +174,38 @@ fun FeedContent(
                     }
                 }
             }
+            bookmarksPagingItems.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        item { PageLoader(modifier = Modifier.fillParentMaxSize()) }
+                    }
+
+                    loadState.refresh is LoadState.Error -> {
+                        val error = bookmarksPagingItems.loadState.refresh as LoadState.Error
+                        item {
+                            ErrorMessage(
+                                modifier = Modifier.fillParentMaxSize(),
+                                message = error.error.localizedMessage?:"",
+                                onClickRetry = { retry() })
+                        }
+                    }
+
+                    loadState.append is LoadState.Loading -> {
+                        item { LoadingNextPageItem(modifier = Modifier) }
+                    }
+
+                    loadState.append is LoadState.Error -> {
+                        val error = bookmarksPagingItems.loadState.append as LoadState.Error
+                        item {
+                            ErrorMessage(
+                                modifier = Modifier,
+                                message = error.error.localizedMessage!!,
+                                onClickRetry = { retry() })
+                        }
+                    }
+                }
+            }
+            item { Spacer(modifier = Modifier.padding(4.dp)) }
         }
 
         PullRefreshIndicator(
@@ -175,59 +241,7 @@ fun FeedContent(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun SearchBar(
-    onBookmarkClick: (Bookmark) -> Unit,
-    onDismiss: () -> Unit,
-    bookmarks: List<Bookmark>,
-) {
-    val searchText = rememberSaveable { mutableStateOf("") }
-    val isActive = rememberSaveable { mutableStateOf(true) }
-    val context = LocalContext.current
-    val filteredBookmarks =
-        bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
-    Box(Modifier
-        .fillMaxSize()) {
-        SearchBar(
-            modifier = Modifier
-                .align(Alignment.TopCenter),
-            query = searchText.value,
-            onQueryChange = { searchText.value = it },
-            onSearch = {
-                Toast.makeText(context, "Select bookmark from list", Toast.LENGTH_SHORT).show()
-            },
-            active = isActive.value,
-            onActiveChange = { isActive.value = it },
-            placeholder = { Text("Search...") },
-            leadingIcon = {
-                IconButton(onClick = {
-                    onDismiss()
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
-                }
-                          },
-            trailingIcon = {
-                Row() {
-                    Box(modifier = Modifier
-                        .padding(end = 8.dp)
-                        .clickable {
-                            searchText.value = ""
-                        }) {
-                        Icon(Icons.Default.Cancel, contentDescription = null)
-                    }
-                }
-            },
-        ) {
-            BookmarkSuggestions(
-                bookmarks = filteredBookmarks,
-                onClickSuggestion = onBookmarkClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun BookmarkSuggestions(
+fun BookmarkSuggestions(
     bookmarks: List<Bookmark>,
     onClickSuggestion: (Bookmark) -> Unit
 ) {

@@ -45,6 +45,7 @@ dependencies {
 
     // coroutines
     implementation (libs.kotlinx.coroutines.android)
+    implementation (libs.androidx.paging.compose)
     testImplementation (libs.kotlinx.coroutines.android)
     testImplementation (libs.kotlin.coroutines.test)
 }

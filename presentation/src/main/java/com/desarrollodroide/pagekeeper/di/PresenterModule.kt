@@ -23,6 +23,7 @@ fun presenterModule() = module {
             getBookmarksUseCase = get(),
             deleteBookmarkUseCase = get(),
             updateBookmarkCacheUseCase = get(),
+            getPagingBookmarksUseCase = get(),
             downloadFileUseCase = get(),
         )
     }
@@ -39,6 +40,7 @@ fun presenterModule() = module {
     viewModel {
         BookmarkViewModel(
             bookmarkDatabase = get(),
+            bookmarksRepository = get(),
             bookmarkAdditionUseCase = get(),
             editBookmarkUseCase = get(),
             userPreferences = get(),

@@ -23,6 +23,7 @@ fun BookmarkEditorScreen(
     bookmark: Bookmark,
     onBackClick: () -> Unit,
     updateBookmark: (Bookmark) -> Unit,
+    startMainActivity: () -> Unit = {}
     ) {
     val bookmarkViewModel = get<BookmarkViewModel>()
     val newTag = remember { mutableStateOf("") }
@@ -43,7 +44,11 @@ fun BookmarkEditorScreen(
             title = "Error",
             content = bookmarkUiState.error,
             openDialog = remember { mutableStateOf(true) },
-            onConfirm = { }
+            onConfirm = {
+                if (bookmarkViewModel.sessionExpired){
+                    startMainActivity()
+                }
+            }
         )
     }
 

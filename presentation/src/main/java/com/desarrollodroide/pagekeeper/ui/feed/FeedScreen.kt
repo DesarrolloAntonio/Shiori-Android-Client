@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.pagekeeper.extensions.shareText
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
@@ -49,8 +51,11 @@ fun FeedScreen(
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
-        feedViewModel.getBookmarks()
+//        feedViewModel.getBookmarks()
+        feedViewModel.getPagingBookmarks()
     }
+    val bookmarksPagingItems: LazyPagingItems<Bookmark> = feedViewModel.bookmarksState.collectAsLazyPagingItems()
+
     val actions = FeedActions(
         goToLogin = {
             feedViewModel.resetData()
@@ -105,6 +110,7 @@ fun FeedScreen(
         isSearchBarVisible = isSearchBarVisible,
         showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
         uniqueCategories = feedViewModel.uniqueCategories,
+        bookmarksPagingItems = bookmarksPagingItems
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -181,6 +187,7 @@ private fun FeedView(
     showEpubOptionsDialog: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
     uniqueCategories: MutableState<List<Tag>>,
+    bookmarksPagingItems: LazyPagingItems<Bookmark>,
 ) {
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -202,9 +209,9 @@ private fun FeedView(
         )
         Log.v("bookmarksUiState", "Error")
     } else
-        if (bookmarksUiState.data != null) {
+       // if (bookmarksPagingItems.data != null) {
             Log.v("bookmarksUiState", "Success")
-            if (bookmarksUiState.data.isNotEmpty()) {
+            if (bookmarksPagingItems.itemCount > 0) {
                 Column {
                     Box(
                         modifier = Modifier
@@ -213,7 +220,7 @@ private fun FeedView(
                     ) {
                         FeedContent(
                             actions = actions,
-                            bookmarks = bookmarksUiState.data.reversed(),
+                            bookmarks = emptyList(),
                             uniqueCategories = uniqueCategories,
                             serverURL = serverURL,
                             xSessionId = xSessionId,
@@ -223,15 +230,16 @@ private fun FeedView(
                             isCategoriesVisible = isCategoriesVisible,
                             isSearchBarVisible = isSearchBarVisible,
                             selectedTags = selectedTags,
+                            bookmarksPagingItems = bookmarksPagingItems
                         )
                     }
                 }
             } else  if (!bookmarksUiState.isLoading){
                 EmptyView(actions)
             }
-        } else if (!bookmarksUiState.isLoading){
-            EmptyView(actions)
-        }
+//        } else if (!bookmarksUiState.isLoading){
+//            EmptyView(actions)
+//        }
     if (!downloadUiState.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,

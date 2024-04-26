@@ -139,15 +139,15 @@ private fun ContentViews(
     onCheckedRememberSessionChange: (Boolean) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.curved_wave_top),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primaryContainer),
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-        )
+//        Image(
+//            painter = painterResource(id = R.drawable.curved_wave_top),
+//            contentDescription = null,
+//            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(150.dp)
+//        )
 
         Image(
             painter = painterResource(id = R.drawable.ic_logo),
@@ -155,13 +155,13 @@ private fun ContentViews(
             contentScale = ContentScale.FillHeight,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp)
-                .height(100.dp)
+                .padding(top = 20.dp)
+                .height(120.dp)
         )
         Image(
             painter = painterResource(id = R.drawable.curved_wave_bottom),
             contentDescription = null,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primaryContainer),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
@@ -219,7 +219,9 @@ private fun ContentViews(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    ShioriTheme() {
+    ShioriTheme(
+        dynamicColor = false
+    ) {
         LoginContent(
             user = remember { mutableStateOf("User") },
             password = remember { mutableStateOf("Pass") },
@@ -232,7 +234,7 @@ fun DefaultPreview() {
             onClickLoginButton = {},
             onCheckedRememberSessionChange = {},
             onClearError = {},
-            loginUiState = UiState(false),
+            loginUiState = UiState(data = null, idle = false),
             livenessUiState = UiState(false)
         )
     }

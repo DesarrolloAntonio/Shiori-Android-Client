@@ -25,19 +25,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
+import com.desarrollodroide.pagekeeper.extensions.isArabicText
 
 @Composable
 fun SmallBookmarkView(
@@ -48,8 +52,11 @@ fun SmallBookmarkView(
     token: String,
     actions: BookmarkActions
 ) {
-    val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
-    val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
+    val imageUrl =
+        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+    val modifier =
+        if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
+    val isArabic = bookmark.title.isArabicText() || bookmark.excerpt.isArabicText()
     Row(
         modifier = modifier
             .padding(vertical = 8.dp)
@@ -81,19 +88,21 @@ fun SmallBookmarkView(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = bookmark.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = bookmark.modified,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+                    Text(
+                        text = bookmark.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 2
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = bookmark.modified,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        maxLines = 1
+                    )
+                }
             }
             Column {
                 val expanded = remember { mutableStateOf(false) }
@@ -137,7 +146,7 @@ fun SmallBookmarkView(
                                 contentDescription = null
                             )
                         })
-                    if (bookmark.hasEbook){
+                    if (bookmark.hasEbook) {
                         DropdownMenuItem(
                             text = { Text("Epub") },
                             onClick = {
