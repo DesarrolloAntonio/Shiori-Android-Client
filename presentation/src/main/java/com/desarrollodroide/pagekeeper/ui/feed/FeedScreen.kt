@@ -13,8 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -44,21 +46,20 @@ fun FeedScreen(
     goToLogin: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
-    isCategoriesVisible: Boolean,
+    isCategoriesVisible: MutableState<Boolean>,
     isSearchBarVisible: MutableState<Boolean>,
     setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
-//        feedViewModel.getBookmarks()
         feedViewModel.getPagingBookmarks()
     }
-    val bookmarksPagingItems: LazyPagingItems<Bookmark> = feedViewModel.bookmarksState.collectAsLazyPagingItems()
+    val bookmarksPagingItems: LazyPagingItems<Bookmark> =
+        feedViewModel.bookmarksState.collectAsLazyPagingItems()
 
     val actions = FeedActions(
         goToLogin = {
-            feedViewModel.resetData()
             goToLogin()
         },
         onBookmarkSelect = { bookmark ->
@@ -91,7 +92,7 @@ fun FeedScreen(
         },
         onCategoriesSelectedChanged = { categories ->
             feedViewModel.saveSelectedCategories(categories)
-        }
+        },
     )
     FeedView(
         actions = actions,
@@ -110,7 +111,7 @@ fun FeedScreen(
         isSearchBarVisible = isSearchBarVisible,
         showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
         uniqueCategories = feedViewModel.uniqueCategories,
-        bookmarksPagingItems = bookmarksPagingItems
+        bookmarksPagingItems = bookmarksPagingItems,
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -182,13 +183,15 @@ private fun FeedView(
     bookmarksUiState: UiState<List<Bookmark>>,
     downloadUiState: UiState<File>,
     shareEpubFile: (File) -> Unit,
-    isCategoriesVisible: Boolean,
+    isCategoriesVisible: MutableState<Boolean>,
     isSearchBarVisible: MutableState<Boolean>,
     showEpubOptionsDialog: MutableState<Boolean>,
     selectedTags: MutableState<List<Tag>>,
     uniqueCategories: MutableState<List<Tag>>,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
-) {
+    ) {
+
+
     if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
@@ -208,38 +211,32 @@ private fun FeedView(
             ),
         )
         Log.v("bookmarksUiState", "Error")
-    } else
-       // if (bookmarksPagingItems.data != null) {
-            Log.v("bookmarksUiState", "Success")
-            if (bookmarksPagingItems.itemCount > 0) {
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .nestedScroll(rememberNestedScrollInteropConnection()),
-                    ) {
-                        FeedContent(
-                            actions = actions,
-                            bookmarks = emptyList(),
-                            uniqueCategories = uniqueCategories,
-                            serverURL = serverURL,
-                            xSessionId = xSessionId,
-                            isLegacyApi = isLegacyApi,
-                            token = token,
-                            viewType = viewType,
-                            isCategoriesVisible = isCategoriesVisible,
-                            isSearchBarVisible = isSearchBarVisible,
-                            selectedTags = selectedTags,
-                            bookmarksPagingItems = bookmarksPagingItems
-                        )
-                    }
-                }
-            } else  if (!bookmarksUiState.isLoading){
-                EmptyView(actions)
+    }
+    //if (bookmarksPagingItems.itemCount > 0) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(rememberNestedScrollInteropConnection()),
+            ) {
+                FeedContent(
+                    actions = actions,
+                    bookmarks = emptyList(),
+                    serverURL = serverURL,
+                    xSessionId = xSessionId,
+                    isLegacyApi = isLegacyApi,
+                    token = token,
+                    viewType = viewType,
+                    isCategoriesVisible = isCategoriesVisible,
+                    isSearchBarVisible = isSearchBarVisible,
+                    selectedTags = selectedTags,
+                    bookmarksPagingItems = bookmarksPagingItems,
+                )
             }
-//        } else if (!bookmarksUiState.isLoading){
-//            EmptyView(actions)
-//        }
+        }
+//    } else if (!bookmarksUiState.isLoading) {
+//        EmptyView(actions)
+//    }
     if (!downloadUiState.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,
@@ -256,14 +253,20 @@ private fun FeedView(
 
     if (downloadUiState.data != null && showEpubOptionsDialog.value) {
         val context = LocalContext.current
-        MediaScannerConnection.scanFile(context, arrayOf(downloadUiState.data.absolutePath),null) { path, uri -> }
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(downloadUiState.data.absolutePath),
+            null
+        ) { path, uri -> }
         EpubOptionsDialog(
             icon = Icons.Default.Error,
             title = "Success",
             content = "Epub file downloaded, would you like to share it?",
             onClickOption = { index ->
                 when (index) {
-                    2 -> { shareEpubFile.invoke(downloadUiState.data) }
+                    2 -> {
+                        shareEpubFile.invoke(downloadUiState.data)
+                    }
                 }
             },
             properties = DialogProperties(
@@ -299,5 +302,5 @@ data class FeedActions(
     val onBookmarkEpub: (Bookmark) -> Unit,
     val onClickSync: (Bookmark) -> Unit,
     val onClearError: () -> Unit,
-    val onCategoriesSelectedChanged: (List<Tag>) -> Unit
+    val onCategoriesSelectedChanged: (List<Tag>) -> Unit,
 )

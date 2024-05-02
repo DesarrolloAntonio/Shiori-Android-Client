@@ -3,6 +3,7 @@ package com.desarrollodroide.data.repository.paging
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.desarrollodroide.data.extensions.removeTrailingSlash
+import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.mapper.toEntityModel
@@ -17,29 +18,33 @@ class MoviePagingSource(
     private val remoteDataSource: RetrofitNetwork,
     private val bookmarksDao: BookmarksDao,
     private val serverUrl: String,
-    private val xSessionId: String
+    private val xSessionId: String,
+    private val searchText: String,
 ) : PagingSource<Int, Bookmark>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Bookmark> {
         return try {
             val page = params.key ?: 1
             val pageSize = params.loadSize // Not needed
+            val searchParams = if (searchText.isNotEmpty())"&keyword=$searchText" else ""
             val bookmarksDto = remoteDataSource.getPagingBookmarks(
                 xSessionId = xSessionId,
-                //url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$page&keyword=app&tags=test2+test1",
-                url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$page",
+                url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$page$searchParams",
             )
-            bookmarksDto.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
+            if (bookmarksDto.errorBody()?.string() == SESSION_HAS_BEEN_EXPIRED) {
+                return LoadResult.Error(Exception(SESSION_HAS_BEEN_EXPIRED))
+            }
+            bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
                 if (page == 1) {
                     bookmarksDao.deleteAll()
                 }
                 bookmarksDao.insertAll(bookmarksList)
             }
-            val bookmarks = bookmarksDto.bookmarks?.map { it.toDomainModel() }?: emptyList()
+            val bookmarks = bookmarksDto.body()?.bookmarks?.map { it.toDomainModel() }?: emptyList()
             LoadResult.Page(
                 data = bookmarks,
                 prevKey = if (page == 1) null else page - 1,
-                nextKey = if ((bookmarksDto.page ?: 0) >= (bookmarksDto.maxPage ?: 0)) null else page + 1
+                nextKey = if ((bookmarksDto.body()?.page ?: 0) >= (bookmarksDto.body()?.maxPage ?: 0)) null else page + 1
             )
         } catch (exception: IOException) {
             return loadFromLocalWhenError()

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
 import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
@@ -55,12 +56,10 @@ fun HomeScreen(
     shareEpubFile: (File) -> Unit,
 ) {
     val navController = rememberNavController()
-    val (isCategoriesVisible, setCategoriesVisible) = remember { mutableStateOf(feedViewModel.isCategoriesVisible()) }
+    val isCategoriesVisible = remember { mutableStateOf(false) }
     val isSearchBarVisible = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
-    val hasCategories = feedViewModel.uniqueCategories.value.isNotEmpty()
-    val hasBookmarks = feedViewModel.bookmarksUiState.collectAsState().value.data?.isNotEmpty() == true
-    val clickSearch: ( () -> Unit) = {}
+    val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
 
     BackHandler {
         onFinish()
@@ -78,18 +77,11 @@ fun HomeScreen(
                 topBar = {
                     AnimatedVisibility (showTopBar) {
                         TopBar(
-                            toggleCategoryVisibility = {
-                                setCategoriesVisible(!isCategoriesVisible)
-                                feedViewModel.saveCategoriesVisibilityState(!isCategoriesVisible)
-                            },
+                            toggleCategoryVisibility = { isCategoriesVisible.value = !isCategoriesVisible.value },
                             toggleSearchBarVisibility = { isSearchBarVisible.value = !isSearchBarVisible.value },
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
-                            //isSearchActive = isSearchBarVisible,
-                            isFilterActive = isCategoriesVisible,
                             scrollBehavior = scrollBehavior,
-                            hasCategories = hasCategories,
                             hasBookmarks = hasBookmarks,
-                            onSearchClicked = clickSearch
                             )
                     }
                 }
@@ -152,11 +144,7 @@ fun TopBar(
     toggleCategoryVisibility: () -> Unit,
     toggleSearchBarVisibility: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSearchClicked: () -> Unit,
-//    isSearchActive: Boolean,
-    isFilterActive: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
-    hasCategories: Boolean,
     hasBookmarks: Boolean,
 ) {
     TopAppBar(
@@ -190,20 +178,12 @@ fun TopBar(
                         tint =  MaterialTheme.colorScheme.secondary,
                     )
                 }
-            }
-            if (hasCategories){
                 IconButton(onClick = { toggleCategoryVisibility() }) {
                     Icon(
                         imageVector = Icons.Filled.FilterList,
                         contentDescription = "Filter",
-                        tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier
-                            .background(
-                                if (isFilterActive) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .padding(6.dp)
-                    )
+                        tint =  MaterialTheme.colorScheme.secondary,
+                       )
                 }
             }
             IconButton(onClick = onSettingsClick ) {

@@ -14,34 +14,37 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.model.Bookmark
+import org.koin.androidx.compose.getViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun SearchBar(
     onBookmarkClick: (Bookmark) -> Unit,
     onDismiss: () -> Unit,
-    bookmarks: List<Bookmark>,
+    viewModel: SearchViewModel = getViewModel()
 ) {
-    val searchText = rememberSaveable { mutableStateOf("") }
+    val searchText by viewModel.searchQuery.collectAsState()
     val isActive = rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
-    val filteredBookmarks =
-        bookmarks.filter { it.title.contains(searchText.value, ignoreCase = true) }
+    val filteredBookmarks = viewModel.bookmarksState.collectAsLazyPagingItems()
     Box(
         Modifier
         .fillMaxSize()) {
         androidx.compose.material3.SearchBar(
             modifier = Modifier
                 .align(Alignment.TopCenter),
-            query = searchText.value,
-            onQueryChange = { searchText.value = it },
+            query = searchText,
+            onQueryChange = { viewModel.updateSearchQuery(it) },
             onSearch = {
                 Toast.makeText(context, "Select bookmark from list", Toast.LENGTH_SHORT).show()
             },
@@ -60,7 +63,7 @@ fun SearchBar(
                     Box(modifier = Modifier
                         .padding(end = 8.dp)
                         .clickable {
-                            searchText.value = ""
+                            viewModel.resetSearch()
                         }) {
                         Icon(Icons.Default.Cancel, contentDescription = null)
                     }

@@ -11,10 +11,12 @@ class GetPagingBookmarksUseCase(
     operator fun invoke(
         serverUrl: String,
         xSession: String,
+        searchText: String = "",
     ): Flow<PagingData<Bookmark>> {
         return bookmarksRepository.getPagingBookmarks(
             xSession = xSession,
-            serverUrl = serverUrl
+            serverUrl = serverUrl,
+            searchText = searchText,
         )
     }
 }

@@ -14,8 +14,9 @@ interface BookmarksRepository {
   ): Flow<Result<List<Bookmark>?>>
 
   fun getPagingBookmarks(
-    xSession: String,
-    serverUrl: String
+      xSession: String,
+      serverUrl: String,
+      searchText: String
   ): Flow<PagingData<Bookmark>>
 
   fun addBookmark(

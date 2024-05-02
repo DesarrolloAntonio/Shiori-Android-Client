@@ -2,10 +2,8 @@ package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.idle
@@ -34,6 +32,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
+import androidx.paging.PagingData
+import androidx.paging.map
+import kotlinx.coroutines.flow.map
 
 class FeedViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
@@ -78,8 +79,13 @@ class FeedViewModel(
                 uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
                 loadSelectedCategories()
             }
-        }
+//            bookmarksState.collect { pagingData ->
+//                val bookmarks = pagingData.collectData()
+//                uniqueCategories.value = bookmarks.flatMap { it.tags }.distinct()
+//                loadSelectedCategories()
+            }
     }
+
 
     fun getBookmarks() {
         bookmarksJob?.cancel()
@@ -126,16 +132,14 @@ class FeedViewModel(
     suspend fun getPagingBookmarks() {
         getPagingBookmarksUseCase.invoke(
             serverUrl = serverUrl,
-            xSession = settingsPreferenceDataSource.getSession()
+            xSession = settingsPreferenceDataSource.getSession(),
         )
             .distinctUntilChanged()
             .cachedIn(viewModelScope)
-            .collect {
-                bookmarksState.value = it
+            .collect { loadResult: PagingData<Bookmark> ->
+                bookmarksState.value = loadResult
             }
     }
-
-
 
     fun loadInitialData() {
         viewModelScope.launch {

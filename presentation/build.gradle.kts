@@ -84,6 +84,7 @@ dependencies {
     implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
     implementation (libs.androidx.paging.compose)
+    implementation ("androidx.paging:paging-common:3.2.1")
 
     implementation (libs.compose.ui.ui)
     implementation (libs.compose.ui.tooling.preview)
