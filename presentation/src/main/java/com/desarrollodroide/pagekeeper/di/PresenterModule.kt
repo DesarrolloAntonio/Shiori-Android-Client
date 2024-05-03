@@ -20,6 +20,7 @@ fun presenterModule() = module {
 
     viewModel {
         FeedViewModel(
+            bookmarkDatabase = get(),
             settingsPreferenceDataSource = get(),
             getBookmarksUseCase = get(),
             deleteBookmarkUseCase = get(),

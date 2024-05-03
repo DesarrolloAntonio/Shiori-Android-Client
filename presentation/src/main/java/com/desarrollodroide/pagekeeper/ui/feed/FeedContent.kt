@@ -1,14 +1,11 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -19,63 +16,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
-import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.rememberPullRefreshState
 import com.desarrollodroide.model.Bookmark
-import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkActions
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedContent(
     actions: FeedActions,
-    bookmarks: List<Bookmark>,
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
     isLegacyApi: Boolean,
     token: String,
-    isCategoriesVisible: MutableState<Boolean>,
-    isSearchBarVisible: MutableState<Boolean>,
-    selectedTags: MutableState<List<Tag>>,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-    val filteredBookmarks = if (selectedTags.value.isEmpty()) {
-        bookmarks
-    } else {
-        bookmarks.filter { bookmark ->
-            bookmark.tags.any { it in selectedTags.value }
-        }
-    }
-
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
     fun refreshBookmarks() = refreshCoroutineScope.launch {
@@ -96,16 +67,6 @@ fun FeedContent(
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-//            item {
-//                Categories(
-//                    showCategories = isCategoriesVisible,
-//                    uniqueCategories = uniqueCategories,
-//                    selectedTags = selectedTags,
-//                    onCategoriesSelectedChanged = actions.onCategoriesSelectedChanged
-//                )
-//            }
-
-            item { Spacer(modifier = Modifier.padding(4.dp)) }
             items(bookmarksPagingItems.itemCount) { index ->
                 val bookmark = bookmarksPagingItems[index]
                 if (bookmark != null) {
@@ -124,13 +85,13 @@ fun FeedContent(
                             onClickEpub = { actions.onBookmarkEpub(bookmark) },
                             onClickSync = { actions.onClickSync(bookmark) },
                             onClickCategory = { category ->
-                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
-                                    if (selectedTags.value.contains(category)) {
-                                        selectedTags.value = selectedTags.value - category
-                                    } else {
-                                        selectedTags.value = selectedTags.value + category
-                                    }
-                                }
+//                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
+//                                    if (selectedTags.value.contains(category)) {
+//                                        selectedTags.value = selectedTags.value - category
+//                                    } else {
+//                                        selectedTags.value = selectedTags.value + category
+//                                    }
+//                                }
                             }),
                     )
                     if (index < bookmarksPagingItems.itemCount) {
@@ -183,52 +144,6 @@ fun FeedContent(
             refreshing = isRefreshing,
             state = refreshState,
         )
-    }
-
-    if (isSearchBarVisible.value) {
-        val scope = rememberCoroutineScope()
-        ModalBottomSheet(
-            modifier = Modifier.fillMaxSize(),
-            shape = BottomSheetDefaults.ExpandedShape,
-            onDismissRequest = {
-                isSearchBarVisible.value = false
-            },
-            sheetState = sheetState,
-            dragHandle = null
-        ) {
-            SearchBar(
-                onBookmarkClick =  actions.onBookmarkSelect,
-                onDismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        isSearchBarVisible.value = false
-                    }
-                }
-            )
-        }
-    }
-
-    if (isCategoriesVisible.value) {
-        val scope = rememberCoroutineScope()
-        ModalBottomSheet(
-            modifier = Modifier.fillMaxSize(),
-            shape = BottomSheetDefaults.ExpandedShape,
-            onDismissRequest = {
-                isSearchBarVisible.value = false
-            },
-            sheetState = sheetState,
-            dragHandle = null
-        ) {
-            SearchBar(
-                onBookmarkClick =  actions.onBookmarkSelect,
-                onDismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        isSearchBarVisible.value = false
-                    }
-                }
-            )
-        }
     }
 }
 

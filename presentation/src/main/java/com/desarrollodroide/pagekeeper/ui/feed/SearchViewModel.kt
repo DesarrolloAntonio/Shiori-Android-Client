@@ -14,10 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
@@ -51,16 +49,16 @@ class SearchViewModel(
     suspend fun getPagingBookmarks(
         searchText: String
     ) {
-        Log.v("SearchViewModel", "getPagingBookmarks: $searchText")
         _bookmarksState.value = PagingData.empty()
         getPagingBookmarksUseCase.invoke(
             serverUrl = settingsPreferenceDataSource.getUrl(),
             xSession = settingsPreferenceDataSource.getSession(),
-            searchText = searchText
+            searchText = searchText,
+            tags = emptyList(),
+            saveToLocal = false
         )
             .cachedIn(viewModelScope)
             .collect {
-                Log.v("SearchViewModel", "getPagingBookmarks22: $it")
                 _bookmarksState.value = it
             }
     }

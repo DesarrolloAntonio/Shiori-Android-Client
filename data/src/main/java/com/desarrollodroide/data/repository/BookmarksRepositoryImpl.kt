@@ -11,6 +11,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.data.repository.paging.MoviePagingSource
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
@@ -60,7 +61,9 @@ class BookmarksRepositoryImpl(
     override fun getPagingBookmarks(
         xSession: String,
         serverUrl: String,
-        searchText: String
+        searchText: String,
+        tags: List<Tag>,
+        saveToLocal: Boolean
     ): Flow<PagingData<Bookmark>> {
         return Pager(
             config = PagingConfig(pageSize = 20, prefetchDistance = 2),
@@ -71,6 +74,8 @@ class BookmarksRepositoryImpl(
                     serverUrl = serverUrl,
                     xSessionId = xSession,
                     searchText = searchText,
+                    tags = tags,
+                    saveToLocal = saveToLocal
                 )
             }
         ).flow

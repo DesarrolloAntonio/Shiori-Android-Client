@@ -9,14 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -33,13 +36,14 @@ import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
-import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.EpubOptionsDialog
 import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
+import kotlinx.coroutines.launch
 import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     feedViewModel: FeedViewModel,
@@ -57,6 +61,17 @@ fun FeedScreen(
     }
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
+
+    val availableTags = feedViewModel.availableTags.collectAsState()
+    val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
+    val downloadUiState = feedViewModel.downloadUiState.collectAsState()
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+    val sheetStateCategories = rememberModalBottomSheetState(
+        skipPartiallyExpanded = false
+    )
 
     val actions = FeedActions(
         goToLogin = {
@@ -91,26 +106,18 @@ fun FeedScreen(
             feedViewModel.resetData()
         },
         onCategoriesSelectedChanged = { categories ->
-            feedViewModel.saveSelectedCategories(categories)
+            //feedViewModel.saveSelectedCategories(categories)
         },
     )
     FeedView(
         actions = actions,
-        bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value,
-        downloadUiState = feedViewModel.downloadUiState.collectAsState().value,
-        selectedTags = feedViewModel.selectedCategories,
         serverURL = feedViewModel.getServerUrl(),
         xSessionId = feedViewModel.getSession(),
-        shareEpubFile = shareEpubFile,
         isLegacyApi = feedViewModel.isLegacyApi(),
         token = feedViewModel.getToken(),
         viewType = feedViewModel.isCompactView.collectAsState().value.let { isCompactView ->
             if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
         },
-        isCategoriesVisible = isCategoriesVisible,
-        isSearchBarVisible = isSearchBarVisible,
-        showEpubOptionsDialog = feedViewModel.showEpubOptionsDialog,
-        uniqueCategories = feedViewModel.uniqueCategories,
         bookmarksPagingItems = bookmarksPagingItems,
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
@@ -159,40 +166,7 @@ fun FeedScreen(
             )
         )
     }
-    val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
-    UpdateCacheDialog(
-        isLoading = isUpdating,
-        showDialog = feedViewModel.showSyncDialog
-    ) { keepOldTitle, updateArchive, updateEbook ->
-        feedViewModel.updateBookmark(
-            keepOldTitle = keepOldTitle,
-            updateEbook = updateEbook,
-            updateArchive = updateArchive,
-        )
-    }
-}
-
-@Composable
-private fun FeedView(
-    actions: FeedActions,
-    viewType: BookmarkViewType,
-    serverURL: String,
-    xSessionId: String,
-    isLegacyApi: Boolean,
-    token: String,
-    bookmarksUiState: UiState<List<Bookmark>>,
-    downloadUiState: UiState<File>,
-    shareEpubFile: (File) -> Unit,
-    isCategoriesVisible: MutableState<Boolean>,
-    isSearchBarVisible: MutableState<Boolean>,
-    showEpubOptionsDialog: MutableState<Boolean>,
-    selectedTags: MutableState<List<Tag>>,
-    uniqueCategories: MutableState<List<Tag>>,
-    bookmarksPagingItems: LazyPagingItems<Bookmark>,
-    ) {
-
-
-    if (bookmarksUiState.isLoading || downloadUiState.isLoading) {
+    if (bookmarksUiState.isLoading || downloadUiState.value.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
     if (!bookmarksUiState.error.isNullOrEmpty()) {
@@ -212,36 +186,22 @@ private fun FeedView(
         )
         Log.v("bookmarksUiState", "Error")
     }
-    //if (bookmarksPagingItems.itemCount > 0) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(rememberNestedScrollInteropConnection()),
-            ) {
-                FeedContent(
-                    actions = actions,
-                    bookmarks = emptyList(),
-                    serverURL = serverURL,
-                    xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
-                    token = token,
-                    viewType = viewType,
-                    isCategoriesVisible = isCategoriesVisible,
-                    isSearchBarVisible = isSearchBarVisible,
-                    selectedTags = selectedTags,
-                    bookmarksPagingItems = bookmarksPagingItems,
-                )
-            }
-        }
-//    } else if (!bookmarksUiState.isLoading) {
-//        EmptyView(actions)
-//    }
-    if (!downloadUiState.error.isNullOrEmpty()) {
+    val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
+    UpdateCacheDialog(
+        isLoading = isUpdating,
+        showDialog = feedViewModel.showSyncDialog
+    ) { keepOldTitle, updateArchive, updateEbook ->
+        feedViewModel.updateBookmark(
+            keepOldTitle = keepOldTitle,
+            updateEbook = updateEbook,
+            updateArchive = updateArchive,
+        )
+    }
+    if (!downloadUiState.value.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,
             title = "Download Error",
-            content = downloadUiState.error,
+            content = downloadUiState.value.error?:"Unknown error",
             openDialog = remember { mutableStateOf(true) },
             onConfirm = { },
             properties = DialogProperties(
@@ -251,11 +211,10 @@ private fun FeedView(
         )
     }
 
-    if (downloadUiState.data != null && showEpubOptionsDialog.value) {
-        val context = LocalContext.current
+    if (downloadUiState.value.data != null && feedViewModel.showEpubOptionsDialog.value) {
         MediaScannerConnection.scanFile(
             context,
-            arrayOf(downloadUiState.data.absolutePath),
+            arrayOf(downloadUiState.value.data?.absolutePath),
             null
         ) { path, uri -> }
         EpubOptionsDialog(
@@ -265,7 +224,7 @@ private fun FeedView(
             onClickOption = { index ->
                 when (index) {
                     2 -> {
-                        shareEpubFile.invoke(downloadUiState.data)
+                        shareEpubFile.invoke(downloadUiState.value.data!!)
                     }
                 }
             },
@@ -273,8 +232,87 @@ private fun FeedView(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true
             ),
-            showDialog = showEpubOptionsDialog
+            showDialog = feedViewModel.showEpubOptionsDialog
         )
+    }
+
+    if (isSearchBarVisible.value) {
+        val scope = rememberCoroutineScope()
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxSize(),
+            shape = BottomSheetDefaults.ExpandedShape,
+            onDismissRequest = {
+                isSearchBarVisible.value = false
+            },
+            sheetState = sheetState,
+            dragHandle = null
+        ) {
+            SearchBar(
+                onBookmarkClick =  actions.onBookmarkSelect,
+                onDismiss = {
+                    scope.launch {
+                        sheetState.hide()
+                        isSearchBarVisible.value = false
+                    }
+                }
+            )
+        }
+    }
+
+    if (isCategoriesVisible.value) {
+        val scope = rememberCoroutineScope()
+        ModalBottomSheet(
+            shape = BottomSheetDefaults.ExpandedShape,
+            onDismissRequest = {
+                isCategoriesVisible.value = false
+            },
+            sheetState = sheetStateCategories,
+        ) {
+            CategoriesView(
+                uniqueCategories = availableTags,
+                onApply = { selectedTags ->
+                    scope.launch {
+                        sheetStateCategories.hide()
+                        isCategoriesVisible.value = false
+                        feedViewModel.getPagingBookmarks(selectedTags)
+                    }
+                },
+                onDismiss = {}
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeedView(
+    actions: FeedActions,
+    viewType: BookmarkViewType,
+    serverURL: String,
+    xSessionId: String,
+    isLegacyApi: Boolean,
+    token: String,
+    bookmarksPagingItems: LazyPagingItems<Bookmark>,
+    ) {
+    if (bookmarksPagingItems.itemCount > 0) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(rememberNestedScrollInteropConnection()),
+            ) {
+                FeedContent(
+                    actions = actions,
+                    serverURL = serverURL,
+                    xSessionId = xSessionId,
+                    isLegacyApi = isLegacyApi,
+                    token = token,
+                    viewType = viewType,
+                    bookmarksPagingItems = bookmarksPagingItems,
+                )
+            }
+        }
+    } else  {
+        EmptyView(actions)
     }
 }
 

@@ -8,6 +8,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.mapper.toEntityModel
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -20,25 +21,30 @@ class MoviePagingSource(
     private val serverUrl: String,
     private val xSessionId: String,
     private val searchText: String,
+    private val tags: List<Tag>,
+    private val saveToLocal: Boolean,
 ) : PagingSource<Int, Bookmark>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Bookmark> {
         return try {
             val page = params.key ?: 1
             val pageSize = params.loadSize // Not needed
-            val searchParams = if (searchText.isNotEmpty())"&keyword=$searchText" else ""
+            val searchKeywordsParams = if (searchText.isNotEmpty())"&keyword=$searchText" else ""
+            val searchTagsParams = if (tags.isNotEmpty())"&tags=${tags.joinToString(",") { it.name }}" else ""
             val bookmarksDto = remoteDataSource.getPagingBookmarks(
                 xSessionId = xSessionId,
-                url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$page$searchParams",
+                url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$page$searchKeywordsParams$searchTagsParams",
             )
             if (bookmarksDto.errorBody()?.string() == SESSION_HAS_BEEN_EXPIRED) {
                 return LoadResult.Error(Exception(SESSION_HAS_BEEN_EXPIRED))
             }
-            bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
-                if (page == 1) {
-                    bookmarksDao.deleteAll()
+            if (saveToLocal){
+                bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
+                    if (page == 1) {
+                        bookmarksDao.deleteAll()
+                    }
+                    bookmarksDao.insertAll(bookmarksList)
                 }
-                bookmarksDao.insertAll(bookmarksList)
             }
             val bookmarks = bookmarksDto.body()?.bookmarks?.map { it.toDomainModel() }?: emptyList()
             LoadResult.Page(

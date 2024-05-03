@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 
 interface BookmarksRepository {
@@ -16,7 +17,9 @@ interface BookmarksRepository {
   fun getPagingBookmarks(
       xSession: String,
       serverUrl: String,
-      searchText: String
+      searchText: String,
+      tags: List<Tag>,
+      saveToLocal: Boolean
   ): Flow<PagingData<Bookmark>>
 
   fun addBookmark(

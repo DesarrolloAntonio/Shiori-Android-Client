@@ -8,7 +8,6 @@ import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.idle
 import com.desarrollodroide.pagekeeper.ui.components.isLoading
-import com.desarrollodroide.pagekeeper.ui.components.success
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.toProtoEntity
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
@@ -27,16 +26,19 @@ import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.pagekeeper.ui.components.isUpdating
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
-import androidx.paging.map
+import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class FeedViewModel(
+    bookmarkDatabase: BookmarksDao,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getBookmarksUseCase: GetBookmarksUseCase,
     private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
@@ -58,7 +60,6 @@ class FeedViewModel(
     private var xSessionId = ""
     private var token = ""
     private var isLegacyApi = false
-    private var bookmarksJob: Job? = null
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
     val showEpubOptionsDialog = mutableStateOf(false)
@@ -67,18 +68,24 @@ class FeedViewModel(
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
     val isCompactView = MutableStateFlow<Boolean>(false)
-    val selectedCategories = mutableStateOf<List<Tag>>(emptyList())
-    val uniqueCategories =  mutableStateOf<List<Tag>>(emptyList())
-    val searchTextState =  mutableStateOf("")
-    val isActive =  mutableStateOf(true)
+
+    val availableTags: StateFlow<List<Tag>> = bookmarkDatabase.getAll()
+        .map { bookmarks ->
+            bookmarks.flatMap { it.tags }.distinct()
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
 
     init {
         viewModelScope.launch {
             //getPagingBookmarks()
-            _bookmarksUiState.collect { state ->
-                uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
-                loadSelectedCategories()
-            }
+//            _bookmarksUiState.collect { state ->
+//                uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
+//                loadSelectedCategories()
+//            }
 //            bookmarksState.collect { pagingData ->
 //                val bookmarks = pagingData.collectData()
 //                uniqueCategories.value = bookmarks.flatMap { it.tags }.distinct()
@@ -86,53 +93,14 @@ class FeedViewModel(
             }
     }
 
-
-    fun getBookmarks() {
-        bookmarksJob?.cancel()
-        if (hasLoadedFeed) {
-            return
-        }
-        bookmarksJob = viewModelScope.launch {
-            getBookmarksUseCase.invoke(
-                serverUrl = serverUrl,
-                xSession = settingsPreferenceDataSource.getSession()
-            )
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            Log.v("FeedViewModel", "Error: ${result.error?.message}")
-                            if (result.error is Result.ErrorType.SessionExpired) {
-                                _bookmarksUiState.error(
-                                    errorMessage = result.error?.message ?: ""
-                                )
-                            } else if (result.data?.isNotEmpty() == true) {
-                                _bookmarksUiState.success(result.data)
-                            }
-                        }
-
-                        is Result.Loading -> {
-                            Log.v("FeedViewModel", "Loading: ${result.data}")
-                            if (result.data?.isNotEmpty() == true) {
-                                _bookmarksUiState.success(result.data)
-                            }
-                        }
-
-                        is Result.Success -> {
-                            Log.v("FeedViewModel", "Success: ${result.data}")
-                            if (result.data != null) {
-                                _bookmarksUiState.success(result.data)
-                                hasLoadedFeed = true
-                            }
-                        }
-                    }
-                }
-        }
-    }
-
-    suspend fun getPagingBookmarks() {
+    suspend fun getPagingBookmarks(
+        tags: List<Tag> = emptyList(),
+    ) {
         getPagingBookmarksUseCase.invoke(
             serverUrl = serverUrl,
             xSession = settingsPreferenceDataSource.getSession(),
+            tags = tags,
+            saveToLocal = tags.isEmpty()
         )
             .distinctUntilChanged()
             .cachedIn(viewModelScope)
@@ -198,6 +166,7 @@ class FeedViewModel(
 
                         is Result.Success -> {
                             Log.v("FeedViewModel", "Bookmark updating successfully.")
+                            _bookmarksUiState.isUpdating(false)
                             refreshFeed()
                         }
                     }
@@ -252,6 +221,7 @@ class FeedViewModel(
 
                         is Result.Success -> {
                             Log.v("FeedViewModel", "Bookmark deleted successfully.")
+                            _bookmarksUiState.isLoading(false)
                             refreshFeed()
                         }
                     }
@@ -286,28 +256,4 @@ class FeedViewModel(
     fun isLegacyApi(): Boolean = runBlocking {
         settingsPreferenceDataSource.getIsLegacyApi()
     }
-
-    fun isCategoriesVisible(): Boolean = runBlocking {
-        settingsPreferenceDataSource.getCategoriesVisible()
-    }
-
-    fun saveCategoriesVisibilityState(visible: Boolean) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setCategoriesVisible(visible)
-        }
-    }
-
-    fun saveSelectedCategories(categories: List<Tag>) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setSelectedCategories(categories.map { it.name } )
-        }
-    }
-
-    private fun loadSelectedCategories() {
-        viewModelScope.launch {
-            val selectedCategoryNames = settingsPreferenceDataSource.getSelectedCategories()
-            selectedCategories.value = uniqueCategories.value .filter { it.name in selectedCategoryNames }
-        }
-    }
-
 }
