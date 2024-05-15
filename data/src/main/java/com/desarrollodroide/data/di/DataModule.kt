@@ -21,6 +21,8 @@ import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
 import com.desarrollodroide.data.repository.SystemRepository
 import com.desarrollodroide.data.repository.SystemRepositoryImpl
+import com.desarrollodroide.data.repository.TagsRepository
+import com.desarrollodroide.data.repository.TagsRepositoryImpl
 import com.desarrollodroide.network.retrofit.FileRemoteDataSource
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -92,6 +94,14 @@ fun dataModule() = module {
             settingsPreferenceDataSource = get(),
             errorHandler = get()
         ) as SystemRepository
+    }
+
+    single {
+        TagsRepositoryImpl(
+            apiService = get(),
+            tagsDao = get(),
+            errorHandler = get()
+        ) as TagsRepository
     }
 
 

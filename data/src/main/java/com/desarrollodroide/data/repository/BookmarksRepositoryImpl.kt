@@ -9,7 +9,7 @@ import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
-import com.desarrollodroide.data.repository.paging.MoviePagingSource
+import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
@@ -68,7 +68,7 @@ class BookmarksRepositoryImpl(
         return Pager(
             config = PagingConfig(pageSize = 20, prefetchDistance = 2),
             pagingSourceFactory = {
-                MoviePagingSource(
+                BookmarkPagingSource(
                     remoteDataSource = apiService,
                     bookmarksDao = bookmarksDao,
                     serverUrl = serverUrl,

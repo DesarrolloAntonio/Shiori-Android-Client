@@ -10,6 +10,7 @@ import com.desarrollodroide.domain.usecase.DownloadFileUseCase
 import com.desarrollodroide.domain.usecase.EditBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetPagingBookmarksUseCase
+import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
@@ -84,6 +85,12 @@ fun appModule() = module {
     single {
         SystemLivenessUseCase(
             systemRepository = get()
+        )
+    }
+
+    single {
+        GetTagsUseCase(
+            tagsRepository = get()
         )
     }
 

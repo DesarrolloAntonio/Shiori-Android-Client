@@ -2,6 +2,7 @@ package com.desarrollodroide.data.mapper
 
 import com.desarrollodroide.data.UserPreferences
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
+import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.*
 import com.desarrollodroide.network.model.*
 
@@ -57,6 +58,19 @@ fun TagDTO.toDomainModel() = Tag(
     name = name?:"",
     selected = false,
     nBookmarks = nBookmarks?:0
+)
+
+fun TagDTO.toEntityModel() = TagEntity(
+    id = id?:0,
+    name = name?:"",
+    nBookmarks = nBookmarks?:0
+)
+
+fun TagEntity.toDomainModel() = Tag(
+    id = id,
+    name = name,
+    selected = false,
+    nBookmarks = nBookmarks
 )
 
 fun Account.toRequestBody() =

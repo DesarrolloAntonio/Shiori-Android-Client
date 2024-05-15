@@ -1,5 +1,6 @@
 package com.desarrollodroide.data.repository.paging
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.desarrollodroide.data.extensions.removeTrailingSlash
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
 import java.io.IOException
 
-class MoviePagingSource(
+class BookmarkPagingSource(
     private val remoteDataSource: RetrofitNetwork,
     private val bookmarksDao: BookmarksDao,
     private val serverUrl: String,
@@ -53,8 +54,10 @@ class MoviePagingSource(
                 nextKey = if ((bookmarksDto.body()?.page ?: 0) >= (bookmarksDto.body()?.maxPage ?: 0)) null else page + 1
             )
         } catch (exception: IOException) {
+            Log.e("BookmarkPagingSource", "IOException", exception)
             return loadFromLocalWhenError()
         } catch (exception: HttpException) {
+            Log.e("BookmarkPagingSource", "HttpException", exception)
             return loadFromLocalWhenError()
         }
     }

@@ -13,7 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,12 +31,12 @@ import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
 fun CategoriesView(
     onApply: (List<Tag>) -> Unit,
     onDismiss: () -> Unit,
-    uniqueCategories: State<List<Tag>>,
+    uniqueCategories: MutableState<List<Tag>>,
 ) {
     val context = LocalContext.current
     val sortingOptions = remember { mutableStateListOf(Tag("Alphabetical order"), Tag("Date")) }
     val selectedSorting = remember { mutableStateOf(listOf<Tag>()) }
-    val mutableUniqueCategories = remember { mutableStateOf(uniqueCategories.value) }
+    val mutableUniqueCategories = remember { mutableStateOf(uniqueCategories) }
 
     val selectedTags = remember { mutableStateOf(listOf<Tag>()) }
 
@@ -64,7 +64,7 @@ fun CategoriesView(
         Categories(
             categoriesType = CategoriesType.SELECTABLES,
             showCategories = true,
-            uniqueCategories = mutableUniqueCategories,
+            uniqueCategories = uniqueCategories,
             selectedTags = selectedTags,
             onCategoriesSelectedChanged = { tags ->
                 selectedTags.value = tags

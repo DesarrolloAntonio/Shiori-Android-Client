@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,9 +29,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
+import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.pagekeeper.extensions.shareText
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
@@ -55,14 +58,18 @@ fun FeedScreen(
     setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
+    val tagsState by feedViewModel.tagsState.collectAsState()
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
         feedViewModel.getPagingBookmarks()
     }
+    LaunchedEffect(isCategoriesVisible.value) {
+        if (isCategoriesVisible.value) {
+            feedViewModel.getTags()
+        }
+    }
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
-
-    val availableTags = feedViewModel.availableTags.collectAsState()
     val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
     val downloadUiState = feedViewModel.downloadUiState.collectAsState()
 
@@ -109,6 +116,17 @@ fun FeedScreen(
             //feedViewModel.saveSelectedCategories(categories)
         },
     )
+
+    LaunchedEffect(bookmarksPagingItems.loadState) {
+        val loadState = bookmarksPagingItems.loadState.refresh
+        if (loadState is LoadState.Error) {
+            val error = loadState.error
+            if (error.message == SESSION_HAS_BEEN_EXPIRED) {
+                feedViewModel.handleLoadState(loadState)
+            }
+        }
+    }
+
     FeedView(
         actions = actions,
         serverURL = feedViewModel.getServerUrl(),
@@ -268,8 +286,9 @@ fun FeedScreen(
             },
             sheetState = sheetStateCategories,
         ) {
+            val categories = tagsState.data?.let { mutableStateOf(it) } ?: remember { mutableStateOf(emptyList<Tag>()) }
             CategoriesView(
-                uniqueCategories = availableTags,
+                uniqueCategories = categories,
                 onApply = { selectedTags ->
                     scope.launch {
                         sheetStateCategories.hide()

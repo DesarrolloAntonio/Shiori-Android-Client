@@ -4,13 +4,13 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.LoadState
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.idle
 import com.desarrollodroide.pagekeeper.ui.components.isLoading
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.toProtoEntity
-import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.network.model.SessionDTO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,15 +32,19 @@ import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.pagekeeper.ui.components.success
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 class FeedViewModel(
     bookmarkDatabase: BookmarksDao,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
-    private val getBookmarksUseCase: GetBookmarksUseCase,
+    private val getTagsUseCase: GetTagsUseCase,
     private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
@@ -52,9 +56,15 @@ class FeedViewModel(
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
     val downloadUiState = _downloadUiState.asStateFlow()
 
-    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> = MutableStateFlow(value = PagingData.empty())
+    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> =
+        MutableStateFlow(value = PagingData.empty())
     val bookmarksState: MutableStateFlow<PagingData<Bookmark>> get() = _bookmarksState
 
+
+    private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
+    val tagsState = _tagsState.asStateFlow()
+
+    private var tagsJob: Job? = null
     private var hasLoadedFeed = false
     private var serverUrl = ""
     private var xSessionId = ""
@@ -78,20 +88,6 @@ class FeedViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = listOf()
         )
-
-    init {
-        viewModelScope.launch {
-            //getPagingBookmarks()
-//            _bookmarksUiState.collect { state ->
-//                uniqueCategories.value = state.data?.flatMap { it.tags }?.distinct() ?: emptyList()
-//                loadSelectedCategories()
-//            }
-//            bookmarksState.collect { pagingData ->
-//                val bookmarks = pagingData.collectData()
-//                uniqueCategories.value = bookmarks.flatMap { it.tags }.distinct()
-//                loadSelectedCategories()
-            }
-    }
 
     suspend fun getPagingBookmarks(
         tags: List<Tag> = emptyList(),
@@ -123,6 +119,46 @@ class FeedViewModel(
         viewModelScope.launch {
             hasLoadedFeed = false
             getPagingBookmarks()
+        }
+    }
+
+    fun getTags() {
+        tagsJob?.cancel()
+        tagsJob =  viewModelScope.launch {
+            getTagsUseCase.invoke(
+                serverUrl = serverUrl,
+                token = token,
+            )
+                .distinctUntilChanged()
+                .collect() { result ->
+                when (result) {
+                    is Result.Error -> {
+                        Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
+                        _tagsState.error(
+                            errorMessage = result.error?.message ?: ""
+                        )
+                    }
+
+                    is Result.Loading -> {
+                        Log.v("FeedViewModel", "updating tags...")
+                        _tagsState.success(result.data)
+
+                    }
+
+                    is Result.Success -> {
+                        Log.v("FeedViewModel", "Tags loaded successfully.")
+                        _tagsState.success(result.data)
+                    }
+                }
+            }
+        }
+    }
+
+    fun handleLoadState(loadState: LoadState) {
+        if (loadState is LoadState.Error) {
+            _bookmarksUiState.update { currentState ->
+                currentState.copy(isLoading = false, error = loadState.error.message)
+            }
         }
     }
 
@@ -236,7 +272,8 @@ class FeedViewModel(
             val sessionId = settingsPreferenceDataSource.getSession()
             _downloadUiState.value = UiState(isLoading = true)
             try {
-                val downloadedFile = downloadFileUseCase.execute(getEpubUrl(bookmark), bookmark.title, sessionId)
+                val downloadedFile =
+                    downloadFileUseCase.execute(getEpubUrl(bookmark), bookmark.title, sessionId)
                 _downloadUiState.value = UiState(data = downloadedFile)
                 showEpubOptionsDialog.value = true
             } catch (e: Exception) {

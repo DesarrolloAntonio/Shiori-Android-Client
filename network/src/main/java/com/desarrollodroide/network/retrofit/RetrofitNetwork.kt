@@ -8,7 +8,7 @@ import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.model.TagDTO
-import okhttp3.ResponseBody
+import com.desarrollodroide.network.model.TagsDTO
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -81,10 +81,11 @@ interface RetrofitNetwork {
     ): Response<BookmarkResponseDTO>
 
     // Get tags
-    @GET("/api/tags")
+    @GET()
     suspend fun getTags(
-        @Header("X-Session-Id") xSessionId: String
-    ): Response<List<TagDTO>>
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+    ): Response<TagsDTO>
 
     // Rename tag
     @PUT("/api/tags")
