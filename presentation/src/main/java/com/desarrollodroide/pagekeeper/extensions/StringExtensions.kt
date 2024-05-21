@@ -5,7 +5,7 @@ package com.desarrollodroide.pagekeeper.extensions
  *
  * @return True if the string contains more than half Arabic characters, false otherwise.
  */
-fun String.isArabicText(): Boolean {
+fun String.isRTLText(): Boolean {
     // Take the first 20 characters of the string
     val textSample = this.take(20)
 

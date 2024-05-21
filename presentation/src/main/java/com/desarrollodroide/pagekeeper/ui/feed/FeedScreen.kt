@@ -194,8 +194,10 @@ fun FeedScreen(
             content = bookmarksUiState.error,
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
-                actions.onClearError()
-                actions.goToLogin.invoke()
+                if (bookmarksUiState.error == SESSION_HAS_BEEN_EXPIRED){
+                    actions.onClearError()
+                    actions.goToLogin.invoke()
+                }
             },
             properties = DialogProperties(
                 dismissOnClickOutside = false,

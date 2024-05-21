@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
-import com.desarrollodroide.pagekeeper.extensions.isArabicText
+import com.desarrollodroide.pagekeeper.extensions.isRTLText
 
 @Composable
 fun FullBookmarkView(
@@ -32,7 +32,7 @@ fun FullBookmarkView(
     token: String,
     actions: BookmarkActions
 ) {
-    val isArabic = bookmark.title.isArabicText() || bookmark.excerpt.isArabicText()
+    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
     val imageUrl =
         "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
     Column {
@@ -57,13 +57,16 @@ fun FullBookmarkView(
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                 Text(
+                    modifier = Modifier.fillMaxWidth(),
                     text = bookmark.title,
                     style = MaterialTheme.typography.titleLarge,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2
                 )
                 Text(
-                    modifier = Modifier.padding(top = 5.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 5.dp),
                     text = bookmark.excerpt,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary,
