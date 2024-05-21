@@ -37,7 +37,7 @@ class LoginViewModel(
     // Synology
 //    var userName = mutableStateOf("Test")
 //    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.26:18080/")
+//    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")

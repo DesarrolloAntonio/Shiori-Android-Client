@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Delete
@@ -41,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
-import com.desarrollodroide.pagekeeper.extensions.isArabicText
+import com.desarrollodroide.pagekeeper.extensions.isRTLText
 
 @Composable
 fun SmallBookmarkView(
@@ -56,7 +55,7 @@ fun SmallBookmarkView(
         "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
     val modifier =
         if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
-    val isArabic = bookmark.title.isArabicText() || bookmark.excerpt.isArabicText()
+    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
     Row(
         modifier = modifier
             .padding(vertical = 8.dp)

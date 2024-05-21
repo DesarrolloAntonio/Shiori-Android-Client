@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id ("de.mannodermaus.android-junit5")
 }
 
 android {
@@ -99,6 +100,15 @@ dependencies {
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.coil.compose)
+
+    // Testing libraries
+    testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
+    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.
+    testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
+    testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
+    testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
+    testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
+    testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
 
 }
 

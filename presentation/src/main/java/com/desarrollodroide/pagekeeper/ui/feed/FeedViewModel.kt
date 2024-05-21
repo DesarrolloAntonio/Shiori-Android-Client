@@ -134,13 +134,10 @@ class FeedViewModel(
                 when (result) {
                     is Result.Error -> {
                         Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
-                        _tagsState.error(
-                            errorMessage = result.error?.message ?: ""
-                        )
                     }
 
                     is Result.Loading -> {
-                        Log.v("FeedViewModel", "updating tags...")
+                        Log.v("FeedViewModel", "Loading, updating tags from cache...")
                         _tagsState.success(result.data)
 
                     }
