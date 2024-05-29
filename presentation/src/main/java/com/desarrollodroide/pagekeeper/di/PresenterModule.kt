@@ -4,6 +4,7 @@ import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
 import com.desarrollodroide.pagekeeper.ui.feed.SearchViewModel
+import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsViewModel
 import org.koin.dsl.module
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -53,6 +54,13 @@ fun presenterModule() = module {
     viewModel {
         SearchViewModel(
             getPagingBookmarksUseCase = get(),
+            settingsPreferenceDataSource = get(),
+        )
+    }
+
+    viewModel {
+        ReadableContentViewModel(
+            getBookmarkReadableContentUseCase = get(),
             settingsPreferenceDataSource = get(),
         )
     }

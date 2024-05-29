@@ -60,7 +60,6 @@ class FeedViewModel(
         MutableStateFlow(value = PagingData.empty())
     val bookmarksState: MutableStateFlow<PagingData<Bookmark>> get() = _bookmarksState
 
-
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
 
@@ -135,13 +134,10 @@ class FeedViewModel(
                     is Result.Error -> {
                         Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
                     }
-
                     is Result.Loading -> {
                         Log.v("FeedViewModel", "Loading, updating tags from cache...")
                         _tagsState.success(result.data)
-
                     }
-
                     is Result.Success -> {
                         Log.v("FeedViewModel", "Tags loaded successfully.")
                         _tagsState.success(result.data)
@@ -202,6 +198,8 @@ class FeedViewModel(
                             _bookmarksUiState.isUpdating(false)
                             refreshFeed()
                         }
+
+                        else -> {}
                     }
                 }
         }
@@ -238,15 +236,11 @@ class FeedViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v(
-                                "FeedViewModel",
-                                "Error deleting bookmark: ${result.error?.message}"
-                            )
+                            Log.v("FeedViewModel","Error deleting bookmark: ${result.error?.message}")
                             _bookmarksUiState.error(
                                 errorMessage = result.error?.message ?: "Unknown error"
                             )
                         }
-
                         is Result.Loading -> {
                             Log.v("FeedViewModel", "Deleting bookmark...")
                             _bookmarksUiState.isLoading(true)
@@ -257,6 +251,7 @@ class FeedViewModel(
                             _bookmarksUiState.isLoading(false)
                             refreshFeed()
                         }
+                        else -> {}
                     }
                 }
         }

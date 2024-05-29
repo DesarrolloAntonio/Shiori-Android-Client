@@ -51,6 +51,7 @@ import java.io.File
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
+    goToReadableContent:(Bookmark) -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: MutableState<Boolean>,
@@ -85,8 +86,7 @@ fun FeedScreen(
             goToLogin()
         },
         onBookmarkSelect = { bookmark ->
-            Log.v("FeedContent", feedViewModel.getUrl(bookmark))
-            openUrlInBrowser(feedViewModel.getUrl(bookmark))
+            goToReadableContent(bookmark)
         },
         onRefreshFeed = {
             feedViewModel.refreshFeed()

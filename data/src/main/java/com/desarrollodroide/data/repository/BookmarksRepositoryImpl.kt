@@ -11,11 +11,13 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.BookmarksDTO
+import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
@@ -179,5 +181,23 @@ class BookmarksRepositoryImpl(
     }.asFlow().flowOn(Dispatchers.IO)
 
     override suspend fun deleteAllLocalBookmarks()  { bookmarksDao.deleteAll() }
+
+    override fun getBookmarkReadableContent(
+        token: String,
+        serverUrl: String,
+        bookmarkId: Int
+    ) = object :
+        NetworkNoCacheResource<ReadableContentResponseDTO, ReadableContent>(errorHandler = errorHandler) {
+        override suspend fun fetchFromRemote(): Response<ReadableContentResponseDTO> = apiService.getBookmarkReadableContent(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/${bookmarkId}/readable",
+            authorization = "Bearer $token",
+        )
+
+        override fun fetchResult(data: ReadableContentResponseDTO): Flow<ReadableContent> {
+            return flow {
+                    emit(data.toDomainModel())
+            }
+        }
+    }.asFlow().flowOn(Dispatchers.IO)
 }
 

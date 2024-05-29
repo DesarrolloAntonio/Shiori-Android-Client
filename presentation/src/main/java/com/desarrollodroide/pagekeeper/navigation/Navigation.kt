@@ -1,5 +1,7 @@
 package com.desarrollodroide.pagekeeper.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
@@ -14,6 +16,7 @@ import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import org.koin.androidx.compose.get
 import java.io.File
 
+@RequiresApi(Build.VERSION_CODES.N)
 @ExperimentalFoundationApi
 @Composable
 fun Navigation(

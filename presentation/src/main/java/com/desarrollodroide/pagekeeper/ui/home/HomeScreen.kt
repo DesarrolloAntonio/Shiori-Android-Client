@@ -1,14 +1,15 @@
 package com.desarrollodroide.pagekeeper.ui.home
 
+import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Modifier
 import org.koin.androidx.compose.get
 import androidx.compose.runtime.*
@@ -26,15 +27,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
 import com.desarrollodroide.pagekeeper.navigation.NavItem
@@ -45,7 +47,9 @@ import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
 import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 import com.desarrollodroide.pagekeeper.R
+import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
 
+@RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -98,6 +102,14 @@ fun HomeScreen(
                         shareEpubFile = shareEpubFile,
                         isSearchBarVisible = isSearchBarVisible,
                         setShowTopBar = setShowTopBar,
+                        goToReadableContent = { bookmark->
+                             navController.navigate(NavItem.ReadableContentNavItem.createRoute(
+                                 bookmarkId = bookmark.id,
+                                 bookmarkUrl = bookmark.url,
+                                 bookmarkDate = bookmark.modified,
+                                 bookmarkTitle = bookmark.title
+                             ))
+                        },
                     )
                 }
 
@@ -135,6 +147,33 @@ fun HomeScreen(
                 }
             )
         }
+        composable(
+            route = NavItem.ReadableContentNavItem.route,
+            arguments = listOf(
+                navArgument("bookmarkId") { type = NavType.IntType },
+                navArgument("bookmarkUrl") { type = NavType.StringType },
+                navArgument("bookmarkDate") { type = NavType.StringType },
+                navArgument("bookmarkTitle") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val bookmarkId = backStackEntry.arguments?.getInt("bookmarkId") ?: 0
+            val bookmarkUrl = backStackEntry.arguments?.getString("bookmarkUrl")?.let { Uri.decode(it) } ?: ""
+            val bookmarkDate = backStackEntry.arguments?.getString("bookmarkDate")?.let { Uri.decode(it) } ?: ""
+            val bookmarkTitle = backStackEntry.arguments?.getString("bookmarkTitle")?.let { Uri.decode(it) } ?: ""
+
+            ReadableContentScreen(
+                readableContentViewModel = get(),
+                bookmarkUrl = bookmarkUrl,
+                bookmarkId = bookmarkId,
+                bookmarkDate = bookmarkDate,
+                onBack = {
+                    navController.navigateUp()
+                },
+                openUrlInBrowser = openUrlInBrowser,
+                bookmarkTitle = bookmarkTitle
+            )
+        }
+
     }
 }
 

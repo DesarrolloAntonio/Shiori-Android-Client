@@ -155,5 +155,14 @@ fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(
     token = token?:""
 )
 
+fun ReadableContentResponseDTO.toDomainModel() = ReadableContent(
+    ok = ok?:false,
+    message = message?.toDomainModel() ?: ReadableMessage("", "")
+)
+
+fun ReadableMessageDto.toDomainModel() = ReadableMessage(
+    content = content?:"",
+    html = html?:""
+)
 
 

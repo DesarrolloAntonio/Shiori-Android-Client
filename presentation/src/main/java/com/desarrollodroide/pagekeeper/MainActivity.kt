@@ -1,9 +1,11 @@
 package com.desarrollodroide.pagekeeper
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -19,6 +21,7 @@ class MainActivity : ComponentActivity() {
 
     private val themeManager: ThemeManager by inject()
 
+    @RequiresApi(Build.VERSION_CODES.N)
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
