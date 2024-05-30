@@ -47,6 +47,7 @@ import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
 import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 import com.desarrollodroide.pagekeeper.R
+import com.desarrollodroide.pagekeeper.extensions.isRTLText
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -107,12 +108,12 @@ fun HomeScreen(
                                  bookmarkId = bookmark.id,
                                  bookmarkUrl = bookmark.url,
                                  bookmarkDate = bookmark.modified,
-                                 bookmarkTitle = bookmark.title
+                                 bookmarkTitle = bookmark.title,
+                                 bookmarkIsRtl = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
                              ))
                         },
                     )
                 }
-
             }
         }
         composable(NavItem.SettingsNavItem.route) {
@@ -153,13 +154,15 @@ fun HomeScreen(
                 navArgument("bookmarkId") { type = NavType.IntType },
                 navArgument("bookmarkUrl") { type = NavType.StringType },
                 navArgument("bookmarkDate") { type = NavType.StringType },
-                navArgument("bookmarkTitle") { type = NavType.StringType }
+                navArgument("bookmarkTitle") { type = NavType.StringType },
+                navArgument("bookmarkIsRtl") { type = NavType.BoolType }
             )
         ) { backStackEntry ->
             val bookmarkId = backStackEntry.arguments?.getInt("bookmarkId") ?: 0
             val bookmarkUrl = backStackEntry.arguments?.getString("bookmarkUrl")?.let { Uri.decode(it) } ?: ""
             val bookmarkDate = backStackEntry.arguments?.getString("bookmarkDate")?.let { Uri.decode(it) } ?: ""
             val bookmarkTitle = backStackEntry.arguments?.getString("bookmarkTitle")?.let { Uri.decode(it) } ?: ""
+            val bookmarkIsRtl = backStackEntry.arguments?.getBoolean("bookmarkIsRtl")?: false
 
             ReadableContentScreen(
                 readableContentViewModel = get(),
@@ -170,7 +173,8 @@ fun HomeScreen(
                     navController.navigateUp()
                 },
                 openUrlInBrowser = openUrlInBrowser,
-                bookmarkTitle = bookmarkTitle
+                bookmarkTitle = bookmarkTitle,
+                isRtl = bookmarkIsRtl
             )
         }
 

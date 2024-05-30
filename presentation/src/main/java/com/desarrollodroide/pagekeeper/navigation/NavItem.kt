@@ -14,12 +14,13 @@ sealed class NavItem(
     object SettingsNavItem : NavItem("settings")
     object TermsOfUseNavItem : NavItem("termsOfUse")
     object PrivacyPolicyNavItem : NavItem("privacyPolicy")
-    object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}/{bookmarkUrl}/{bookmarkDate}/{bookmarkTitle}") {
-        fun createRoute(bookmarkId: Int, bookmarkUrl: String, bookmarkDate: String, bookmarkTitle: String): String {
+    object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}/{bookmarkUrl}/{bookmarkDate}/{bookmarkTitle}/{bookmarkIsRtl}") {
+        fun createRoute(bookmarkId: Int, bookmarkUrl: String, bookmarkDate: String, bookmarkTitle: String, bookmarkIsRtl: Boolean): String {
             val encodedUrl = Uri.encode(bookmarkUrl)
             val encodedDate = Uri.encode(bookmarkDate)
             val encodedTitle = Uri.encode(bookmarkTitle)
-            return "readable_content/$bookmarkId/$encodedUrl/$encodedDate/$encodedTitle"
+            val encodedIsRtl = bookmarkIsRtl.toString()
+            return "readable_content/$bookmarkId/$encodedUrl/$encodedDate/$encodedTitle/$encodedIsRtl"
         }
     }
 

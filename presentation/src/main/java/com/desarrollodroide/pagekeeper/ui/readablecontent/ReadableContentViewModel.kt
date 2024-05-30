@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.domain.usecase.GetBookmarkReadableContentUseCase
 import com.desarrollodroide.model.ReadableMessage
@@ -26,10 +27,14 @@ class ReadableContentViewModel(
     private val _readableContentState = MutableStateFlow(UiState<ReadableMessage>(idle = true))
     val readableContentState = _readableContentState.asStateFlow()
 
+    val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
+
+
     fun loadInitialData() {
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
+            themeMode.value = settingsPreferenceDataSource.getThemeMode()
         }
     }
 
