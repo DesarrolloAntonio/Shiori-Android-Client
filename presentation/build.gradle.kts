@@ -1,7 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id ("de.mannodermaus.android-junit5")
+    id("de.mannodermaus.android-junit5")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -110,6 +111,10 @@ dependencies {
     testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
 
+}
+
+composeCompiler {
+    enableStrongSkippingMode = true
 }
 
 java {

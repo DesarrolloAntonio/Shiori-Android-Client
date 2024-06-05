@@ -9,6 +9,7 @@
 /.idea/assetWizardSettings.xml
 /.idea/appInsightsSettings.xml
 /.idea/migrations.xml
+/.kotlin
 presentation/release
 .DS_Store
 /build
