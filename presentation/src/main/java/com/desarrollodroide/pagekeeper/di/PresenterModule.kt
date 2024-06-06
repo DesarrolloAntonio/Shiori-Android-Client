@@ -62,6 +62,8 @@ fun presenterModule() = module {
         ReadableContentViewModel(
             getBookmarkReadableContentUseCase = get(),
             settingsPreferenceDataSource = get(),
+            bookmarksDao = get(),
+            bookmarkHtmlDao = get(),
         )
     }
 

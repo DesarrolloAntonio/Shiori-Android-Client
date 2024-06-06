@@ -29,5 +29,5 @@ data class BookmarkEntity(
     @ColumnInfo(name = "create_archive")
     val createArchive: Boolean,
     @ColumnInfo(name = "create_ebook")
-    val createEbook: Boolean
+    val createEbook: Boolean,
 )

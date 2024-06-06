@@ -38,7 +38,7 @@ fun ReadableContentScreen(
 
     LaunchedEffect(Unit) {
         readableContentViewModel.loadInitialData()
-        readableContentViewModel.getBookmarkReadableContent(bookmarkId)
+        readableContentViewModel.getBookmarkReadableContent(bookmarkId = bookmarkId, bookmarkUrl = bookmarkUrl)
     }
 
     val themeMode by readableContentViewModel.themeMode.collectAsState()

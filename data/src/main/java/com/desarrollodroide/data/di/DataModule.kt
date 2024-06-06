@@ -34,8 +34,6 @@ fun dataModule() = module {
     val protoDataStoreQualifier = named("protoDataStore")
     val protoRememberUserDataStoreQualifier = named("protoRememberUserDataStore")
 
-
-
     single(preferencesDataStoreQualifier) {
         PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler(

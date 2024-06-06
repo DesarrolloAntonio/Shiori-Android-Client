@@ -43,7 +43,7 @@ fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
     hasEbook = hasEbook?:false,
     tags = tags?.map { it.toDomainModel() }?: emptyList(),
     createArchive = createArchive?:false,
-    createEbook = createEbook?:false
+    createEbook = createEbook?:false,
 )
 
 fun BookmarksDTO.toDomainModel(serverUrl: String) = Bookmarks(
@@ -93,7 +93,7 @@ fun BookmarkDTO.toEntityModel() = BookmarkEntity(
     hasEbook = hasEbook?:false,
     tags = tags?.map { it.toDomainModel() } ?: emptyList(),
     createArchive = createArchive?:false,
-    createEbook = createEbook?:false
+    createEbook = createEbook?:false,
 )
 
 fun BookmarkEntity.toDomainModel() = Bookmark(
@@ -110,7 +110,7 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     hasEbook = hasEbook,
     tags = tags,
     createArchive = createArchive,
-    createEbook = createEbook
+    createEbook = createEbook,
 )
 
 fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(

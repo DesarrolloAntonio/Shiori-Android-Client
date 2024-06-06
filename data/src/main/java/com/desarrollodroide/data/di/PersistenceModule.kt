@@ -9,6 +9,7 @@ fun databaseModule() = module {
   single { BookmarksDatabase.create(androidContext()) }
   single { get<BookmarksDatabase>().bookmarksDao() }
   single { get<BookmarksDatabase>().tagDao() }
+  single { get<BookmarksDatabase>().bookmarkHtmlDao() }
 
 }
 
