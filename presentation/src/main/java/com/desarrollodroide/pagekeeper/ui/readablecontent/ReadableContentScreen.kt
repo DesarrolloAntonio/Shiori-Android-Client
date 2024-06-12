@@ -117,6 +117,7 @@ fun ReadableContentScreen(
                                         }
                                     }
                                     settings.javaScriptEnabled = true
+                                    setBackgroundColor(if (isDarkTheme) 0xFF121212.toInt() else 0xFFFFFFFF.toInt())
                                     loadDataWithBaseURL(null, readableMessage.html, "text/html", "UTF-8", null)
                                 }
                             })

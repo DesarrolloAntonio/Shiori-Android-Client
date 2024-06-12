@@ -91,17 +91,8 @@ fun BookmarkEditorScreen(
         )
 
     if (bookmarkUiState.data != null) {
-        Log.v("BookmarkEditorScreen", "Success")
-        SimpleDialog(
-            title = "Success",
-            content = "Bookmark successfully saved!",
-            confirmButtonText = "Ok",
-            openDialog = remember { mutableStateOf(true) },
-            onConfirm = {
-                updateBookmark(bookmarkUiState.data)
-                onBackClick()
-            }
-        )
+        updateBookmark(bookmarkUiState.data)
+        onBackClick()
     }
 }
 
