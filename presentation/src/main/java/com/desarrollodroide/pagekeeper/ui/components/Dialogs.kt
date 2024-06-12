@@ -106,6 +106,7 @@ fun ConfirmDialog(
     dismissButton: String = "",
     icon: ImageVector? = null,
     onConfirm: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
     openDialog: MutableState<Boolean>,
     properties: DialogProperties = DialogProperties(),
 ) {
@@ -114,6 +115,7 @@ fun ConfirmDialog(
         content = content,
         icon = icon,
         onConfirm = onConfirm,
+        onDismiss = onDismiss,
         confirmButtonText = confirmButton,
         dismissButtonText = dismissButton,
         openDialog = openDialog,

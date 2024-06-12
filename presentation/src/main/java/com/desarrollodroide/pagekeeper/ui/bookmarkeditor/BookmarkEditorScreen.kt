@@ -43,12 +43,15 @@ fun BookmarkEditorScreen(
             icon = Icons.Default.Error,
             title = "Error",
             content = bookmarkUiState.error,
+            dismissButton = if (bookmarkViewModel.sessionExpired) "Go to login" else "",
+            confirmButton = "Accept" ,
             openDialog = remember { mutableStateOf(true) },
-            onConfirm = {
+            onDismiss = {
                 if (bookmarkViewModel.sessionExpired){
                     startMainActivity()
                 }
-            }
+            },
+            onConfirm = {}
         )
     }
 
