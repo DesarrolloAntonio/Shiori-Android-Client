@@ -30,15 +30,25 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew test
 
+      - name: Install Android SDK
+        uses: actions/setup-android-sdk@v2
+        with:
+          api-level: 30
+          build-tools: 30.0.3
+
       - name: Start emulator
         uses: ReactiveCircus/android-emulator-runner@v2.31.0
         with:
           api-level: 30
-          target: default
+          target: google_apis
           arch: x86_64
           profile: Nexus 6
-          emulator-options: -no-window
+          emulator-options: -no-window -no-snapshot
           disable-animations: true
+          working-directory: ./
+
+      - name: Wait for Emulator
+        run: adb wait-for-device
 
       - name: Run Instrumented Tests
         run: ./gradlew connectedAndroidTest
@@ -66,4 +76,3 @@ jobs:
           prerelease: false
           files: |
             presentation/build/outputs/apk/release/*.apk
-
