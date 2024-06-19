@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/model" />
             <option value="$PROJECT_DIR$/network" />
             <option value="$PROJECT_DIR$/presentation" />
+            <option value="$PROJECT_DIR$/shared" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
