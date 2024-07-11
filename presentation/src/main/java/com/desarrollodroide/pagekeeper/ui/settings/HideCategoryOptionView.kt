@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
@@ -32,8 +31,9 @@ import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
 fun HideCategoryOptionView(
     onApply: (Tag?) -> Unit,
     uniqueCategories: MutableState<List<Tag>>,
+    hideTag: Tag?,
 ) {
-    val selectedTags = remember { mutableStateOf(listOf<Tag>()) }
+    val selectedTags = remember { mutableStateOf(hideTag?.let { listOf(it) } ?: listOf()) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +42,6 @@ fun HideCategoryOptionView(
     ) {
         Text("Select category to hide", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))
-
         if (uniqueCategories.value.isEmpty()) {
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -116,7 +115,8 @@ fun SortAndFilterScreenPreview() {
     MaterialTheme {
         HideCategoryOptionView(
             onApply = {},
-            uniqueCategories = regionOptions
+            uniqueCategories = regionOptions,
+            hideTag = null
         )
     }
 }

@@ -91,9 +91,10 @@ fun FeedSection(
                 },
                 sheetState = sheetStateCategories,
             ) {
-                val categories: List<String> = tagsUiState.data?.map { it.name } ?: emptyList()
-                val categoriesState = remember { mutableStateOf(categories.map { Tag(it) }) }
+                val categories: List<Tag> = tagsUiState.data ?: emptyList()
+                val categoriesState = remember { mutableStateOf(categories) }
                 HideCategoryOptionView(
+                    hideTag = hideTag,
                     uniqueCategories = categoriesState,
                     onApply = { selectedTag ->
                         scope.launch {

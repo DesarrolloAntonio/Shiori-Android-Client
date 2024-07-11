@@ -228,7 +228,6 @@ fun SettingsScreenPreview() {
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
-        //onCompactViewChanged = remember { MutableStateFlow(false) },
         themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         goToLogin = {},
         useDynamicColors = remember { MutableStateFlow(false) },

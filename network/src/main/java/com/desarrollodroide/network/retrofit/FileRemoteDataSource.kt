@@ -4,10 +4,9 @@ import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
-import android.os.Environment
 
 class FileRemoteDataSource {
-    suspend fun downloadFile(
+    fun downloadFile(
         context: Context,
         url: String,
         fileName: String,

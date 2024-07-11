@@ -37,13 +37,13 @@ class LoginViewModel(
 //    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
 
     // Synology
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
+    var userName = mutableStateOf("Test")
+    var password = mutableStateOf("Test")
+    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
 
-    var serverUrl = mutableStateOf("")
-    var userName = mutableStateOf("")
-    var password = mutableStateOf("")
+//    var serverUrl = mutableStateOf("")
+//    var userName = mutableStateOf("")
+//    var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
     val passwordError = mutableStateOf(false)
@@ -61,7 +61,7 @@ class LoginViewModel(
     init {
         viewModelScope.launch {
             getUser()
-            getRememberUser()
+            //getRememberUser()
         }
     }
 

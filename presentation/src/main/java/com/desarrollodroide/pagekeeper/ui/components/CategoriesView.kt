@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -35,11 +36,12 @@ fun Categories(
     onCategoriesSelectedChanged: (List<Tag>) -> Unit,
     singleSelection: Boolean = false
 ) {
+    Log.v("selectedTags", "selectedTags: $selectedTags")
     AnimatedVisibility(showCategories) {
         Column {
             FlowRow {
                 uniqueCategories.value.forEach { category ->
-                    val selected = category in selectedTags.value
+                    val selected = selectedTags.value.any { it.id == category.id }
                     FilterChip(
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
