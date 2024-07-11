@@ -15,9 +15,9 @@ import org.koin.androidx.compose.get
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -223,7 +223,7 @@ fun TopBar(
                 }
                 IconButton(onClick = { toggleCategoryVisibility() }) {
                     Icon(
-                        imageVector = Icons.Filled.FilterList,
+                        imageVector = Icons.Outlined.Sell,
                         contentDescription = "Filter",
                         tint =  MaterialTheme.colorScheme.secondary,
                        )

@@ -15,17 +15,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.desarrollodroide.data.HideTag
 import com.desarrollodroide.data.RememberUserPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
+import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 
 class SettingsPreferencesDataSourceImpl(
     private val dataStore: DataStore<Preferences>,
     private val protoDataStore: DataStore<UserPreferences>,
-    private val rememberUserProtoDataStore: DataStore<RememberUserPreferences>
+    private val rememberUserProtoDataStore: DataStore<RememberUserPreferences>,
+    private val hideTagDataStore: DataStore<HideTag>,
 
-) : SettingsPreferenceDataSource {
+    ) : SettingsPreferenceDataSource {
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     val COMPACT_VIEW = booleanPreferencesKey("compact_view")
@@ -246,6 +249,25 @@ class SettingsPreferencesDataSourceImpl(
             dataStore.edit { preferences ->
                 preferences[USE_DYNAMIC_COLORS] = newValue
             }
+        }
+    }
+
+    override suspend fun setHideTag(tag: Tag?) {
+        hideTagDataStore.updateData { currentHideTag ->
+            when (tag) {
+                null -> HideTag.getDefaultInstance()
+                else -> currentHideTag.toBuilder()
+                    .setId(tag.id)
+                    .setName(tag.name)
+                    .build()
+            }
+        }
+    }
+
+    override suspend fun getHideTag(): Tag? {
+        return hideTagDataStore.data.first().let { hideTag ->
+            if (hideTag == HideTag.getDefaultInstance()) null
+            else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
         }
     }
 

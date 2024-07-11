@@ -28,3 +28,11 @@ message RememberUserPreferences {
   bool createArchive = 7;
 
 }
+
+
+message HideTag {
+
+  int32 id = 1;
+  string name = 2;
+
+}

@@ -84,15 +84,7 @@ fun FeedContent(
                             onClickBookmark = { actions.onBookmarkSelect(bookmark) },
                             onClickEpub = { actions.onBookmarkEpub(bookmark) },
                             onClickSync = { actions.onClickSync(bookmark) },
-                            onClickCategory = { category ->
-//                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
-//                                    if (selectedTags.value.contains(category)) {
-//                                        selectedTags.value = selectedTags.value - category
-//                                    } else {
-//                                        selectedTags.value = selectedTags.value + category
-//                                    }
-//                                }
-                            }),
+                            onClickCategory = { category -> }),
                     )
                     if (index < bookmarksPagingItems.itemCount) {
                         HorizontalDivider(

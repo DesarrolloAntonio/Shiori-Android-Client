@@ -32,7 +32,7 @@ class FileRemoteDataSource {
     }
 
     private fun cleanFileName(fileName: String): String {
-        return fileName.replace(Regex("[^a-zA-Z0-9.,\\-\\s_]"), "_")
+        return fileName.replace(Regex("[^a-zA-Z0-9.,\\-\\s_\u0600-\u06FF]"), "_")
     }
 }
 

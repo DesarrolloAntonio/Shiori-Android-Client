@@ -112,9 +112,7 @@ fun FeedScreen(
         onClearError = {
             feedViewModel.resetData()
         },
-        onCategoriesSelectedChanged = { categories ->
-            //feedViewModel.saveSelectedCategories(categories)
-        },
+        onCategoriesSelectedChanged = { categories -> },
     )
 
     LaunchedEffect(bookmarksPagingItems.loadState) {

@@ -3,6 +3,7 @@ package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -48,7 +49,10 @@ class BookmarkEditorActivity : ComponentActivity() {
                                 createArchive = bookmarkViewModel.getCreateArchive(),
                                 createEbook = bookmarkViewModel.getCreateEbook()
                             ),
-                            onBackClick = { finish() },
+                            onBackClick = {
+                                Toast.makeText(this@BookmarkEditorActivity, "Bookmark saved", Toast.LENGTH_LONG).show()
+                                finish()
+                            },
                             updateBookmark = { },
                             startMainActivity = { startMainActivity() }
                         )

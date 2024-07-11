@@ -32,11 +32,12 @@ fun Categories(
     showCategories: Boolean,
     uniqueCategories: MutableState<List<Tag>>,
     selectedTags: MutableState<List<Tag>> = mutableStateOf(emptyList<Tag>()),
-    onCategoriesSelectedChanged: (List<Tag>) -> Unit
+    onCategoriesSelectedChanged: (List<Tag>) -> Unit,
+    singleSelection: Boolean = false
 ) {
     AnimatedVisibility(showCategories) {
-        Column() {
-            FlowRow() {
+        Column {
+            FlowRow {
                 uniqueCategories.value.forEach { category ->
                     val selected = category in selectedTags.value
                     FilterChip(
@@ -58,10 +59,14 @@ fun Categories(
                         onClick = {
                             when (categoriesType) {
                                 CategoriesType.SELECTABLES -> {
-                                    if (selected) {
-                                        selectedTags.value = selectedTags.value - category
+                                    if (singleSelection) {
+                                        selectedTags.value = if (selected) emptyList() else listOf(category)
                                     } else {
-                                        selectedTags.value = selectedTags.value + category
+                                        if (selected) {
+                                            selectedTags.value = selectedTags.value - category
+                                        } else {
+                                            selectedTags.value = selectedTags.value + category
+                                        }
                                     }
                                 }
                                 CategoriesType.REMOVEABLES -> {

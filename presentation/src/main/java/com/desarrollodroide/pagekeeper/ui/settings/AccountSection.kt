@@ -41,6 +41,13 @@ fun AccountSection(
         Spacer(modifier = Modifier.height(5.dp))
         ClickableOption(
             Item(
+                "Logout",
+                icon = Icons.AutoMirrored.Filled.Logout,
+                onClick = onLogout
+            ),
+        )
+        ClickableOption(
+            Item(
                 title = "Server Settings Guide",
                 icon = Icons.Filled.Dns,
                 onClick = onNavigateToSeverSettings
@@ -49,7 +56,7 @@ fun AccountSection(
         ClickableOption(
             item = Item(
                 title = "Source Code",
-                icon = Icons.Filled.Code, // Icono que representa código fuente
+                icon = Icons.Filled.Code,
                 onClick = onNavigateToSourceCode
             )
         )
@@ -73,14 +80,6 @@ fun AccountSection(
                 icon = Icons.Filled.Security,
                 onClick = onNavigateToPrivacyPolicy
             )
-        )
-        ClickableOption(
-            Item(
-                "Logout",
-                icon = Icons.AutoMirrored.Filled.Logout,
-                onClick = onLogout
-            ),
-            color = Color.Red
         )
     }
 }

@@ -3,6 +3,7 @@ package com.desarrollodroide.data.local.preferences
 import com.desarrollodroide.data.UserPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Account
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.User
 import kotlinx.coroutines.flow.Flow
 
@@ -46,4 +47,6 @@ interface SettingsPreferenceDataSource {
 
     fun getUseDynamicColors(): Boolean
     fun setUseDynamicColors(newValue: Boolean)
+    suspend fun getHideTag(): Tag?
+    suspend fun setHideTag(tag: Tag?)
 }

@@ -37,6 +37,7 @@ fun presenterModule() = module {
             bookmarksRepository = get(),
             sendLogoutUseCase = get(),
             themeManager = get(),
+            getTagsUseCase = get(),
         )
     }
 
