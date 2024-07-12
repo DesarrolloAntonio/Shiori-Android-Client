@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.model.LivenessResponse
+import com.desarrollodroide.pagekeeper.ui.components.idle
+import kotlinx.coroutines.delay
 
 class LoginViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
@@ -52,6 +54,9 @@ class LoginViewModel(
 
     private val _livenessUiState = MutableStateFlow(UiState<LivenessResponse>(idle = true))
     val livenessUiState = _livenessUiState.asStateFlow()
+
+    private val _serverAvailabilityUiState = MutableStateFlow(UiState<LivenessResponse>(idle = true))
+    val serverAvailabilityUiState = _serverAvailabilityUiState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -132,10 +137,31 @@ class LoginViewModel(
                         is Result.Success -> {
                             Log.v("LoginViewModel", "Liveness: ${result.data}")
                             _livenessUiState.success(result.data)
-//                            if (result.data != null) {
-//                                _livenessUiState.success(result.data)
-//                            }
                             sendLogin()
+                        }
+                    }
+                }
+        }
+    }
+
+    fun checkServerAvailability(){
+        viewModelScope.launch {
+            livenessUseCase.invoke(serverUrl.value)
+                .collect { result ->
+                    when (result) {
+                        is Result.Error -> {
+                            Log.v("LoginViewModel", "Server Availability error")
+                            val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
+                            _serverAvailabilityUiState.error(errorMessage = error)
+                        }
+                        is Result.Loading -> {
+                            _serverAvailabilityUiState.isLoading(true)
+                        }
+
+                        is Result.Success -> {
+                            Log.v("LoginViewModel", "Server Availability: ${result.data}")
+                            delay(1000)
+                            _serverAvailabilityUiState.success(result.data)
                         }
                     }
                 }
@@ -164,5 +190,9 @@ class LoginViewModel(
             password.value = rememberUser.password
             rememberSession.value = true
         }
+    }
+
+    fun resetServerAvailabilityUiState() {
+        _serverAvailabilityUiState.idle(true)
     }
 }

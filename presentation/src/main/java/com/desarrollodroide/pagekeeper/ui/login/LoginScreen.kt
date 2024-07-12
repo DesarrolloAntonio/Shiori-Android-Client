@@ -31,9 +31,10 @@ import com.desarrollodroide.pagekeeper.ui.settings.LinkableText
 fun LoginScreen(
     loginViewModel: LoginViewModel,
     onSuccess: (User) -> Unit,
-    ) {
+) {
     val loginUiState: UiState<User> by loginViewModel.userUiState.collectAsStateWithLifecycle()
     val livenessUiState: UiState<LivenessResponse> by loginViewModel.livenessUiState.collectAsStateWithLifecycle()
+    val serverAvailabilityUiState: UiState<LivenessResponse> by loginViewModel.serverAvailabilityUiState.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -53,14 +54,21 @@ fun LoginScreen(
             onSuccess = {
                 loginViewModel.clearState()
                 onSuccess.invoke(it)
-                        },
+            },
             user = loginViewModel.userName,
             password = loginViewModel.password,
             serverUrl = loginViewModel.serverUrl,
             onClearError = {
                 loginViewModel.clearState()
             },
-            livenessUiState = livenessUiState
+            livenessUiState = livenessUiState,
+            serverAvailabilityUiState = serverAvailabilityUiState,
+            onClickTestButton = {
+                loginViewModel.checkServerAvailability()
+            },
+            resetServerAvailabilityState = {
+                loginViewModel.resetServerAvailabilityUiState()
+            }
         )
     }
 }
@@ -76,10 +84,13 @@ fun LoginContent(
     passwordErrorState: MutableState<Boolean>,
     onSuccess: (User) -> Unit,
     onClickLoginButton: () -> Unit,
+    onClickTestButton: () -> Unit,
     onClearError: () -> Unit,
     onCheckedRememberSessionChange: (Boolean) -> Unit,
     loginUiState: UiState<User>,
     livenessUiState: UiState<LivenessResponse>,
+    serverAvailabilityUiState: UiState<LivenessResponse>,
+    resetServerAvailabilityState: () -> Unit
 ) {
     if (loginUiState.isLoading || livenessUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -111,16 +122,21 @@ fun LoginContent(
         ContentViews(
             serverUrl = serverUrl,
             urlErrorState = urlErrorState,
-            user =user,
+            user = user,
             userErrorState = userErrorState,
             password = password,
             passwordErrorState = passwordErrorState,
             onClickLoginButton = onClickLoginButton,
             checked = checked,
             onCheckedRememberSessionChange = onCheckedRememberSessionChange,
+            isTestingServer = serverAvailabilityUiState.isLoading,
+            onClickTestButton = onClickTestButton,
+            serverAvailabilityUiState = serverAvailabilityUiState,
+            serverVersion = serverAvailabilityUiState.data?.message?.version ?: "",
+            resetServerAvailabilityState = resetServerAvailabilityState
         )
-    } else if (loginUiState.data != null){
-        LaunchedEffect(Unit){
+    } else if (loginUiState.data != null) {
+        LaunchedEffect(Unit) {
             onSuccess.invoke(loginUiState.data)
         }
     }
@@ -134,21 +150,16 @@ private fun ContentViews(
     userErrorState: MutableState<Boolean>,
     password: MutableState<String>,
     passwordErrorState: MutableState<Boolean>,
+    isTestingServer: Boolean,
     onClickLoginButton: () -> Unit,
+    onClickTestButton: () -> Unit,
     checked: MutableState<Boolean>,
     onCheckedRememberSessionChange: (Boolean) -> Unit,
+    serverAvailabilityUiState: UiState<LivenessResponse>,
+    serverVersion: String,
+    resetServerAvailabilityState: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-//        Image(
-//            painter = painterResource(id = R.drawable.curved_wave_top),
-//            contentDescription = null,
-//            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(150.dp)
-//        )
-
         Image(
             painter = painterResource(id = R.drawable.ic_logo),
             contentDescription = null,
@@ -177,16 +188,25 @@ private fun ContentViews(
             verticalArrangement = Arrangement.Bottom,
         ) {
             ServerUrlTextField(
+                modifier = Modifier,
                 serverUrl = serverUrl,
-                serverErrorState = urlErrorState)
+                serverErrorState = urlErrorState,
+                serverAvailabilityUiState = serverAvailabilityUiState,
+                serverVersion = serverVersion,
+                resetServerAvailabilityState = resetServerAvailabilityState,
+                onClick = onClickTestButton,
+                isTestingServer = isTestingServer
+            )
             Spacer(modifier = Modifier.height(10.dp))
             UserTextField(
                 user = user,
-                userErrorState = userErrorState)
+                userErrorState = userErrorState
+            )
             Spacer(modifier = Modifier.height(10.dp))
             PasswordTextField(
                 password = password,
-                passwordErrorState = passwordErrorState)
+                passwordErrorState = passwordErrorState
+            )
             Spacer(Modifier.size(14.dp))
             LoginButton(
                 user = user,
@@ -194,7 +214,8 @@ private fun ContentViews(
                 password = password,
                 passwordErrorState = passwordErrorState,
                 onClickLoginButton = onClickLoginButton,
-                serverErrorState = urlErrorState)
+                serverErrorState = urlErrorState
+            )
             RememberSessionSection(
                 checked = checked,
                 onCheckedChange = onCheckedRememberSessionChange
@@ -202,10 +223,9 @@ private fun ContentViews(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp)
-                ,
+                    .padding(10.dp),
                 contentAlignment = Alignment.Center
-            ){
+            ) {
                 LinkableText(
                     text = "Server Setup Guide",
                     url = SHIORI_GITHUB_URL
@@ -235,7 +255,10 @@ fun DefaultPreview() {
             onCheckedRememberSessionChange = {},
             onClearError = {},
             loginUiState = UiState(data = null, idle = false),
-            livenessUiState = UiState(false)
+            livenessUiState = UiState(false),
+            serverAvailabilityUiState = UiState(data = null, idle = false),
+            onClickTestButton = {},
+            resetServerAvailabilityState = {}
         )
     }
 }

@@ -60,6 +60,8 @@ fun FeedScreen(
 ) {
     val context = LocalContext.current
     val tagsState by feedViewModel.tagsState.collectAsState()
+    val tagToHide by feedViewModel.tagToHide.collectAsState()
+
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
         feedViewModel.getPagingBookmarks()
@@ -112,9 +114,7 @@ fun FeedScreen(
         onClearError = {
             feedViewModel.resetData()
         },
-        onCategoriesSelectedChanged = { categories ->
-            //feedViewModel.saveSelectedCategories(categories)
-        },
+        onCategoriesSelectedChanged = { categories -> },
     )
 
     LaunchedEffect(bookmarksPagingItems.loadState) {
@@ -137,6 +137,7 @@ fun FeedScreen(
             if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
         },
         bookmarksPagingItems = bookmarksPagingItems,
+        tagToHide = tagToHide
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -313,6 +314,7 @@ private fun FeedView(
     isLegacyApi: Boolean,
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
+    tagToHide: Tag?,
     ) {
     if (bookmarksPagingItems.itemCount > 0) {
         Column {
@@ -329,6 +331,7 @@ private fun FeedView(
                     token = token,
                     viewType = viewType,
                     bookmarksPagingItems = bookmarksPagingItems,
+                    tagToHide = tagToHide
                 )
             }
         }

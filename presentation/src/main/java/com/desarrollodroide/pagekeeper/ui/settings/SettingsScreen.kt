@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.data.helpers.ThemeMode
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
@@ -54,6 +55,9 @@ fun SettingsScreen(
         onBack()
     }
     val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
+    val tagsUiState = settingsViewModel.tagsState.collectAsState().value
+    val tagToHide = settingsViewModel.tagToHide.collectAsState().value
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -80,6 +84,7 @@ fun SettingsScreen(
         ) {
             SettingsContent(
                 settingsUiState = settingsUiState,
+                tagsUiState = tagsUiState,
                 onLogout = { settingsViewModel.logout() },
                 goToLogin = goToLogin,
                 themeMode = settingsViewModel.themeMode,
@@ -90,7 +95,10 @@ fun SettingsScreen(
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSourceCode = onNavigateToSourceCode,
-                useDynamicColors = settingsViewModel.useDynamicColors
+                useDynamicColors = settingsViewModel.useDynamicColors,
+                onClickHideDialogOption = settingsViewModel::getTags,
+                onSelectHideDialogOption = settingsViewModel::setHideTag,
+                hideTag = tagToHide
             )
         }
     }
@@ -104,13 +112,17 @@ fun SettingsContent(
     createArchive: MutableStateFlow<Boolean>,
     compatView: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
-    onNavigateToSourceCode: () -> Unit ,
+    onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     themeMode: MutableStateFlow<ThemeMode>,
     goToLogin: () -> Unit,
     useDynamicColors: MutableStateFlow<Boolean>,
-) {
+    tagsUiState: UiState<List<Tag>>,
+    onClickHideDialogOption: () -> Unit,
+    onSelectHideDialogOption: (Tag?) -> Unit,
+    hideTag: Tag?,
+    ) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -141,8 +153,16 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(8.dp))
             VisualSection(
                 themeMode = themeMode,
-                compactView = compatView,
                 dynamicColors = useDynamicColors
+            )
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(18.dp))
+            FeedSection(
+                compactView = compatView,
+                tagsUiState = tagsUiState,
+                onSelectHideDialogOption = onSelectHideDialogOption,
+                onClickHideDialogOption = onClickHideDialogOption,
+                hideTag = hideTag
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
@@ -190,6 +210,7 @@ private fun HorizontalDivider(){
 data class Item(
     val title: String,
     val icon: ImageVector,
+    val subtitle: String = "",
     val onClick: () -> Unit = {},
     val switchState: MutableStateFlow<Boolean> = MutableStateFlow(false)
 )
@@ -198,18 +219,21 @@ data class Item(
 @Composable
 fun SettingsScreenPreview() {
     SettingsContent(
-        onLogout = {},
-        goToLogin = {},
         settingsUiState = UiState(isLoading = false),
-        themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         makeArchivePublic = remember { MutableStateFlow(false) },
-        createArchive = remember { MutableStateFlow(false) },
         createEbook = remember { MutableStateFlow(false) },
+        createArchive = remember { MutableStateFlow(false) },
+        compatView = remember { MutableStateFlow(false) },
+        onLogout = {},
+        onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
-        //onCompactViewChanged = remember { MutableStateFlow(false) },
-        compatView = remember { MutableStateFlow(false) },
-        onNavigateToSourceCode = {},
-        useDynamicColors = remember { MutableStateFlow(false) }
+        themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
+        goToLogin = {},
+        useDynamicColors = remember { MutableStateFlow(false) },
+        tagsUiState = UiState(isLoading = false),
+        onClickHideDialogOption = {},
+        onSelectHideDialogOption = {},
+        hideTag = null,
     )
 }

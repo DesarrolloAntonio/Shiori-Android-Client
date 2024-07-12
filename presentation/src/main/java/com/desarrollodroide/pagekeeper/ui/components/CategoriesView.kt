@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -32,13 +33,15 @@ fun Categories(
     showCategories: Boolean,
     uniqueCategories: MutableState<List<Tag>>,
     selectedTags: MutableState<List<Tag>> = mutableStateOf(emptyList<Tag>()),
-    onCategoriesSelectedChanged: (List<Tag>) -> Unit
+    onCategoriesSelectedChanged: (List<Tag>) -> Unit,
+    singleSelection: Boolean = false
 ) {
+    Log.v("selectedTags", "selectedTags: $selectedTags")
     AnimatedVisibility(showCategories) {
-        Column() {
-            FlowRow() {
+        Column {
+            FlowRow {
                 uniqueCategories.value.forEach { category ->
-                    val selected = category in selectedTags.value
+                    val selected = selectedTags.value.any { it.id == category.id }
                     FilterChip(
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
@@ -58,10 +61,14 @@ fun Categories(
                         onClick = {
                             when (categoriesType) {
                                 CategoriesType.SELECTABLES -> {
-                                    if (selected) {
-                                        selectedTags.value = selectedTags.value - category
+                                    if (singleSelection) {
+                                        selectedTags.value = if (selected) emptyList() else listOf(category)
                                     } else {
-                                        selectedTags.value = selectedTags.value + category
+                                        if (selected) {
+                                            selectedTags.value = selectedTags.value - category
+                                        } else {
+                                            selectedTags.value = selectedTags.value + category
+                                        }
                                     }
                                 }
                                 CategoriesType.REMOVEABLES -> {

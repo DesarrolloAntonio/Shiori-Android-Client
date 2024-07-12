@@ -4,10 +4,9 @@ import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
-import android.os.Environment
 
 class FileRemoteDataSource {
-    suspend fun downloadFile(
+    fun downloadFile(
         context: Context,
         url: String,
         fileName: String,
@@ -32,7 +31,7 @@ class FileRemoteDataSource {
     }
 
     private fun cleanFileName(fileName: String): String {
-        return fileName.replace(Regex("[^a-zA-Z0-9.,\\-\\s_]"), "_")
+        return fileName.replace(Regex("[^a-zA-Z0-9.,\\-\\s_\u0600-\u06FF]"), "_")
     }
 }
 

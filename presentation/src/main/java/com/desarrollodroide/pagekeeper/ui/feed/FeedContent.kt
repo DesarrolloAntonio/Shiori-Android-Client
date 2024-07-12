@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIn
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
 import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.rememberPullRefreshState
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkActions
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
@@ -46,6 +48,7 @@ fun FeedContent(
     isLegacyApi: Boolean,
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
+    tagToHide: Tag?,
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -69,7 +72,8 @@ fun FeedContent(
         ) {
             items(bookmarksPagingItems.itemCount) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                if (bookmark != null) {
+                Log.v("TagToHide", "$tagToHide")
+                if (bookmark != null && bookmark.tags.none { it.id == tagToHide?.id }) {
                     BookmarkItem(
                         bookmark = bookmark,
                         serverURL = serverURL,
@@ -84,15 +88,7 @@ fun FeedContent(
                             onClickBookmark = { actions.onBookmarkSelect(bookmark) },
                             onClickEpub = { actions.onBookmarkEpub(bookmark) },
                             onClickSync = { actions.onClickSync(bookmark) },
-                            onClickCategory = { category ->
-//                                bookmark.tags.firstOrNull() { it.name == category.name }?.apply {
-//                                    if (selectedTags.value.contains(category)) {
-//                                        selectedTags.value = selectedTags.value - category
-//                                    } else {
-//                                        selectedTags.value = selectedTags.value + category
-//                                    }
-//                                }
-                            }),
+                            onClickCategory = { category -> }),
                     )
                     if (index < bookmarksPagingItems.itemCount) {
                         HorizontalDivider(

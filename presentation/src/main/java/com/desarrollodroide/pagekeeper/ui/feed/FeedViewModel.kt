@@ -77,6 +77,7 @@ class FeedViewModel(
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
     val isCompactView = MutableStateFlow<Boolean>(false)
+    val tagToHide = MutableStateFlow<Tag?>(null)
 
     val availableTags: StateFlow<List<Tag>> = bookmarkDatabase.getAll()
         .map { bookmarks ->
@@ -111,6 +112,7 @@ class FeedViewModel(
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
             isCompactView.value = settingsPreferenceDataSource.getCompactView()
+            tagToHide.value = settingsPreferenceDataSource.getHideTag()
         }
     }
 
@@ -285,4 +287,5 @@ class FeedViewModel(
     fun isLegacyApi(): Boolean = runBlocking {
         settingsPreferenceDataSource.getIsLegacyApi()
     }
+
 }

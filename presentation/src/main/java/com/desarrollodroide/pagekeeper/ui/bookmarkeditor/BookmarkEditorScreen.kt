@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
-import com.desarrollodroide.pagekeeper.ui.components.SimpleDialog
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import org.koin.androidx.compose.get

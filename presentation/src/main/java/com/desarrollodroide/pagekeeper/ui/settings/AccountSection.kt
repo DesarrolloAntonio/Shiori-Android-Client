@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -41,6 +40,13 @@ fun AccountSection(
         Spacer(modifier = Modifier.height(5.dp))
         ClickableOption(
             Item(
+                "Logout",
+                icon = Icons.AutoMirrored.Filled.Logout,
+                onClick = onLogout
+            ),
+        )
+        ClickableOption(
+            Item(
                 title = "Server Settings Guide",
                 icon = Icons.Filled.Dns,
                 onClick = onNavigateToSeverSettings
@@ -49,7 +55,7 @@ fun AccountSection(
         ClickableOption(
             item = Item(
                 title = "Source Code",
-                icon = Icons.Filled.Code, // Icono que representa código fuente
+                icon = Icons.Filled.Code,
                 onClick = onNavigateToSourceCode
             )
         )
@@ -73,14 +79,6 @@ fun AccountSection(
                 icon = Icons.Filled.Security,
                 onClick = onNavigateToPrivacyPolicy
             )
-        )
-        ClickableOption(
-            Item(
-                "Logout",
-                icon = Icons.AutoMirrored.Filled.Logout,
-                onClick = onLogout
-            ),
-            color = Color.Red
         )
     }
 }

@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.HdrAuto
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun VisualSection(
     themeMode: MutableStateFlow<ThemeMode>,
-    compactView: MutableStateFlow<Boolean>,
     dynamicColors: MutableStateFlow<Boolean>,
 ) {
     Column(
@@ -42,28 +41,13 @@ fun VisualSection(
         Text(text = "Visual", style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.height(5.dp))
         ThemeOption(
-            item = Item("Theme", Icons.Filled.Palette, onClick = {
-                val newMode = when (themeMode.value) {
-                    ThemeMode.DARK -> ThemeMode.LIGHT
-                    ThemeMode.LIGHT -> ThemeMode.AUTO
-                    ThemeMode.AUTO -> ThemeMode.DARK
-                }
-            }),
+            item = Item("Theme", Icons.Filled.Palette, onClick = {}),
             initialThemeMode = themeMode
-        )
-        val compatViewItem = Item(
-            title = "Compact view",
-            icon = Icons.Filled.ViewCompactAlt,
-            switchState = compactView
         )
         val dynamicColorItem = Item(
             title = "Use dynamic colors",
-            icon = Icons.Filled.Palette,
+            icon = Icons.Filled.FormatColorFill,
             switchState = dynamicColors
-        )
-        SwitchOption(
-            item = compatViewItem,
-            switchState = compactView
         )
         SwitchOption(
             item = dynamicColorItem,

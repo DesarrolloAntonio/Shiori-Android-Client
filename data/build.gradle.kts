@@ -34,10 +34,15 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    // JUnit 5 will bundle in files with identical paths, exclude them
     packagingOptions {
-        exclude("META-INF/LICENSE*")
+        jniLibs {
+            excludes += setOf("META-INF/LICENSE*")
+        }
+        resources {
+            excludes += setOf("META-INF/LICENSE*")
+        }
     }
+    // JUnit 5 will bundle in files with identical paths, exclude them
 }
 
 java {
