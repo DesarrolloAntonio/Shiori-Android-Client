@@ -17,7 +17,11 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.desarrollodroide.data.HideTag
+import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.first
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 
@@ -27,6 +31,7 @@ class SettingsPreferencesDataSourceImplTest {
     private lateinit var settingsPreferencesDataSourceImpl: SettingsPreferencesDataSourceImpl
     private var preferencesDataStore: DataStore<Preferences> = mock()
     private val protoDataStoreMock: DataStore<UserPreferences> = mock()
+    private val hideTagDataStoreMock: DataStore<HideTag> = mock()
     private val rememberUserProtoDataStoreMock: DataStore<RememberUserPreferences> = mock()
     private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     private val COMPACT_VIEW_KEY = booleanPreferencesKey("compact_view")
@@ -38,7 +43,8 @@ class SettingsPreferencesDataSourceImplTest {
         settingsPreferencesDataSourceImpl = SettingsPreferencesDataSourceImpl(
             dataStore = preferencesDataStore,
             protoDataStore = protoDataStoreMock,
-            rememberUserProtoDataStore = rememberUserProtoDataStoreMock
+            rememberUserProtoDataStore = rememberUserProtoDataStoreMock,
+            hideTagDataStore = hideTagDataStoreMock
             )
     }
 
@@ -268,6 +274,54 @@ class SettingsPreferencesDataSourceImplTest {
         val password = "savePass123"
         settingsPreferencesDataSourceImpl.saveRememberUser(url, userName, password)
         verify(rememberUserProtoDataStoreMock).updateData(any())
+    }
+
+    @Test
+    fun `setUseDynamicColors updates preference correctly`() = runTest {
+        val newValue = true
+        settingsPreferencesDataSourceImpl.setUseDynamicColors(newValue)
+        verify(preferencesDataStore).edit(any())
+    }
+
+    @Test
+    fun `getUseDynamicColors retrieves the correct value`() = runTest {
+        val expectedValue = true
+        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(settingsPreferencesDataSourceImpl.USE_DYNAMIC_COLORS to expectedValue)))
+        val actualValue = settingsPreferencesDataSourceImpl.getUseDynamicColors()
+        assertEquals(expectedValue, actualValue)
+    }
+
+    @Test
+    fun `setHideTag updates HideTag correctly`() = runTest {
+        val tag = Tag(id = 1, name = "TestTag", selected = false, nBookmarks = 0)
+        settingsPreferencesDataSourceImpl.setHideTag(tag)
+        verify(hideTagDataStoreMock).updateData(any())
+    }
+
+    @Test
+    fun `setHideTag with null clears HideTag`() = runTest {
+        settingsPreferencesDataSourceImpl.setHideTag(null)
+        verify(hideTagDataStoreMock).updateData(any())
+    }
+
+    @Test
+    fun `getHideTag retrieves the correct Tag when set`() = runTest {
+        val expectedTag = HideTag.newBuilder()
+            .setId(1)
+            .setName("TestTag")
+            .build()
+        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(expectedTag))
+        val actualTag = settingsPreferencesDataSourceImpl.getHideTag()
+        assertNotNull(actualTag)
+        assertEquals(expectedTag.id, actualTag?.id)
+        assertEquals(expectedTag.name, actualTag?.name)
+    }
+
+    @Test
+    fun `getHideTag returns null when no tag is set`() = runTest {
+        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(HideTag.getDefaultInstance()))
+        val actualTag = settingsPreferencesDataSourceImpl.getHideTag()
+        assertNull(actualTag)
     }
 
 }
