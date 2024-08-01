@@ -32,13 +32,16 @@ class BookmarkViewModel(
     private val editBookmarkUseCase: EditBookmarkUseCase,
     private val userPreferences: SettingsPreferenceDataSource,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
-    ) : ViewModel() {
+) : ViewModel() {
 
     var backendUrl = ""
     var sessionExpired = false
 
     private val _bookmarkUiState = MutableStateFlow(UiState<Bookmark>(idle = true))
     val bookmarkUiState = _bookmarkUiState.asStateFlow()
+
+    private val _toastMessage = MutableStateFlow<String?>(null)
+    val toastMessage = _toastMessage.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -56,6 +59,15 @@ class BookmarkViewModel(
             initialValue = listOf()
         )
 
+    fun autoAddBookmark(url: String) = viewModelScope.launch {
+        saveBookmark(
+            url = url,
+            tags = emptyList(),
+            createArchive = getCreateArchive(),
+            makeArchivePublic = getMakeArchivePublic(),
+            createEbook = getCreateEbook()
+        )
+    }
 
     fun saveBookmark(
         url: String,
@@ -64,48 +76,49 @@ class BookmarkViewModel(
         makeArchivePublic: Boolean,
         createEbook: Boolean
     ) = viewModelScope.launch {
-        Log.v("Add BookmarkViewModel", "createArchive: $createArchive makeArchivePublic: $makeArchivePublic")
-
-        viewModelScope.launch {
-            bookmarkAdditionUseCase.invoke(
-                serverUrl = backendUrl,
-                xSession = userPreferences.getSession(),
-                bookmark = Bookmark(
-                    url = url,
-                    tags = tags,
-                    createArchive = createArchive,
-                    createEbook = createEbook,
-                    public = if (makeArchivePublic) 1 else 0
-                )
+        bookmarkAdditionUseCase.invoke(
+            serverUrl = backendUrl,
+            xSession = userPreferences.getSession(),
+            bookmark = Bookmark(
+                url = url,
+                tags = tags,
+                createArchive = createArchive,
+                createEbook = createEbook,
+                public = if (makeArchivePublic) 1 else 0
             )
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            if (result.error is Result.ErrorType.SessionExpired) {
-                                settingsPreferenceDataSource.resetUser()
-                                bookmarksRepository.deleteAllLocalBookmarks()
-                                sessionExpired = true
-                                _bookmarkUiState.error(
-                                    errorMessage = result.error?.message ?: ""
-                                )
-                            } else {
-                                Log.v("Add BookmarkViewModel", result.error?.message ?: "")
-                                _bookmarkUiState.error(errorMessage = result.error?.message ?: "Unknown error" )
-                            }
-                         }
-
-                        is Result.Loading -> {
-                            Log.v("Add BookmarkViewModel", "Loading")
-                            _bookmarkUiState.isLoading(true)
-                        }
-
-                        is Result.Success -> {
-                            Log.v("Add BookmarkViewModel", "Success")
-                            _bookmarkUiState.success(result.data)
+        )
+            .collect { result ->
+                when (result) {
+                    is Result.Error -> {
+                        if (result.error is Result.ErrorType.SessionExpired) {
+                            settingsPreferenceDataSource.resetUser()
+                            bookmarksRepository.deleteAllLocalBookmarks()
+                            sessionExpired = true
+                            _bookmarkUiState.error(
+                                errorMessage = result.error?.message ?: ""
+                            )
+                            emitToastIfAutoAdd(result.error?.message ?: "")
+                        } else {
+                            Log.v("Add BookmarkViewModel", result.error?.message ?: "")
+                            _bookmarkUiState.error(
+                                errorMessage = result.error?.message ?: "Unknown error"
+                            )
+                            emitToastIfAutoAdd("Error: ${result.error?.message ?: "Unknown error"}")
                         }
                     }
+
+                    is Result.Loading -> {
+                        Log.v("Add BookmarkViewModel", "Loading")
+                        _bookmarkUiState.isLoading(true)
+                    }
+
+                    is Result.Success -> {
+                        Log.v("Add BookmarkViewModel", "Success")
+                        _bookmarkUiState.success(result.data)
+                        emitToastIfAutoAdd("Bookmark saved successfully")
+                    }
                 }
-        }
+            }
     }
 
     fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
@@ -118,7 +131,9 @@ class BookmarkViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            val errorMessage = result.error?.message ?: result.error?.throwable?.message?: "Unknown error"
+                            val errorMessage =
+                                result.error?.message ?: result.error?.throwable?.message
+                                ?: "Unknown error"
                             Log.v("Edit BookmarkViewModel", errorMessage)
                             _bookmarkUiState.error(errorMessage = errorMessage)
                         }
@@ -157,6 +172,20 @@ class BookmarkViewModel(
 
     fun userHasSession() = runBlocking {
         userPreferences.getUser().first().hasSession()
+    }
+
+    fun getAutoAddBookmark(): Boolean {
+        return runBlocking {
+            settingsPreferenceDataSource.getAutoAddBookmark()
+        }
+    }
+
+    private fun emitToastIfAutoAdd(message: String) {
+        viewModelScope.launch {
+            if (getAutoAddBookmark()) {
+                _toastMessage.value = message
+            }
+        }
     }
 
 }

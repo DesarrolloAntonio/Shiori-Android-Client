@@ -32,6 +32,7 @@ class SettingsPreferencesDataSourceImpl(
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     val COMPACT_VIEW = booleanPreferencesKey("compact_view")
+    val AUTO_ADD_BOOKMARK = booleanPreferencesKey("auto_add_bookmark")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
     val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
     val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
@@ -269,6 +270,15 @@ class SettingsPreferencesDataSourceImpl(
             if (hideTag == HideTag.getDefaultInstance()) null
             else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
         }
+    }
+
+    override suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[AUTO_ADD_BOOKMARK] = isAutoAddBookmark
+        }
+    }
+    override suspend fun getAutoAddBookmark(): Boolean = runBlocking {
+        dataStore.data.firstOrNull()?.get(AUTO_ADD_BOOKMARK) ?: false
     }
 
 }

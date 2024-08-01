@@ -41,6 +41,7 @@ class SettingsViewModel(
     val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
     val compactView = MutableStateFlow<Boolean>(false)
+    val autoAddBookmark = MutableStateFlow<Boolean>(false)
     val useDynamicColors = MutableStateFlow<Boolean>(false)
     val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
     private var token = ""
@@ -83,6 +84,7 @@ class SettingsViewModel(
             createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
             compactView.value = settingsPreferenceDataSource.getCompactView()
+            autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             token = settingsPreferenceDataSource.getToken()
@@ -153,6 +155,11 @@ class SettingsViewModel(
             themeMode.collect { newValue ->
                 settingsPreferenceDataSource.setTheme(newValue)
                 themeManager.themeMode.value = newValue
+            }
+        }
+        viewModelScope.launch {
+            autoAddBookmark.collect { newValue ->
+                settingsPreferenceDataSource.setAutoAddBookmark(newValue)
             }
         }
     }

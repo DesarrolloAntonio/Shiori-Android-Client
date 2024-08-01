@@ -153,7 +153,7 @@ fun FeedScreen(
                     title = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,
-                    onBackClick = {
+                    onBack = {
                         setShowTopBar(true)
                         feedViewModel.showBookmarkEditorScreen.value = false
                     },

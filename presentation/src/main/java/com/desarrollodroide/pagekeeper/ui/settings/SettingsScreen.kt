@@ -92,6 +92,7 @@ fun SettingsScreen(
                 createEbook = settingsViewModel.createEbook,
                 createArchive = settingsViewModel.createArchive,
                 compatView = settingsViewModel.compactView,
+                autoAddBookmark = settingsViewModel.autoAddBookmark,
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSourceCode = onNavigateToSourceCode,
@@ -110,6 +111,7 @@ fun SettingsContent(
     makeArchivePublic: MutableStateFlow<Boolean>,
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
+    autoAddBookmark: MutableStateFlow<Boolean>,
     compatView: MutableStateFlow<Boolean>,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
@@ -169,7 +171,8 @@ fun SettingsContent(
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
                 createEbook = createEbook,
-                createArchive = createArchive
+                createArchive = createArchive,
+                autoAddBookmark = autoAddBookmark
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
@@ -224,6 +227,7 @@ fun SettingsScreenPreview() {
         createEbook = remember { MutableStateFlow(false) },
         createArchive = remember { MutableStateFlow(false) },
         compatView = remember { MutableStateFlow(false) },
+        autoAddBookmark = remember { MutableStateFlow(false) },
         onLogout = {},
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},

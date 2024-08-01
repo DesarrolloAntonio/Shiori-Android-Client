@@ -20,17 +20,18 @@ fun BookmarkEditorScreen(
     title: String,
     bookmarkEditorType: BookmarkEditorType,
     bookmark: Bookmark,
-    onBackClick: () -> Unit,
+    onBack: () -> Unit,
     updateBookmark: (Bookmark) -> Unit,
+    showToast: (String) -> Unit = {},
     startMainActivity: () -> Unit = {}
-    ) {
+) {
     val bookmarkViewModel = get<BookmarkViewModel>()
     val newTag = remember { mutableStateOf("") }
     val availableTags = bookmarkViewModel.availableTags.collectAsState()
     val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
 
     BackHandler {
-        onBackClick()
+        onBack()
     }
     if (bookmarkUiState.isLoading) {
         Log.v("BookmarkEditorScreen", "isLoading")
@@ -85,7 +86,7 @@ fun BookmarkEditorScreen(
                     }
                 }
             },
-            onBackClick = onBackClick,
+            onBackClick = onBack,
             createArchive = createArchive,
             makeArchivePublic = makeArchivePublic,
             createEbook = createEbook,
@@ -94,7 +95,7 @@ fun BookmarkEditorScreen(
 
     if (bookmarkUiState.data != null) {
         updateBookmark(bookmarkUiState.data)
-        onBackClick()
+        showToast("Bookmark saved")
     }
 }
 
