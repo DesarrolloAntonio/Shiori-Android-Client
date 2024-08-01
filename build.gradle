@@ -4,7 +4,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-java:3.19.4'
-        classpath "de.mannodermaus.gradle.plugins:android-junit5:1.6.2.0"
+        classpath "de.mannodermaus.gradle.plugins:android-junit5:1.10.2.0"
     }
 }// Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
