@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,7 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun DefaultsSection(
     makeArchivePublic: MutableStateFlow<Boolean>,
     createEbook: MutableStateFlow<Boolean>,
-    createArchive: MutableStateFlow<Boolean>
+    createArchive: MutableStateFlow<Boolean>,
+    autoAddBookmark: MutableStateFlow<Boolean>
 ) {
     Column(
         modifier = Modifier
@@ -31,13 +33,10 @@ fun DefaultsSection(
         Text(text = "Defaults", style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.height(5.dp))
         val items = listOf(
-            Item(
-                "Make bookmark publicly available",
-                icon = Icons.Filled.Public,
-                switchState = makeArchivePublic
-            ),
+            Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
             Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
-            Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook)
+            Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook),
+            Item("Add bookmark automatically", icon = Icons.Filled.BookmarkAdd, switchState = autoAddBookmark)
         )
         items.forEach { item ->
             SwitchOption(

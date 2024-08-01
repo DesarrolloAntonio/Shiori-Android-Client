@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.preferencesOf
 import com.desarrollodroide.data.RememberUserPreferences
 import com.desarrollodroide.data.UserPreferences
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 
 @ExperimentalCoroutinesApi
@@ -37,6 +39,7 @@ class SettingsPreferencesDataSourceImplTest {
     private val COMPACT_VIEW_KEY = booleanPreferencesKey("compact_view")
     private val CATEGORIES_VISIBLE_KEY = booleanPreferencesKey("categories_visible")
     private val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
+    private val AUTO_ADD_BOOKMARK_KEY = booleanPreferencesKey("auto_add_bookmark")
 
     @BeforeEach
     fun setUp() {
@@ -60,7 +63,7 @@ class SettingsPreferencesDataSourceImplTest {
     fun `setThemeMode updates theme mode to DARK`() = runTest {
         val themeMode = ThemeMode.DARK
         settingsPreferencesDataSourceImpl.setTheme(themeMode)
-        verify(preferencesDataStore).edit(any())
+        verifyPreferenceEdit(preferencesDataStore, THEME_MODE_KEY, themeMode.name)
     }
 
     @Test
@@ -91,7 +94,7 @@ class SettingsPreferencesDataSourceImplTest {
     fun `setCompactView updates compact view to false`() = runTest {
         val compactView = false
         settingsPreferencesDataSourceImpl.setCompactView(compactView)
-        verify(preferencesDataStore).edit(any())
+        verifyPreferenceEdit(preferencesDataStore, COMPACT_VIEW_KEY, compactView)
     }
 
     @Test
@@ -106,7 +109,7 @@ class SettingsPreferencesDataSourceImplTest {
     fun `setCategoriesVisible updates categories visible to false`() = runTest {
         val categoriesVisible = false
         settingsPreferencesDataSourceImpl.setCategoriesVisible(categoriesVisible)
-        verify(preferencesDataStore).edit(any())
+        verifyPreferenceEdit(preferencesDataStore, CATEGORIES_VISIBLE_KEY, categoriesVisible)
     }
 
     @Test
@@ -194,7 +197,7 @@ class SettingsPreferencesDataSourceImplTest {
     fun `setSelectedCategories updates selected categories correctly`() = runTest {
         val selectedCategories = listOf("Sports", "Technology")
         settingsPreferencesDataSourceImpl.setSelectedCategories(selectedCategories)
-        verify(preferencesDataStore).edit(any())
+        verifyPreferenceEdit(preferencesDataStore, SELECTED_CATEGORIES_KEY, selectedCategories.joinToString(","))
     }
 
     @Test
@@ -324,4 +327,39 @@ class SettingsPreferencesDataSourceImplTest {
         assertNull(actualTag)
     }
 
+    @Test
+    fun `getAutoAddBookmark retrieves the correct value`() = runTest {
+        val expectedValue = true
+        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(AUTO_ADD_BOOKMARK_KEY to expectedValue)))
+        val actualValue = settingsPreferencesDataSourceImpl.getAutoAddBookmark()
+        assertEquals(expectedValue, actualValue)
+    }
+
+    @Test
+    fun `getAutoAddBookmark returns false when preference is not set`() = runTest {
+        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf()))
+        val actualValue = settingsPreferencesDataSourceImpl.getAutoAddBookmark()
+        assertEquals(false, actualValue)
+    }
+
+    @Test
+    fun `setAutoAddBookmark updates auto add bookmark preference correctly`() = runTest {
+        val newValue = true
+        settingsPreferencesDataSourceImpl.setAutoAddBookmark(newValue)
+        verifyPreferenceEdit(preferencesDataStore, AUTO_ADD_BOOKMARK_KEY, newValue)
+    }
+
+}
+
+private suspend fun <T> verifyPreferenceEdit(
+    preferencesDataStore: DataStore<Preferences>,
+    key: Preferences.Key<T>,
+    expectedValue: T
+) {
+    val argumentCaptor = argumentCaptor<suspend (Preferences) -> Preferences>()
+    verify(preferencesDataStore).updateData(argumentCaptor.capture())
+
+    val preferences = mutablePreferencesOf()
+    val updatedPreferences = argumentCaptor.firstValue(preferences)
+    assertEquals(expectedValue, updatedPreferences[key])
 }

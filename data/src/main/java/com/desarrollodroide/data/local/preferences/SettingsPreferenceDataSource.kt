@@ -40,6 +40,8 @@ interface SettingsPreferenceDataSource {
     suspend fun getIsLegacyApi(): Boolean
     suspend fun getCompactView(): Boolean
     suspend fun setCompactView(isCompactView: Boolean)
+    suspend fun getAutoAddBookmark(): Boolean
+    suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean)
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
     suspend fun setSelectedCategories(categories: List<String>)
