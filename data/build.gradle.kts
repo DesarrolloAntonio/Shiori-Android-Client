@@ -84,6 +84,8 @@ dependencies {
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
     testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
+    testImplementation(libs.androidx.paging.common) // Common Paging library for testing.
+
 
     // Android Testing libraries
     androidTestImplementation ("androidx.test:core:1.5.0") // Core testing library for Android, providing API for test infrastructure.
