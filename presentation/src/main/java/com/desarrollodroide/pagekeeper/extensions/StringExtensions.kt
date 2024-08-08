@@ -7,7 +7,7 @@ package com.desarrollodroide.pagekeeper.extensions
  */
 fun String.isRTLText(): Boolean {
     // Take the first 20 characters of the string
-    val textSample = this.take(20)
+    val textSample = this.take(100)
 
     // Count the number of Arabic characters in the sample
     val arabicCount = textSample.count { char ->

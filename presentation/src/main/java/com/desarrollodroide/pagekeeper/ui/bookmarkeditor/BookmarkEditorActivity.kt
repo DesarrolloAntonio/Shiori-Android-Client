@@ -31,6 +31,9 @@ class BookmarkEditorActivity : ComponentActivity() {
                     sharedUrl = it
                     Log.v("Shared link", it)
                 }
+            } else {
+                Toast.makeText(this, "Invalid shared link", Toast.LENGTH_LONG).show()
+                finish()
             }
         }
         lifecycleScope.launch {
@@ -42,36 +45,45 @@ class BookmarkEditorActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            if (bookmarkViewModel.getAutoAddBookmark()) {
-                bookmarkViewModel.autoAddBookmark(sharedUrl)
-            } else {
-                setContent {
-                    ShioriTheme {
-                        if (bookmarkViewModel.userHasSession()) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.inverseOnSurface)
-                            ) {
-                                BookmarkEditorScreen(
-                                    title = "Add",
-                                    bookmarkEditorType = BookmarkEditorType.ADD,
-                                    bookmark = Bookmark(
-                                        url = sharedUrl,
-                                        tags = emptyList(),
-                                        public = if (bookmarkViewModel.getMakeArchivePublic()) 1 else 0,
-                                        createArchive = bookmarkViewModel.getCreateArchive(),
-                                        createEbook = bookmarkViewModel.getCreateEbook()
-                                    ),
-                                    onBack = { finish() },
-                                    updateBookmark = { finish() },
-                                    showToast = { message ->
-                                        Toast.makeText(this@BookmarkEditorActivity, message, Toast.LENGTH_LONG).show()
-                                    },
-                                    startMainActivity = { startMainActivity() }
-                                )
+            if (sharedUrl.isNotEmpty()) {
+                if (bookmarkViewModel.userHasSession()) {
+                    if (bookmarkViewModel.getAutoAddBookmark()) {
+                        // Auto-add bookmark without showing the editor screen
+                        bookmarkViewModel.autoAddBookmark(sharedUrl)
+                    } else {
+                        // Show the bookmark editor screen
+                        setContent {
+                            ShioriTheme {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.inverseOnSurface)
+                                ) {
+                                    BookmarkEditorScreen(
+                                        title = "Add",
+                                        bookmarkEditorType = BookmarkEditorType.ADD,
+                                        bookmark = Bookmark(
+                                            url = sharedUrl,
+                                            tags = emptyList(),
+                                            public = if (bookmarkViewModel.getMakeArchivePublic()) 1 else 0,
+                                            createArchive = bookmarkViewModel.getCreateArchive(),
+                                            createEbook = bookmarkViewModel.getCreateEbook()
+                                        ),
+                                        onBack = { finish() },
+                                        updateBookmark = { finish() },
+                                        showToast = { message ->
+                                            Toast.makeText(this@BookmarkEditorActivity, message, Toast.LENGTH_LONG).show()
+                                        },
+                                        startMainActivity = { startMainActivity() }
+                                    )
+                                }
                             }
-                        } else {
+                        }
+                    }
+                } else {
+                    // User doesn't have a session, show login screen
+                    setContent {
+                        ShioriTheme {
                             NotSessionScreen(
                                 onClickLogin = {
                                     startMainActivity()
@@ -80,6 +92,10 @@ class BookmarkEditorActivity : ComponentActivity() {
                         }
                     }
                 }
+            } else {
+                // No shared URL, finish the activity
+                Toast.makeText(this@BookmarkEditorActivity, "No shared URL found", Toast.LENGTH_LONG).show()
+                finish()
             }
         }
     }
