@@ -60,4 +60,14 @@ interface BookmarksRepository {
     serverUrl: String,
     bookmarkId: Int
   ): Flow<Result<ReadableContent>>
+
+  suspend fun syncAllBookmarks(
+    xSession: String,
+    serverUrl: String
+  ): Flow<SyncStatus>
+
+  fun getLocalPagingBookmarks(
+    tags: List<Tag>,
+    searchText: String
+  ): Flow<PagingData<Bookmark>>
 }

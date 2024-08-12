@@ -55,7 +55,6 @@ class SearchViewModel(
             xSession = settingsPreferenceDataSource.getSession(),
             searchText = searchText,
             tags = emptyList(),
-            saveToLocal = false
         )
             .cachedIn(viewModelScope)
             .collect {

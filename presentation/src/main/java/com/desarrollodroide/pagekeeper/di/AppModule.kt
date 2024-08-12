@@ -14,6 +14,7 @@ import com.desarrollodroide.domain.usecase.GetPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
+import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import org.koin.dsl.module
@@ -97,6 +98,12 @@ fun appModule() = module {
 
     single {
         GetBookmarkReadableContentUseCase(
+            bookmarksRepository = get()
+        )
+    }
+
+    single {
+        SyncInitialBookmarksUseCase(
             bookmarksRepository = get()
         )
     }

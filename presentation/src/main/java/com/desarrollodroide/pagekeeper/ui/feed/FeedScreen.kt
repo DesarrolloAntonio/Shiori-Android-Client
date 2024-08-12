@@ -64,6 +64,7 @@ fun FeedScreen(
 
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
+        //feedViewModel.syncBookmarks()
         feedViewModel.getPagingBookmarks()
     }
     LaunchedEffect(isCategoriesVisible.value) {

@@ -28,6 +28,7 @@ fun presenterModule() = module {
             updateBookmarkCacheUseCase = get(),
             getPagingBookmarksUseCase = get(),
             downloadFileUseCase = get(),
+            syncInitialBookmarksUseCase = get(),
         )
     }
 

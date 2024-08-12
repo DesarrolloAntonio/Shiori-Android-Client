@@ -5,6 +5,7 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 
 class GetPagingBookmarksUseCase(
     private val bookmarksRepository: BookmarksRepository,
@@ -14,15 +15,15 @@ class GetPagingBookmarksUseCase(
         xSession: String,
         searchText: String = "",
         tags: List<Tag>,
-        saveToLocal: Boolean
     ): Flow<PagingData<Bookmark>> {
-        return bookmarksRepository.getPagingBookmarks(
-            xSession = xSession,
-            serverUrl = serverUrl,
-            searchText = searchText,
-            tags = tags,
-            saveToLocal = saveToLocal
-        )
+        val localDataFlow = bookmarksRepository.getLocalPagingBookmarks(tags, searchText)
+
+        // Then, if a connection is available, attempt to synchronize with the remote server.
+        // TODO create sync logic
+
+
+       return localDataFlow
     }
+
 }
 

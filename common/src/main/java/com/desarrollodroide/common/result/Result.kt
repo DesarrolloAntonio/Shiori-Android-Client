@@ -37,5 +37,6 @@ sealed class Result<out T>(
         class HttpError(throwable: Throwable? = null, statusCode: Int, message: String? = null) : ErrorType(throwable, statusCode, message)
         class Unknown(throwable: Throwable? = null) : ErrorType(throwable)
         class SessionExpired(throwable: Throwable? = null, message: String? = null) : ErrorType(throwable, message = message)
+        class SyncErrorException(errorType: ErrorType) : Exception(errorType.toString())
     }
 }

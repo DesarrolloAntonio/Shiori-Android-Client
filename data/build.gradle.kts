@@ -75,6 +75,7 @@ dependencies {
     // Room for abstracting SQLite database access and providing compile-time checks of SQL queries
     implementation(libs.androidx.room) // Room for database access, abstracting SQLite and providing LiveData support.
     ksp(libs.androidx.room.compiler) // Kotlin Symbol Processing (KSP) for Room to generate database access code at compile time.
+    implementation(libs.androidx.room.paging) // Replace with the appropriate version if different.
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.

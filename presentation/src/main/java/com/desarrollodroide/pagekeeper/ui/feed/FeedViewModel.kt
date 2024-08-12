@@ -31,8 +31,11 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
+import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
 import com.desarrollodroide.pagekeeper.ui.components.success
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,8 +52,10 @@ class FeedViewModel(
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
+    private val syncInitialBookmarksUseCase: SyncInitialBookmarksUseCase,
 ) : ViewModel() {
 
+    private val TAG = "FeedViewModel"
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
@@ -96,13 +101,56 @@ class FeedViewModel(
             serverUrl = serverUrl,
             xSession = settingsPreferenceDataSource.getSession(),
             tags = tags,
-            saveToLocal = tags.isEmpty()
         )
             .distinctUntilChanged()
             .cachedIn(viewModelScope)
             .collect { loadResult: PagingData<Bookmark> ->
                 bookmarksState.value = loadResult
             }
+    }
+
+    fun syncBookmarks() {
+        Log.v(TAG, "Syncing bookmarks")
+        viewModelScope.launch {
+            syncInitialBookmarksUseCase.invoke(
+                serverUrl = serverUrl,
+                xSession = settingsPreferenceDataSource.getSession()
+            ).collect { result ->
+                result.fold(
+                    onSuccess = { status ->
+                        when (status) {
+                            is SyncStatus.Started -> {
+                                Log.v(TAG, "Sync started")
+                            }
+                            is SyncStatus.InProgress -> {
+                                Log.v(TAG, "Sync in progress")
+                            }
+                            is SyncStatus.Completed -> {
+                                Log.v(TAG, "Sync completed")
+                            }
+                            is SyncStatus.Error -> {
+                                Log.v(TAG, "Sync error")
+                                if (status.error is Result.ErrorType.SessionExpired) {
+                                    Log.v(TAG, "Session expired")
+                                }
+                                handleSyncError(status.error)
+                            }
+                        }
+                    },
+                    onFailure = { throwable ->
+                        _bookmarksUiState.error(errorMessage = throwable.message.toString())
+                    }
+                )
+            }
+        }
+    }
+    private fun handleSyncError(error: Result.ErrorType) {
+        if (error is Result.ErrorType.SessionExpired) {
+            _bookmarksUiState.error(errorMessage = SESSION_HAS_BEEN_EXPIRED)
+        } else {
+            Log.e(TAG, "Unhandled exception: ${error.message}")
+            _bookmarksUiState.error(errorMessage = "Unhandled exception: ${error.message}")
+        }
     }
 
     fun loadInitialData() {

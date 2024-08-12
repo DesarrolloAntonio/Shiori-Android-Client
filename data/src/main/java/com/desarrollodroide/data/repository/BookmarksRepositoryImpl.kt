@@ -1,15 +1,20 @@
 package com.desarrollodroide.data.repository
 
+import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.extensions.toJson
+import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
+import com.desarrollodroide.data.repository.paging.LocalBookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
@@ -33,6 +38,8 @@ class BookmarksRepositoryImpl(
     private val bookmarksDao: BookmarksDao,
     private val errorHandler: ErrorHandler
 ) : BookmarksRepository {
+
+    private val TAG = "BookmarksRepository"
 
     override fun getBookmarks(
         xSession: String,
@@ -81,6 +88,77 @@ class BookmarksRepositoryImpl(
                 )
             }
         ).flow
+    }
+
+    override fun getLocalPagingBookmarks(tags: List<Tag>, searchText: String): Flow<PagingData<Bookmark>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 2,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                LocalBookmarkPagingSource(
+                    bookmarksDao = bookmarksDao,
+                    searchText = searchText,
+                    tags = tags
+                )
+            }
+        ).flow
+    }
+
+
+    override suspend fun syncAllBookmarks(
+        xSession: String,
+        serverUrl: String
+    ): Flow<SyncStatus> = flow {
+        var currentPage = 1
+        var hasNextPage = true
+        val allBookmarks = mutableListOf<BookmarkEntity>()
+        try {
+            Log.d(TAG, "Sync started")
+            emit(SyncStatus.Started)
+
+            while (hasNextPage) {
+                Log.d(TAG, "Fetching bookmarks for page $currentPage")
+                emit(SyncStatus.InProgress(currentPage))
+                val bookmarksDto = apiService.getPagingBookmarks(
+                    xSessionId = xSession,
+                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$currentPage"
+                )
+                Log.d(TAG, "Received response for page $currentPage with status: ${bookmarksDto.code()}")
+                if (bookmarksDto.errorBody()?.string() == SESSION_HAS_BEEN_EXPIRED) {
+                    Log.e(TAG, "Session has expired")
+                    emit(SyncStatus.Error(Result.ErrorType.SessionExpired(message = SESSION_HAS_BEEN_EXPIRED)))
+                    return@flow
+                }
+                val bookmarks = bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() } ?: emptyList()
+                Log.d(TAG, "Fetched ${bookmarks.size} bookmarks for page $currentPage")
+                allBookmarks.addAll(bookmarks)
+                hasNextPage = hasNextPage(bookmarksDto)
+                Log.d(TAG, "Has next page: $hasNextPage")
+                if (hasNextPage) {
+                    currentPage++
+                }
+            }
+            Log.d(TAG, "Inserting ${allBookmarks.size} bookmarks into database")
+            bookmarksDao.deleteAll()
+            bookmarksDao.insertAll(allBookmarks)
+            Log.d(TAG, "Sync completed with ${allBookmarks.size} bookmarks")
+            emit(SyncStatus.Completed(allBookmarks.size))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during sync: ${e.message}")
+            emit(SyncStatus.Error(Result.ErrorType.Unknown(throwable = e)))
+        }
+    }
+
+    private fun hasNextPage(bookmarksDto: Response<BookmarksDTO>): Boolean {
+        val body = bookmarksDto.body() ?: return false
+        val currentPage = body.page ?: return false
+        val maxPage = body.maxPage ?: return false
+        val bookmarks = body.bookmarks
+
+        return currentPage < maxPage && bookmarks?.isNotEmpty() == true
     }
 
     override fun addBookmark(
@@ -159,6 +237,7 @@ class BookmarksRepositoryImpl(
         }
     }.asFlow().flowOn(Dispatchers.IO)
 
+
     override fun updateBookmarkCacheV1(
         token: String,
         serverUrl: String,
@@ -199,5 +278,12 @@ class BookmarksRepositoryImpl(
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
+}
+
+sealed class SyncStatus {
+    data object Started : SyncStatus()
+    data class InProgress(val currentPage: Int) : SyncStatus()
+    data class Completed(val totalSynced: Int) : SyncStatus()
+    data class Error(val error: Result.ErrorType) : SyncStatus()
 }
 
