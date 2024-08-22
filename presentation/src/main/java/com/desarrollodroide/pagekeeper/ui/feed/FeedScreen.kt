@@ -61,11 +61,15 @@ fun FeedScreen(
     val context = LocalContext.current
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
+    val isInitialSyncCompleted by feedViewModel.isInitialSyncCompleted.collectAsState()
 
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
-        //feedViewModel.syncBookmarks()
-        feedViewModel.getPagingBookmarks()
+    }
+    LaunchedEffect(isInitialSyncCompleted) {
+        if (isInitialSyncCompleted) {
+            feedViewModel.getPagingBookmarks()
+        }
     }
     LaunchedEffect(isCategoriesVisible.value) {
         if (isCategoriesVisible.value) {
@@ -175,7 +179,7 @@ fun FeedScreen(
             dismissButton = "Cancel",
             onConfirm = {
                 feedViewModel.bookmarkToDelete.value?.let {
-                    feedViewModel.deleteBookmark(it)
+                    feedViewModel.deleteLocalBookmark(it)
                     feedViewModel.showDeleteConfirmationDialog.value = false
                 }
             },

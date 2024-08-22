@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
-import com.desarrollodroide.model.Bookmark
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,27 +27,17 @@ interface BookmarksDao {
         AND 
             (:tagsListSize = 0 OR tags IN (:tags))
         ORDER BY id DESC
-        LIMIT :limit OFFSET :offset
     """)
-  suspend fun getPagingBookmarks(
-    searchText: String,
-    tags: List<String>,
-    tagsListSize: Int,
-    limit: Int,
-    offset: Int
-  ): List<BookmarkEntity>
-
-  @Query("""
-        SELECT COUNT(*) FROM bookmarks 
-        WHERE 
-            (:searchText = '' OR title LIKE '%' || :searchText || '%')
-        AND 
-            (:tagsListSize = 0 OR tags IN (:tags))
-    """)
-  suspend fun getPagingBookmarksCount(
+  fun getPagingBookmarks(
     searchText: String,
     tags: List<String>,
     tagsListSize: Int
-  ): Int
+  ): PagingSource<Int, BookmarkEntity>
+
+  @Query("DELETE FROM bookmarks WHERE id = :bookmarkId")
+  suspend fun deleteBookmarkById(bookmarkId: Int): Int
+
+  @Query("SELECT (SELECT COUNT(*) FROM bookmarks) == 0")
+  suspend fun isEmpty(): Boolean
 
 }

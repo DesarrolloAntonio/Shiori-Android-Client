@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ fun FullBookmarkView(
     val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
     val imageUrl =
         "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+    Log.v("imageUrl", imageUrl)
     Column {
         if (bookmark.imageURL.isNotEmpty()) {
             BookmarkImageView(

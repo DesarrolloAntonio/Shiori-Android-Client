@@ -31,9 +31,11 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
+import androidx.paging.filter
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.SyncStatus
+import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
 import com.desarrollodroide.pagekeeper.ui.components.success
@@ -45,7 +47,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 class FeedViewModel(
-    bookmarkDatabase: BookmarksDao,
+    private val bookmarkDatabase: BookmarksDao,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getTagsUseCase: GetTagsUseCase,
     private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
@@ -53,6 +55,7 @@ class FeedViewModel(
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
     private val syncInitialBookmarksUseCase: SyncInitialBookmarksUseCase,
+    private val deleteLocalBookmarkUseCase: DeleteLocalBookmarkUseCase,
 ) : ViewModel() {
 
     private val TAG = "FeedViewModel"
@@ -60,6 +63,9 @@ class FeedViewModel(
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
     val downloadUiState = _downloadUiState.asStateFlow()
+    private val _isInitialSyncCompleted = MutableStateFlow(false)
+    val isInitialSyncCompleted: StateFlow<Boolean> = _isInitialSyncCompleted.asStateFlow()
+
 
     private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> =
         MutableStateFlow(value = PagingData.empty())
@@ -94,6 +100,22 @@ class FeedViewModel(
             initialValue = listOf()
         )
 
+    fun loadInitialData() {
+        viewModelScope.launch {
+            serverUrl = settingsPreferenceDataSource.getUrl()
+            token = settingsPreferenceDataSource.getToken()
+            xSessionId = settingsPreferenceDataSource.getSession()
+            isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
+            isCompactView.value = settingsPreferenceDataSource.getCompactView()
+            tagToHide.value = settingsPreferenceDataSource.getHideTag()
+            if (bookmarkDatabase.isEmpty()) {
+                syncBookmarks()
+            } else {
+                _isInitialSyncCompleted.value = true
+            }
+        }
+    }
+
     suspend fun getPagingBookmarks(
         tags: List<Tag> = emptyList(),
     ) {
@@ -126,6 +148,7 @@ class FeedViewModel(
                                 Log.v(TAG, "Sync in progress")
                             }
                             is SyncStatus.Completed -> {
+                                _isInitialSyncCompleted.value = true
                                 Log.v(TAG, "Sync completed")
                             }
                             is SyncStatus.Error -> {
@@ -144,23 +167,13 @@ class FeedViewModel(
             }
         }
     }
+
     private fun handleSyncError(error: Result.ErrorType) {
         if (error is Result.ErrorType.SessionExpired) {
             _bookmarksUiState.error(errorMessage = SESSION_HAS_BEEN_EXPIRED)
         } else {
             Log.e(TAG, "Unhandled exception: ${error.message}")
             _bookmarksUiState.error(errorMessage = "Unhandled exception: ${error.message}")
-        }
-    }
-
-    fun loadInitialData() {
-        viewModelScope.launch {
-            serverUrl = settingsPreferenceDataSource.getUrl()
-            token = settingsPreferenceDataSource.getToken()
-            xSessionId = settingsPreferenceDataSource.getSession()
-            isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
-            isCompactView.value = settingsPreferenceDataSource.getCompactView()
-            tagToHide.value = settingsPreferenceDataSource.getHideTag()
         }
     }
 
@@ -304,6 +317,18 @@ class FeedViewModel(
                         else -> {}
                     }
                 }
+        }
+    }
+
+    fun deleteLocalBookmark(bookmark: Bookmark) {
+        viewModelScope.launch {
+            deleteLocalBookmarkUseCase(bookmark).collect { result ->
+                if (result is Result.Success) {
+                    // TODO
+                } else {
+                    // TODO
+                }
+            }
         }
     }
 

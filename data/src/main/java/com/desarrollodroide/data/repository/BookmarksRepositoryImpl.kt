@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
@@ -14,7 +15,6 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
-import com.desarrollodroide.data.repository.paging.LocalBookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
@@ -90,6 +90,24 @@ class BookmarksRepositoryImpl(
         ).flow
     }
 
+    /**
+     * Retrieves a paginated list of bookmarks from the local database using Room and Paging.
+     *
+     * Configurations:
+     * - `pageSize = 30`: Suggests loading 30 items per page.
+     * - `prefetchDistance = 2`: Prefetches 2 pages ahead of the currently loaded page.
+     * - `enablePlaceholders = false`: Disables placeholders for unloaded items.
+     *
+     * Behavior:
+     * - Although `pageSize` is set to 30, Room may initially load more items (90 in this case) as an optimization
+     *   to reduce database queries and improve user experience during initial loads.
+     * - Subsequent loads will fetch additional items in increments of 30 as the user scrolls.
+     *
+     * @param tags List of tags to filter bookmarks.
+     * @param searchText Text to search bookmarks by title.
+     * @return A Flow of paginated data to observe and update the UI as more data is loaded.
+     */
+
     override fun getLocalPagingBookmarks(tags: List<Tag>, searchText: String): Flow<PagingData<Bookmark>> {
         return Pager(
             config = PagingConfig(
@@ -98,16 +116,40 @@ class BookmarksRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                LocalBookmarkPagingSource(
-                    bookmarksDao = bookmarksDao,
+                bookmarksDao.getPagingBookmarks(
                     searchText = searchText,
-                    tags = tags
+                    tags = tags.map { it.name },
+                    tagsListSize = tags.size
                 )
             }
-        ).flow
+        ).flow.map { pagingData ->
+            pagingData.map {
+                Log.v("Bookmark", it.title)
+                it.toDomainModel()
+            }
+        }
     }
 
-
+    /**
+     * Synchronizes all bookmarks from the remote server to the local database.
+     *
+     * This method performs a full synchronization of all bookmarks, regardless of the current
+     * pagination state or user scroll position. It fetches all pages of bookmarks from the server
+     * and updates the local database accordingly.
+     *
+     * @param xSession The session token for authentication with the remote API.
+     * @param serverUrl The base URL of the server API.
+     * @return Flow<SyncStatus> A flow emitting the current status of the synchronization process.
+     *
+     * The flow emits the following states:
+     * - SyncStatus.Started: When the sync process begins.
+     * - SyncStatus.InProgress(currentPage: Int): As each page is being fetched and processed.
+     * - SyncStatus.Completed(totalBookmarks: Int): When all bookmarks have been successfully synced.
+     * - SyncStatus.Error(error: Result.ErrorType): If an error occurs during the sync process.
+     *
+     * Note: This method performs a complete sync independently of RemoteMediator.
+     * Use it for full synchronization when RemoteMediator's on-demand loading is insufficient.
+     */
     override suspend fun syncAllBookmarks(
         xSession: String,
         serverUrl: String

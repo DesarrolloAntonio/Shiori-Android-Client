@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -72,7 +71,6 @@ fun FeedContent(
         ) {
             items(bookmarksPagingItems.itemCount) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                Log.v("TagToHide", "$tagToHide")
                 if (bookmark != null && bookmark.tags.none { it.id == tagToHide?.id }) {
                     BookmarkItem(
                         bookmark = bookmark,

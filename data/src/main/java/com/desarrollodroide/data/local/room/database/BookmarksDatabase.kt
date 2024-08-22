@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.local.room.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -14,6 +15,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkHtmlEntity
 import com.desarrollodroide.data.local.room.entity.TagEntity
+import java.util.concurrent.Executors
 
 @Database(entities = [BookmarkEntity::class, TagEntity::class, BookmarkHtmlEntity::class], version = 5)
 @TypeConverters(TagsConverter::class)
@@ -72,6 +74,9 @@ abstract class BookmarksDatabase : RoomDatabase() {
             )
                 .allowMainThreadQueries()
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .setQueryCallback({ sqlQuery, bindArgs ->
+                    Log.d("SQL Query", "SQL Query: $sqlQuery SQL Args: $bindArgs")
+                }, Executors.newSingleThreadExecutor())
                 .build()
         }
     }
