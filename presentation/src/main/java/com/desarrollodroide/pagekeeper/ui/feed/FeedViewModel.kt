@@ -19,7 +19,7 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DownloadFileUseCase
-import com.desarrollodroide.domain.usecase.GetPagingBookmarksUseCase
+import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
@@ -31,7 +31,6 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
-import androidx.paging.filter
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.SyncStatus
@@ -50,7 +49,7 @@ class FeedViewModel(
     private val bookmarkDatabase: BookmarksDao,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val getTagsUseCase: GetTagsUseCase,
-    private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
+    private val getLocalPagingBookmarksUseCase: GetLocalPagingBookmarksUseCase,
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
@@ -63,19 +62,13 @@ class FeedViewModel(
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
     val downloadUiState = _downloadUiState.asStateFlow()
-    private val _isInitialSyncCompleted = MutableStateFlow(false)
-    val isInitialSyncCompleted: StateFlow<Boolean> = _isInitialSyncCompleted.asStateFlow()
-
-
-    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> =
-        MutableStateFlow(value = PagingData.empty())
+    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> = MutableStateFlow(value = PagingData.empty())
     val bookmarksState: MutableStateFlow<PagingData<Bookmark>> get() = _bookmarksState
 
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
 
     private var tagsJob: Job? = null
-    private var hasLoadedFeed = false
     private var serverUrl = ""
     private var xSessionId = ""
     private var token = ""
@@ -109,17 +102,15 @@ class FeedViewModel(
             isCompactView.value = settingsPreferenceDataSource.getCompactView()
             tagToHide.value = settingsPreferenceDataSource.getHideTag()
             if (bookmarkDatabase.isEmpty()) {
-                syncBookmarks()
-            } else {
-                _isInitialSyncCompleted.value = true
+                retrieveAllLocalBookmarks()
             }
         }
     }
 
-    suspend fun getPagingBookmarks(
+    suspend fun getLocalPagingBookmarks(
         tags: List<Tag> = emptyList(),
     ) {
-        getPagingBookmarksUseCase.invoke(
+        getLocalPagingBookmarksUseCase.invoke(
             serverUrl = serverUrl,
             xSession = settingsPreferenceDataSource.getSession(),
             tags = tags,
@@ -131,7 +122,7 @@ class FeedViewModel(
             }
     }
 
-    fun syncBookmarks() {
+    private fun retrieveAllLocalBookmarks() {
         Log.v(TAG, "Syncing bookmarks")
         viewModelScope.launch {
             syncInitialBookmarksUseCase.invoke(
@@ -148,7 +139,6 @@ class FeedViewModel(
                                 Log.v(TAG, "Sync in progress")
                             }
                             is SyncStatus.Completed -> {
-                                _isInitialSyncCompleted.value = true
                                 Log.v(TAG, "Sync completed")
                             }
                             is SyncStatus.Error -> {
@@ -179,8 +169,7 @@ class FeedViewModel(
 
     fun refreshFeed() {
         viewModelScope.launch {
-            hasLoadedFeed = false
-            getPagingBookmarks()
+            getLocalPagingBookmarks()
         }
     }
 
@@ -271,7 +260,6 @@ class FeedViewModel(
 
     fun resetData() {
         _bookmarksUiState.idle(true)
-        hasLoadedFeed = false
         viewModelScope.launch {
             settingsPreferenceDataSource.saveUser(
                 password = "",
@@ -325,8 +313,11 @@ class FeedViewModel(
             deleteLocalBookmarkUseCase(bookmark).collect { result ->
                 if (result is Result.Success) {
                     // TODO
-                } else {
-                    // TODO
+                } else if (result is Result.Error){
+                    Log.v("FeedViewModel","Error deleting local bookmark: ${result.error?.message}")
+                    _bookmarksUiState.error(
+                        errorMessage = result.error?.message ?: "Unknown error"
+                    )
                 }
             }
         }
@@ -351,6 +342,7 @@ class FeedViewModel(
     }
 
     fun getServerUrl() = serverUrl
+
     fun getSession(): String = xSessionId
 
     fun getToken(): String = runBlocking {

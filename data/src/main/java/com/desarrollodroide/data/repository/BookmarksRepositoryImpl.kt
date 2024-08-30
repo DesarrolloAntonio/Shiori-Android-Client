@@ -10,6 +10,7 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.extensions.toJson
+import com.desarrollodroide.data.extensions.toTagPattern
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
@@ -109,6 +110,10 @@ class BookmarksRepositoryImpl(
      */
 
     override fun getLocalPagingBookmarks(tags: List<Tag>, searchText: String): Flow<PagingData<Bookmark>> {
+
+        val processedSearchText = searchText.trim()
+        val tagIds = tags.map { it.id }
+
         return Pager(
             config = PagingConfig(
                 pageSize = 30,
@@ -116,11 +121,20 @@ class BookmarksRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                bookmarksDao.getPagingBookmarks(
-                    searchText = searchText,
-                    tags = tags.map { it.name },
-                    tagsListSize = tags.size
-                )
+                when {
+                    processedSearchText.isNotEmpty() && tagIds.isNotEmpty() -> {
+                        bookmarksDao.getPagingBookmarks(searchText = processedSearchText, tagIds = tagIds)
+                    }
+                    processedSearchText.isNotEmpty() && tagIds.isEmpty() -> {
+                        bookmarksDao.getPagingBookmarksWithoutTags(searchText = processedSearchText)
+                    }
+                    processedSearchText.isEmpty() && tagIds.isNotEmpty() -> {
+                        bookmarksDao.getPagingBookmarksByTags(tagIds = tagIds)
+                    }
+                    else -> {
+                        bookmarksDao.getAllPagingBookmarks()
+                    }
+                }
             }
         ).flow.map { pagingData ->
             pagingData.map {

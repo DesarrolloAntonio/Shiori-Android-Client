@@ -5,9 +5,8 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 
-class GetPagingBookmarksUseCase(
+class GetLocalPagingBookmarksUseCase(
     private val bookmarksRepository: BookmarksRepository,
 ) {
     operator fun invoke(

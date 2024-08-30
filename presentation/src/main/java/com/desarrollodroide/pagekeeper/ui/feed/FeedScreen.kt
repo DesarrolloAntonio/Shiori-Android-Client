@@ -61,15 +61,10 @@ fun FeedScreen(
     val context = LocalContext.current
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
-    val isInitialSyncCompleted by feedViewModel.isInitialSyncCompleted.collectAsState()
 
     LaunchedEffect(Unit) {
         feedViewModel.loadInitialData()
-    }
-    LaunchedEffect(isInitialSyncCompleted) {
-        if (isInitialSyncCompleted) {
-            feedViewModel.getPagingBookmarks()
-        }
+        feedViewModel.getLocalPagingBookmarks()
     }
     LaunchedEffect(isCategoriesVisible.value) {
         if (isCategoriesVisible.value) {
@@ -301,7 +296,7 @@ fun FeedScreen(
                     scope.launch {
                         sheetStateCategories.hide()
                         isCategoriesVisible.value = false
-                        feedViewModel.getPagingBookmarks(selectedTags)
+                        feedViewModel.getLocalPagingBookmarks(selectedTags)
                     }
                 },
                 onDismiss = {}
