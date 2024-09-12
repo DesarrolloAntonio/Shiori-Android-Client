@@ -10,7 +10,6 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toBodyJson
 import com.desarrollodroide.data.extensions.toJson
-import com.desarrollodroide.data.extensions.toTagPattern
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
@@ -166,7 +165,7 @@ class BookmarksRepositoryImpl(
      */
     override suspend fun syncAllBookmarks(
         xSession: String,
-        serverUrl: String
+        serverUrl: String,
     ): Flow<SyncStatus> = flow {
         var currentPage = 1
         var hasNextPage = true
@@ -198,8 +197,7 @@ class BookmarksRepositoryImpl(
                 }
             }
             Log.d(TAG, "Inserting ${allBookmarks.size} bookmarks into database")
-            bookmarksDao.deleteAll()
-            bookmarksDao.insertAll(allBookmarks)
+            bookmarksDao.insertAllWithTags(allBookmarks)
             Log.d(TAG, "Sync completed with ${allBookmarks.size} bookmarks")
             emit(SyncStatus.Completed(allBookmarks.size))
         } catch (e: Exception) {
