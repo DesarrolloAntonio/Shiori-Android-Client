@@ -31,6 +31,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
+import androidx.paging.map
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.SyncStatus
@@ -80,8 +81,14 @@ class FeedViewModel(
     val bookmarkSelected = mutableStateOf<Bookmark?>(null)
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
-    val isCompactView = MutableStateFlow<Boolean>(false)
+    //val isCompactView = MutableStateFlow<Boolean>(false)
     val tagToHide = MutableStateFlow<Tag?>(null)
+    val showOnlyHiddenTag = MutableStateFlow<Boolean>(false)
+    val selectedOptionIndex = mutableStateOf(0)
+    val selectedTags = mutableStateOf<List<Tag>>(emptyList())
+
+    val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val availableTags: StateFlow<List<Tag>> = bookmarkDatabase.getAll()
         .map { bookmarks ->
@@ -93,13 +100,32 @@ class FeedViewModel(
             initialValue = listOf()
         )
 
+    init {
+        Log.d("FeedViewModel", "ViewModel initialized")
+    }
+
+    private var isInitialized = false
+
+    suspend fun initializeIfNeeded() {
+        Log.d("FeedViewModel", "initializeIfNeeded called. Current isInitialized: $isInitialized")
+        if (!isInitialized) {
+            isInitialized = true
+            loadInitialData()
+            getLocalPagingBookmarks()
+            Log.d("FeedViewModel", "Initialization completed. isInitialized set to true")
+        } else {
+            Log.d("FeedViewModel", "Already initialized, skipping")
+        }
+    }
+
     fun loadInitialData() {
+        Log.d("FeedViewModel", "loadInitialData called")
         viewModelScope.launch {
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
-            isCompactView.value = settingsPreferenceDataSource.getCompactView()
+            //isCompactView.value = settingsPreferenceDataSource.getCompactView()
             tagToHide.value = settingsPreferenceDataSource.getHideTag()
             if (bookmarkDatabase.isEmpty()) {
                 retrieveAllLocalBookmarks()

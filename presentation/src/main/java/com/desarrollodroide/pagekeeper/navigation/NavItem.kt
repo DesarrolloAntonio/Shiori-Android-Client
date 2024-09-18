@@ -8,13 +8,12 @@ sealed class NavItem(
     internal val baseRoute: String,
     private val navArgs: List<NavArgs> = emptyList()
 ) {
-    object SplashNavItem : NavItem("splash")
-    object LoginNavItem : NavItem("login")
-    object HomeNavItem : NavItem("home")
-    object SettingsNavItem : NavItem("settings")
-    object TermsOfUseNavItem : NavItem("termsOfUse")
-    object PrivacyPolicyNavItem : NavItem("privacyPolicy")
-    object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}/{bookmarkUrl}/{bookmarkDate}/{bookmarkTitle}/{bookmarkIsRtl}") {
+    data object LoginNavItem : NavItem("login")
+    data object HomeNavItem : NavItem("home")
+    data object SettingsNavItem : NavItem("settings")
+    data object TermsOfUseNavItem : NavItem("termsOfUse")
+    data object PrivacyPolicyNavItem : NavItem("privacyPolicy")
+    data object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}/{bookmarkUrl}/{bookmarkDate}/{bookmarkTitle}/{bookmarkIsRtl}") {
         fun createRoute(bookmarkId: Int, bookmarkUrl: String, bookmarkDate: String, bookmarkTitle: String, bookmarkIsRtl: Boolean): String {
             val encodedUrl = Uri.encode(bookmarkUrl)
             val encodedDate = Uri.encode(bookmarkDate)
@@ -23,8 +22,6 @@ sealed class NavItem(
             return "readable_content/$bookmarkId/$encodedUrl/$encodedDate/$encodedTitle/$encodedIsRtl"
         }
     }
-
-    object FeedNavItem : NavItem("feed")
 
     val route = run {
         val argValues = navArgs.map { "{${it.key}}" }

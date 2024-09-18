@@ -27,9 +27,9 @@ class LoginViewModel(
 
     var rememberSession = mutableStateOf(false)
     // Oracle
-    var userName = mutableStateOf("Test")
-    var password = mutableStateOf("Test")
-    var serverUrl = mutableStateOf("https://shiori.desarrollodroide.es/")
+//    var userName = mutableStateOf("Test")
+//    var password = mutableStateOf("Test")
+//    var serverUrl = mutableStateOf("https://shiori.desarrollodroide.es/")
 
     // v1.6
 //    var userName = mutableStateOf("Test")
@@ -41,9 +41,9 @@ class LoginViewModel(
 //    var password = mutableStateOf("Test")
 //    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
 
-//    var serverUrl = mutableStateOf("")
-//    var userName = mutableStateOf("")
-//    var password = mutableStateOf("")
+    var serverUrl = mutableStateOf("")
+    var userName = mutableStateOf("")
+    var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
     val passwordError = mutableStateOf(false)
@@ -61,7 +61,7 @@ class LoginViewModel(
     init {
         viewModelScope.launch {
             getUser()
-            //getRememberUser()
+            getRememberUser()
         }
     }
 

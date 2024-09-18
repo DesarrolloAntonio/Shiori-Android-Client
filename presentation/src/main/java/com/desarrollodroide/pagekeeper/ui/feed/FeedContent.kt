@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -48,6 +49,7 @@ fun FeedContent(
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
+    showOnlyHiddenTag: Boolean
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -71,7 +73,12 @@ fun FeedContent(
         ) {
             items(bookmarksPagingItems.itemCount) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                if (bookmark != null && bookmark.tags.none { it.id == tagToHide?.id }) {
+                val shouldShowBookmark = when {
+                    tagToHide == null -> true
+                    showOnlyHiddenTag -> bookmark?.tags?.any { it.id == tagToHide.id } == true
+                    else -> bookmark?.tags?.none { it.id == tagToHide.id } == true
+                }
+                if (bookmark != null && shouldShowBookmark) {
                     BookmarkItem(
                         bookmark = bookmark,
                         serverURL = serverURL,

@@ -23,6 +23,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     private val themeManager: ThemeManager by inject()
+    private val imageLoader: ImageLoader by inject()
 
     @RequiresApi(Build.VERSION_CODES.N)
     @OptIn(ExperimentalFoundationApi::class)
@@ -30,9 +31,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Show log disk cache statistics for debugging
-        ImageLoader.Builder(this).build().apply {
-            logCacheDetails()
-        }
+        imageLoader.logCacheDetails()
 
         //val context = this.updateLocale(Locale("iw"))
         setContent {

@@ -3,6 +3,8 @@ package com.desarrollodroide.pagekeeper.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import coil.annotation.ExperimentalCoilApi
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
@@ -15,9 +17,16 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
@@ -25,8 +34,9 @@ class SettingsViewModel(
     private val bookmarksRepository: BookmarksRepository,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val themeManager: ThemeManager,
-    private val getTagsUseCase: GetTagsUseCase
-) : ViewModel() {
+    private val getTagsUseCase: GetTagsUseCase,
+    private val imageLoader: ImageLoader,
+    ) : ViewModel() {
 
     private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
     val settingsUiState = _settingsUiState.asStateFlow()
@@ -37,18 +47,31 @@ class SettingsViewModel(
     private val _tagToHide = MutableStateFlow<Tag?>(null)
     val tagToHide = _tagToHide.asStateFlow()
 
+    private val _cacheSize = MutableStateFlow("Calculating...")
+    val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
+
     val makeArchivePublic = MutableStateFlow<Boolean>(false)
     val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
-    val compactView = MutableStateFlow<Boolean>(false)
+    //val compactView = MutableStateFlow<Boolean>(false)
     val autoAddBookmark = MutableStateFlow<Boolean>(false)
     val useDynamicColors = MutableStateFlow<Boolean>(false)
     val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
     private var token = ""
 
+    val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setCompactView(isCompact: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCompactView(isCompact)
+        }
+    }
+
     init {
         loadSettings()
         observeDefaultsSettings()
+        updateCacheSize()
     }
     fun logout() {
         viewModelScope.launch {
@@ -83,7 +106,7 @@ class SettingsViewModel(
             makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
             createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
-            compactView.value = settingsPreferenceDataSource.getCompactView()
+            //compactView.value = settingsPreferenceDataSource.getCompactView()
             autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
@@ -124,6 +147,24 @@ class SettingsViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoilApi::class)
+    private fun updateCacheSize() {
+        viewModelScope.launch {
+            val size = imageLoader.diskCache?.size ?: 0L
+            _cacheSize.value = size.bytesToDisplaySize()
+        }
+    }
+
+    @OptIn(ExperimentalCoilApi::class)
+    fun clearImageCache() {
+        viewModelScope.launch {
+            imageLoader.memoryCache?.clear()
+            imageLoader.diskCache?.clear()
+            updateCacheSize()
+        }
+    }
+
+    @OptIn(FlowPreview::class)
     private fun observeDefaultsSettings() {
         viewModelScope.launch {
             makeArchivePublic.collect { newValue ->

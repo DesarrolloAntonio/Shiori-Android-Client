@@ -6,6 +6,7 @@ import coil.annotation.ExperimentalCoilApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalCoilApi::class)
 fun ImageLoader.logCacheDetails() {
     diskCache?.let { cache ->
         val imageCount = cache.directory.toFile().listFiles()?.size ?: 0

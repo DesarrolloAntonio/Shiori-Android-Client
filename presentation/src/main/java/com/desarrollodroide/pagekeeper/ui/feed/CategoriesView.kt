@@ -1,5 +1,10 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,10 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,71 +42,150 @@ import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun CategoriesView(
     onApply: (List<Tag>) -> Unit,
     onDismiss: () -> Unit,
     uniqueCategories: MutableState<List<Tag>>,
+    tagToHide: Tag?,
+    onFilterHiddenTag: (Boolean) -> Unit,
+    selectedOptionIndex: MutableState<Int>,
+    selectedTags: MutableState<List<Tag>>
 ) {
-    val context = LocalContext.current
-    val sortingOptions = remember { mutableStateListOf(Tag("Alphabetical order"), Tag("Date")) }
-    val selectedSorting = remember { mutableStateOf(listOf<Tag>()) }
-    val mutableUniqueCategories = remember { mutableStateOf(uniqueCategories) }
-
-    val selectedTags = remember { mutableStateOf(listOf<Tag>()) }
+    // Filter out the tagToHide from uniqueCategories
+    val filteredCategories = remember(uniqueCategories.value, tagToHide) {
+        mutableStateOf(uniqueCategories.value.filter { it.name != tagToHide?.name })
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(bottom = 16.dp)
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-//        Text("Sort by", style = MaterialTheme.typography.headlineSmall)
-//        Categories(
-//            categoriesType = CategoriesType.SELECTABLES,
-//            showCategories = true,
-//            uniqueCategories = remember { mutableStateOf(sortingOptions) },
-//            selectedTags = selectedSorting,
-//            onCategoriesSelectedChanged = { tags ->
-//                selectedSorting.value = tags.take(1) // Only allow one sorting option
-//            }
-//        )
-
-//        Spacer(Modifier.height(24.dp))
-
-        Text("Categories", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
-        if (uniqueCategories.value.isEmpty()) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+        AnimatedVisibility(
+            visible = tagToHide != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column(
                 modifier = Modifier
-                    .padding(vertical = 16.dp)
                     .fillMaxWidth()
+                    .padding(16.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Sell,
-                    contentDescription = "No categories available",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(Modifier.width(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VisibilityOff,
+                        contentDescription = "Hidden tag",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Hidden: ${tagToHide?.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Bookmarks with this tag are currently hidden.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = selectedOptionIndex.value == 0,
+                        onClick = {
+                            selectedOptionIndex.value = 0
+                            onFilterHiddenTag(false)
+                            onApply(selectedTags.value)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    ) {
+                        Text("All", style = MaterialTheme.typography.titleMedium)
+                    }
+                    SegmentedButton(
+                        selected = selectedOptionIndex.value == 1,
+                        onClick = {
+                            selectedOptionIndex.value = 1
+                            onFilterHiddenTag(true)
+                            onApply(selectedTags.value)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    ) {
+                        Text("Hidden tag", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    "No categories available",
-                    style = MaterialTheme.typography.bodyLarge
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = if (selectedOptionIndex.value == 0)
+                        "Filter by all bookmarks\n"
+                    else
+                        "Showing only bookmarks with the '${tagToHide?.name}' tag",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else {
-            Categories(
-                categoriesType = CategoriesType.SELECTABLES,
-                showCategories = true,
-                uniqueCategories = uniqueCategories,
-                selectedTags = selectedTags,
-                onCategoriesSelectedChanged = { tags ->
-                    selectedTags.value = tags
+        }
+
+        AnimatedVisibility(
+            visible = selectedOptionIndex.value == 0,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Categories", style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.height(8.dp))
+
+                if (uniqueCategories.value.isEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(vertical = 16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Sell,
+                            contentDescription = "No categories available",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "No categories available",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    Categories(
+                        categoriesType = CategoriesType.SELECTABLES,
+                        showCategories = true,
+                        uniqueCategories = filteredCategories,
+                        selectedTags = selectedTags,
+                        onCategoriesSelectedChanged = { tags ->
+                            selectedTags.value = tags
+                        }
+                    )
                 }
-            )
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -102,6 +194,7 @@ fun CategoriesView(
             Button(
                 onClick = {
                     selectedTags.value = listOf()
+                    onFilterHiddenTag(false)
                 },
                 modifier = Modifier.weight(1f)
             ) {
@@ -113,13 +206,13 @@ fun CategoriesView(
             Button(
                 onClick = {
                     onApply(selectedTags.value)
-                          },
+                },
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Apply")
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(30.dp))
     }
 }
 
@@ -128,17 +221,22 @@ fun CategoriesView(
 fun SortAndFilterScreenPreview() {
     val regionOptions = remember {
         mutableStateOf(
-        listOf(
-            Tag("Northern Europe"), Tag("Western Europe"),
-            Tag("Southern Europe"), Tag("Southeast Europe"),
-            Tag("Central Europe"), Tag("Eastern Europe")
+            listOf(
+                Tag("Northern Europe"), Tag("Western Europe"),
+                Tag("Southern Europe"), Tag("Southeast Europe"),
+                Tag("Central Europe"), Tag("Eastern Europe")
+            )
         )
-    )}
+    }
     MaterialTheme {
         CategoriesView(
             onApply = {},
             onDismiss = {},
-            uniqueCategories = regionOptions
+            uniqueCategories = regionOptions,
+            tagToHide = Tag("Southeast Europe"),
+            onFilterHiddenTag = {},
+            selectedOptionIndex = remember { mutableStateOf(0) },
+            selectedTags = remember { mutableStateOf(listOf<Tag>(Tag("Southern Europe"))) }
         )
     }
 }

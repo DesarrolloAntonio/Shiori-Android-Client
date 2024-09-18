@@ -40,6 +40,7 @@ fun presenterModule() = module {
             sendLogoutUseCase = get(),
             themeManager = get(),
             getTagsUseCase = get(),
+            imageLoader = get(),
         )
     }
 

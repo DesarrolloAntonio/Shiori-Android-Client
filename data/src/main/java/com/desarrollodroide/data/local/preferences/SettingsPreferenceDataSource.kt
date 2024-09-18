@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 interface SettingsPreferenceDataSource {
 
     val userDataStream: Flow<User>
+    val compactViewFlow: Flow<Boolean>
+
     fun getUser(): Flow<User>
     suspend fun saveUser(
         session: UserPreferences,

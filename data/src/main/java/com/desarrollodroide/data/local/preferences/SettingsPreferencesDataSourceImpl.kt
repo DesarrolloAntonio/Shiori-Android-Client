@@ -184,6 +184,12 @@ class SettingsPreferencesDataSourceImpl(
             }
         }
     }
+
+    override val compactViewFlow: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[COMPACT_VIEW] ?: false
+        }
+
     override suspend fun getCompactView(): Boolean = runBlocking {
         dataStore.data.firstOrNull()?.get(COMPACT_VIEW) ?: false
     }

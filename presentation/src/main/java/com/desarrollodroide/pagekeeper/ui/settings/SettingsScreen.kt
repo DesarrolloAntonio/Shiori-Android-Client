@@ -23,13 +23,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Tag
@@ -40,6 +41,7 @@ import com.desarrollodroide.pagekeeper.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.desarrollodroide.pagekeeper.BuildConfig
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,9 +56,11 @@ fun SettingsScreen(
     BackHandler {
         onBack()
     }
-    val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
-    val tagsUiState = settingsViewModel.tagsState.collectAsState().value
-    val tagToHide = settingsViewModel.tagToHide.collectAsState().value
+    val settingsUiState by settingsViewModel.settingsUiState.collectAsStateWithLifecycle()
+    val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
+    val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
+    val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
+    val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -91,7 +95,10 @@ fun SettingsScreen(
                 makeArchivePublic = settingsViewModel.makeArchivePublic,
                 createEbook = settingsViewModel.createEbook,
                 createArchive = settingsViewModel.createArchive,
-                compatView = settingsViewModel.compactView,
+                compactView = compactView,
+                onCompactViewChanged = { isCompact ->
+                    settingsViewModel.setCompactView(isCompact)
+                },
                 autoAddBookmark = settingsViewModel.autoAddBookmark,
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
@@ -99,7 +106,9 @@ fun SettingsScreen(
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
                 onSelectHideDialogOption = settingsViewModel::setHideTag,
-                hideTag = tagToHide
+                hideTag = tagToHide,
+                cacheSize = settingsViewModel.cacheSize,
+                onClearCache = settingsViewModel::clearImageCache
             )
         }
     }
@@ -112,7 +121,8 @@ fun SettingsContent(
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
     autoAddBookmark: MutableStateFlow<Boolean>,
-    compatView: MutableStateFlow<Boolean>,
+    compactView: Boolean,
+    onCompactViewChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
@@ -124,6 +134,8 @@ fun SettingsContent(
     onClickHideDialogOption: () -> Unit,
     onSelectHideDialogOption: (Tag?) -> Unit,
     hideTag: Tag?,
+    cacheSize: StateFlow<String>,
+    onClearCache: () -> Unit
     ) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
@@ -160,7 +172,8 @@ fun SettingsContent(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             FeedSection(
-                compactView = compatView,
+                compactView = compactView,
+                onCompactViewChanged = onCompactViewChanged,
                 tagsUiState = tagsUiState,
                 onSelectHideDialogOption = onSelectHideDialogOption,
                 onClickHideDialogOption = onClickHideDialogOption,
@@ -173,6 +186,12 @@ fun SettingsContent(
                 createEbook = createEbook,
                 createArchive = createArchive,
                 autoAddBookmark = autoAddBookmark
+            )
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(18.dp))
+            DataSection(
+                cacheSize = cacheSize,
+                onClearCache = onClearCache
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
@@ -218,6 +237,15 @@ data class Item(
     val switchState: MutableStateFlow<Boolean> = MutableStateFlow(false)
 )
 
+data class Item2(
+    val title: String,
+    val icon: ImageVector,
+    val subtitle: String = "",
+    val isChecked: Boolean = false,
+    val onCheckedChange: ((Boolean) -> Unit)? = null,
+    val onClick: (() -> Unit)? = null
+)
+
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
@@ -226,7 +254,8 @@ fun SettingsScreenPreview() {
         makeArchivePublic = remember { MutableStateFlow(false) },
         createEbook = remember { MutableStateFlow(false) },
         createArchive = remember { MutableStateFlow(false) },
-        compatView = remember { MutableStateFlow(false) },
+        compactView = false,
+        onCompactViewChanged = {},
         autoAddBookmark = remember { MutableStateFlow(false) },
         onLogout = {},
         onNavigateToSourceCode = {},
@@ -239,5 +268,7 @@ fun SettingsScreenPreview() {
         onClickHideDialogOption = {},
         onSelectHideDialogOption = {},
         hideTag = null,
+        cacheSize = MutableStateFlow("Calculating..."),
+        onClearCache = {}
     )
 }

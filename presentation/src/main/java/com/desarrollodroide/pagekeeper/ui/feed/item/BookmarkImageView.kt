@@ -10,19 +10,16 @@ import androidx.compose.ui.layout.ContentScale
 import coil.request.ImageRequest
 import okhttp3.Headers
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalInspectionMode
 import coil.ImageLoader
-import coil.disk.DiskCache
 import coil.size.Size
-import okhttp3.OkHttpClient
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.FilterQuality
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
+import org.koin.androidx.compose.get
 
 @Composable
 fun BookmarkImageView(
@@ -42,32 +39,7 @@ fun BookmarkImageView(
         )
     } else {
         val context = LocalContext.current
-        val imageLoader = ImageLoader.Builder(context)
-            .okHttpClient {
-                OkHttpClient.Builder()
-                    .retryOnConnectionFailure(true)
-                    .addInterceptor { chain ->
-                        val request = chain.request()
-                        val response = chain.proceed(request)
-                        if (!response.isSuccessful) {
-                            Log.e("BookmarkImageView", "HTTP error: ${response.code}")
-                        }
-                        val newCacheControl = "public, max-age=31536000"
-                        response.newBuilder()
-                            .header("Cache-Control", newCacheControl)
-                            .build()
-                    }
-                    .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    .directory(context.cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(250L * 1024 * 1024) // 250MB
-                    .build()
-            }
-            .build()
-
-        var retryHash by remember { mutableStateOf(0) }
+        val imageLoader = get<ImageLoader>()
 
         AsyncImage(
             model = ImageRequest.Builder(context)
@@ -87,27 +59,12 @@ fun BookmarkImageView(
                         Headers.Builder().add("Authorization", "Bearer $token").build()
                     }
                 )
-                .setParameter("retry_hash", retryHash)
                 .build(),
             contentDescription = "Bookmark image",
             imageLoader = imageLoader,
             modifier = modifier
                 .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
                 .fillMaxWidth(),
-//            placeholder = rememberVectorPainter(Icons.Default.Image),
-//            error = rememberVectorPainter(Icons.Default.BrokenImage),
-//            fallback = rememberVectorPainter(Icons.Default.HideImage),
-            onLoading = { state ->
-                Log.d("BookmarkImageView", "Loading")
-            },
-            onSuccess = { state ->
-                Log.d("BookmarkImageView", "Success: ${state.result}")
-            },
-            onError = { state ->
-                Log.e("BookmarkImageView", "Error: ${state.result}")
-                imageLoader.diskCache?.remove(imageUrl)
-                retryHash++
-            },
             alignment = Alignment.Center,
             contentScale = contentScale,
             alpha = 1.0f,

@@ -6,9 +6,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.BookmarkTagCrossRef
-import com.desarrollodroide.data.local.room.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -150,4 +150,17 @@ interface BookmarksDao {
       insertBookmarkTagCrossRefs(crossRefs)
     }
   }
+
+  /**
+   * Updates an existing bookmark in the local database.
+   *
+   * This method uses Room's @Update annotation, which generates the necessary SQL
+   * to update the bookmark based on its primary key. If the bookmark doesn't exist
+   * in the database, no action will be taken.
+   *
+   * @param bookmark The BookmarkEntity to be updated in the database.
+   *                 It must have a valid ID that matches an existing entry.
+   */
+  @Update
+  suspend fun updateBookmark(bookmark: BookmarkEntity)
 }

@@ -108,11 +108,12 @@ class BookmarksRepositoryImpl(
      * @return A Flow of paginated data to observe and update the UI as more data is loaded.
      */
 
-    override fun getLocalPagingBookmarks(tags: List<Tag>, searchText: String): Flow<PagingData<Bookmark>> {
-
+    override fun getLocalPagingBookmarks(
+        tags: List<Tag>,
+        searchText: String
+    ): Flow<PagingData<Bookmark>> {
         val processedSearchText = searchText.trim()
         val tagIds = tags.map { it.id }
-
         return Pager(
             config = PagingConfig(
                 pageSize = 30,
@@ -251,6 +252,22 @@ class BookmarksRepositoryImpl(
                 flow { emit(Unit) }
         }.asFlow().flowOn(Dispatchers.IO)
 
+    /**
+     * Edits an existing bookmark both on the remote server and in the local database.
+     *
+     * This method performs the following steps:
+     * 1. Sends an edit request to the remote server.
+     * 2. If the server update is successful, updates the local database.
+     * 3. Emits the updated bookmark if both operations are successful.
+     *
+     * The method uses a NetworkNoCacheResource to handle the network operation and error handling.
+     *
+     * @param xSession The session token for authentication with the remote API.
+     * @param serverUrl The base URL of the server API.
+     * @param bookmark The Bookmark object containing the updated information.
+     * @return A Flow emitting a Result<Bookmark> representing the outcome of the edit operation.
+     *         It can emit Loading, Success with the updated bookmark, or Error states.
+     */
     override fun editBookmark(
         xSession: String,
         serverUrl: String,
@@ -265,6 +282,7 @@ class BookmarksRepositoryImpl(
 
         override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
             return flow {
+                bookmarksDao.updateBookmark(data.toEntityModel())
                 emit(data.toDomainModel())
             }
         }

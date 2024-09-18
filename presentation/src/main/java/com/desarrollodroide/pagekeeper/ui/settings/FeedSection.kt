@@ -24,13 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedSection(
-    compactView: MutableStateFlow<Boolean>,
+    compactView: Boolean,
+    onCompactViewChanged: (Boolean) -> Unit,
     onClickHideDialogOption: () -> Unit,
     onSelectHideDialogOption: (Tag?) -> Unit,
     tagsUiState: UiState<List<Tag>>,
@@ -50,15 +50,29 @@ fun FeedSection(
         )
         Spacer(modifier = Modifier.height(5.dp))
 
-        val compatViewItem = Item(
+//        val compatViewItem = Item(
+//            title = "Compact view",
+//            icon = Icons.Filled.ViewCompactAlt,
+//            switchState = compactView
+//        )
+
+        val compactViewItem = Item2(
             title = "Compact view",
             icon = Icons.Filled.ViewCompactAlt,
-            switchState = compactView
+            isChecked = compactView,
+            onCheckedChange = onCompactViewChanged
         )
 
+//        SwitchOption(
+//            item = compatViewItem,
+//            switchState = compactView
+//        )
+//
         SwitchOption(
-            item = compatViewItem,
-            switchState = compactView
+            title = "Compact view",
+            icon = Icons.Filled.ViewCompactAlt,
+            checked = compactView,
+            onCheckedChange = onCompactViewChanged
         )
 
         ClickableOption(
