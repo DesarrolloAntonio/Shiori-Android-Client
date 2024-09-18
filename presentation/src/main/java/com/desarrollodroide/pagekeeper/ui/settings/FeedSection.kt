@@ -49,32 +49,12 @@ fun FeedSection(
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(5.dp))
-
-//        val compatViewItem = Item(
-//            title = "Compact view",
-//            icon = Icons.Filled.ViewCompactAlt,
-//            switchState = compactView
-//        )
-
-        val compactViewItem = Item2(
-            title = "Compact view",
-            icon = Icons.Filled.ViewCompactAlt,
-            isChecked = compactView,
-            onCheckedChange = onCompactViewChanged
-        )
-
-//        SwitchOption(
-//            item = compatViewItem,
-//            switchState = compactView
-//        )
-//
         SwitchOption(
             title = "Compact view",
             icon = Icons.Filled.ViewCompactAlt,
             checked = compactView,
             onCheckedChange = onCompactViewChanged
         )
-
         ClickableOption(
             title = "Hide tag",
             icon = Icons.Filled.Sell,

@@ -50,10 +50,8 @@ class SettingsViewModel(
     private val _cacheSize = MutableStateFlow("Calculating...")
     val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
 
-    val makeArchivePublic = MutableStateFlow<Boolean>(false)
     val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
-    //val compactView = MutableStateFlow<Boolean>(false)
     val autoAddBookmark = MutableStateFlow<Boolean>(false)
     val useDynamicColors = MutableStateFlow<Boolean>(false)
     val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
@@ -62,9 +60,18 @@ class SettingsViewModel(
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setCompactView(isCompact: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCompactView(isCompact)
+        }
+    }
+
+    fun setMakeArchivePublic(isPublic: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setMakeArchivePublic(isPublic)
         }
     }
 
@@ -103,10 +110,9 @@ class SettingsViewModel(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
+            //makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
             createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
-            //compactView.value = settingsPreferenceDataSource.getCompactView()
             autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
@@ -164,13 +170,12 @@ class SettingsViewModel(
         }
     }
 
-    @OptIn(FlowPreview::class)
     private fun observeDefaultsSettings() {
-        viewModelScope.launch {
-            makeArchivePublic.collect { newValue ->
-                settingsPreferenceDataSource.setMakeArchivePublic(newValue)
-            }
-        }
+//        viewModelScope.launch {
+//            makeArchivePublic.collect { newValue ->
+//                settingsPreferenceDataSource.setMakeArchivePublic(newValue)
+//            }
+//        }
         viewModelScope.launch {
             createEbook.collect { newValue ->
                 settingsPreferenceDataSource.setCreateEbook(newValue)
@@ -181,11 +186,11 @@ class SettingsViewModel(
                 settingsPreferenceDataSource.setCreateArchive(newValue)
             }
         }
-        viewModelScope.launch {
-            compactView.collect { newValue ->
-                settingsPreferenceDataSource.setCompactView(newValue)
-            }
-        }
+//        viewModelScope.launch {
+//            compactView.collect { newValue ->
+//                settingsPreferenceDataSource.setCompactView(newValue)
+//            }
+//        }
         viewModelScope.launch {
             useDynamicColors.collect { newValue ->
                 settingsPreferenceDataSource.setUseDynamicColors(newValue)

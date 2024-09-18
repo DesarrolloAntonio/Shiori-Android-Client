@@ -10,6 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
@@ -59,13 +61,14 @@ class BookmarkEditorActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .background(MaterialTheme.colorScheme.inverseOnSurface)
                                 ) {
+                                    val makeArchivePublic by bookmarkViewModel.makeArchivePublic.collectAsState()
                                     BookmarkEditorScreen(
                                         title = "Add",
                                         bookmarkEditorType = BookmarkEditorType.ADD,
                                         bookmark = Bookmark(
                                             url = sharedUrl,
                                             tags = emptyList(),
-                                            public = if (bookmarkViewModel.getMakeArchivePublic()) 1 else 0,
+                                            public = if (makeArchivePublic) 1 else 0,
                                             createArchive = bookmarkViewModel.getCreateArchive(),
                                             createEbook = bookmarkViewModel.getCreateEbook()
                                         ),

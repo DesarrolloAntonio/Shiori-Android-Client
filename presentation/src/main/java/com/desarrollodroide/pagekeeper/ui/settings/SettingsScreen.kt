@@ -59,8 +59,8 @@ fun SettingsScreen(
     val settingsUiState by settingsViewModel.settingsUiState.collectAsStateWithLifecycle()
     val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
     val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
-    val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
+    val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -92,7 +92,10 @@ fun SettingsScreen(
                 onLogout = { settingsViewModel.logout() },
                 goToLogin = goToLogin,
                 themeMode = settingsViewModel.themeMode,
-                makeArchivePublic = settingsViewModel.makeArchivePublic,
+                makeArchivePublic = makeArchivePublic,
+                onMakeArchivePublicChanged = { isPublic ->
+                    settingsViewModel.setMakeArchivePublic(isPublic)
+                },
                 createEbook = settingsViewModel.createEbook,
                 createArchive = settingsViewModel.createArchive,
                 compactView = compactView,
@@ -117,7 +120,8 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     settingsUiState: UiState<String>,
-    makeArchivePublic: MutableStateFlow<Boolean>,
+    makeArchivePublic: Boolean,
+    onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: MutableStateFlow<Boolean>,
     createArchive: MutableStateFlow<Boolean>,
     autoAddBookmark: MutableStateFlow<Boolean>,
@@ -135,8 +139,8 @@ fun SettingsContent(
     onSelectHideDialogOption: (Tag?) -> Unit,
     hideTag: Tag?,
     cacheSize: StateFlow<String>,
-    onClearCache: () -> Unit
-    ) {
+    onClearCache: () -> Unit,
+) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
@@ -183,6 +187,7 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(18.dp))
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
+                onMakeArchivePublicChanged = onMakeArchivePublicChanged,
                 createEbook = createEbook,
                 createArchive = createArchive,
                 autoAddBookmark = autoAddBookmark
@@ -251,12 +256,12 @@ data class Item2(
 fun SettingsScreenPreview() {
     SettingsContent(
         settingsUiState = UiState(isLoading = false),
-        makeArchivePublic = remember { MutableStateFlow(false) },
+        makeArchivePublic = false,
         createEbook = remember { MutableStateFlow(false) },
         createArchive = remember { MutableStateFlow(false) },
+        autoAddBookmark = remember { MutableStateFlow(false) },
         compactView = false,
         onCompactViewChanged = {},
-        autoAddBookmark = remember { MutableStateFlow(false) },
         onLogout = {},
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
@@ -269,6 +274,7 @@ fun SettingsScreenPreview() {
         onSelectHideDialogOption = {},
         hideTag = null,
         cacheSize = MutableStateFlow("Calculating..."),
-        onClearCache = {}
+        onClearCache = {},
+        onMakeArchivePublicChanged = { isPublic ->}
     )
 }
