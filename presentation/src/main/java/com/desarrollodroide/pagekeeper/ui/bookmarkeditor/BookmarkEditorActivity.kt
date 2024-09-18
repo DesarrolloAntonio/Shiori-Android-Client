@@ -62,6 +62,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                                         .background(MaterialTheme.colorScheme.inverseOnSurface)
                                 ) {
                                     val makeArchivePublic by bookmarkViewModel.makeArchivePublic.collectAsState()
+                                    val createEbook by bookmarkViewModel.createEbook.collectAsState()
                                     BookmarkEditorScreen(
                                         title = "Add",
                                         bookmarkEditorType = BookmarkEditorType.ADD,
@@ -70,7 +71,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                                             tags = emptyList(),
                                             public = if (makeArchivePublic) 1 else 0,
                                             createArchive = bookmarkViewModel.getCreateArchive(),
-                                            createEbook = bookmarkViewModel.getCreateEbook()
+                                            createEbook = createEbook
                                         ),
                                         onBack = { finish() },
                                         updateBookmark = { finish() },

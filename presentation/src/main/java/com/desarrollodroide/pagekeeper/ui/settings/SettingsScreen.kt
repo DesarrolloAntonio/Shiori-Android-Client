@@ -61,6 +61,7 @@ fun SettingsScreen(
     val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
     val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
+    val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -96,7 +97,10 @@ fun SettingsScreen(
                 onMakeArchivePublicChanged = { isPublic ->
                     settingsViewModel.setMakeArchivePublic(isPublic)
                 },
-                createEbook = settingsViewModel.createEbook,
+                createEbook = createEbook,
+                onCreateEbookChanged = { isEbook ->
+                    settingsViewModel.setCreateEbook(isEbook)
+                },
                 createArchive = settingsViewModel.createArchive,
                 compactView = compactView,
                 onCompactViewChanged = { isCompact ->
@@ -122,7 +126,8 @@ fun SettingsContent(
     settingsUiState: UiState<String>,
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
-    createEbook: MutableStateFlow<Boolean>,
+    createEbook:Boolean,
+    onCreateEbookChanged: (Boolean) -> Unit,
     createArchive: MutableStateFlow<Boolean>,
     autoAddBookmark: MutableStateFlow<Boolean>,
     compactView: Boolean,
@@ -189,6 +194,7 @@ fun SettingsContent(
                 makeArchivePublic = makeArchivePublic,
                 onMakeArchivePublicChanged = onMakeArchivePublicChanged,
                 createEbook = createEbook,
+                onCreateEbookChanged = onCreateEbookChanged,
                 createArchive = createArchive,
                 autoAddBookmark = autoAddBookmark
             )
@@ -257,7 +263,7 @@ fun SettingsScreenPreview() {
     SettingsContent(
         settingsUiState = UiState(isLoading = false),
         makeArchivePublic = false,
-        createEbook = remember { MutableStateFlow(false) },
+        createEbook = false,
         createArchive = remember { MutableStateFlow(false) },
         autoAddBookmark = remember { MutableStateFlow(false) },
         compactView = false,
@@ -275,6 +281,7 @@ fun SettingsScreenPreview() {
         hideTag = null,
         cacheSize = MutableStateFlow("Calculating..."),
         onClearCache = {},
-        onMakeArchivePublicChanged = { isPublic ->}
+        onMakeArchivePublicChanged = {},
+        onCreateEbookChanged = {}
     )
 }

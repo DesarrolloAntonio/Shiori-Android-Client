@@ -12,6 +12,7 @@ interface SettingsPreferenceDataSource {
     val userDataStream: Flow<User>
     val compactViewFlow: Flow<Boolean>
     val makeArchivePublicFlow: Flow<Boolean>
+    val createEbookFlow: Flow<Boolean>
 
     fun getUser(): Flow<User>
     suspend fun saveUser(
@@ -36,7 +37,6 @@ interface SettingsPreferenceDataSource {
     fun getThemeMode(): ThemeMode
 //    suspend fun getMakeArchivePublic(): Boolean
     suspend fun setMakeArchivePublic(newValue: Boolean)
-    suspend fun getCreateEbook(): Boolean
     suspend fun setCreateEbook(newValue: Boolean)
     suspend fun getCreateArchive(): Boolean
     suspend fun setCreateArchive(newValue: Boolean)

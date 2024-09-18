@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,9 +21,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun DefaultsSection(
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
-    createEbook: MutableStateFlow<Boolean>,
+    createEbook: Boolean,
+    onCreateEbookChanged: (Boolean) -> Unit,
     createArchive: MutableStateFlow<Boolean>,
-    autoAddBookmark: MutableStateFlow<Boolean>
+    autoAddBookmark: MutableStateFlow<Boolean>,
 ) {
     Column(
         modifier = Modifier
@@ -40,10 +40,16 @@ fun DefaultsSection(
             checked = makeArchivePublic,
             onCheckedChange = onMakeArchivePublicChanged
         )
+        SwitchOption(
+            title = "Create Ebook",
+            icon = Icons.Filled.Book,
+            checked = createEbook,
+            onCheckedChange = onCreateEbookChanged
+        )
         val items = listOf(
             //Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
             Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
-            Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook),
+            //Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook),
             Item("Add bookmark automatically", icon = Icons.Filled.BookmarkAdd, switchState = autoAddBookmark)
         )
         items.forEach { item ->

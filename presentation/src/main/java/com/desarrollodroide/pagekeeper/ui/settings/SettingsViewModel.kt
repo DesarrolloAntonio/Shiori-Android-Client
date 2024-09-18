@@ -50,7 +50,6 @@ class SettingsViewModel(
     private val _cacheSize = MutableStateFlow("Calculating...")
     val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
 
-    val createEbook = MutableStateFlow<Boolean>(false)
     val createArchive = MutableStateFlow<Boolean>(false)
     val autoAddBookmark = MutableStateFlow<Boolean>(false)
     val useDynamicColors = MutableStateFlow<Boolean>(false)
@@ -63,6 +62,9 @@ class SettingsViewModel(
     val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setCompactView(isCompact: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCompactView(isCompact)
@@ -72,6 +74,12 @@ class SettingsViewModel(
     fun setMakeArchivePublic(isPublic: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setMakeArchivePublic(isPublic)
+        }
+    }
+
+    fun setCreateEbook(ebook: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateEbook(ebook)
         }
     }
 
@@ -110,8 +118,6 @@ class SettingsViewModel(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            //makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
-            createEbook.value = settingsPreferenceDataSource.getCreateEbook()
             createArchive.value = settingsPreferenceDataSource.getCreateArchive()
             autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
@@ -171,26 +177,11 @@ class SettingsViewModel(
     }
 
     private fun observeDefaultsSettings() {
-//        viewModelScope.launch {
-//            makeArchivePublic.collect { newValue ->
-//                settingsPreferenceDataSource.setMakeArchivePublic(newValue)
-//            }
-//        }
-        viewModelScope.launch {
-            createEbook.collect { newValue ->
-                settingsPreferenceDataSource.setCreateEbook(newValue)
-            }
-        }
         viewModelScope.launch {
             createArchive.collect { newValue ->
                 settingsPreferenceDataSource.setCreateArchive(newValue)
             }
         }
-//        viewModelScope.launch {
-//            compactView.collect { newValue ->
-//                settingsPreferenceDataSource.setCompactView(newValue)
-//            }
-//        }
         viewModelScope.launch {
             useDynamicColors.collect { newValue ->
                 settingsPreferenceDataSource.setUseDynamicColors(newValue)

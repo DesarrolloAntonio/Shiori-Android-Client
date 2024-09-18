@@ -189,10 +189,6 @@ class SettingsPreferencesDataSourceImpl(
         .map { preferences ->
             preferences[COMPACT_VIEW] ?: false
         }
-//
-//    override suspend fun getCompactView(): Boolean = runBlocking {
-//        dataStore.data.firstOrNull()?.get(COMPACT_VIEW) ?: false
-//    }
 
     override suspend fun setCategoriesVisible(isCategoriesVisible: Boolean) {
         runBlocking {
@@ -208,19 +204,14 @@ class SettingsPreferencesDataSourceImpl(
     override val makeArchivePublicFlow: Flow<Boolean> = rememberUserProtoDataStore.data
         .map { it.makeArchivePublic }
 
-//    override suspend fun getMakeArchivePublic(): Boolean {
-//        return rememberUserProtoDataStore.data.map { it.makeArchivePublic }.first()
-//    }
-
     override suspend fun setMakeArchivePublic(newValue: Boolean) {
         rememberUserProtoDataStore.updateData { preferences ->
             preferences.toBuilder().setMakeArchivePublic(newValue).build()
         }
     }
 
-    override suspend fun getCreateEbook(): Boolean {
-        return rememberUserProtoDataStore.data.map { it.createEbook }.first()
-    }
+    override val createEbookFlow: Flow<Boolean> = rememberUserProtoDataStore.data
+        .map { it.createEbook }
 
     override suspend fun setCreateEbook(newValue: Boolean) {
         rememberUserProtoDataStore.updateData { preferences ->

@@ -52,9 +52,18 @@ class BookmarkViewModel(
     val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setMakeArchivePublic(value: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setMakeArchivePublic(value)
+        }
+    }
+
+    fun setCreateEbook(value: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateEbook(value)
         }
     }
 
@@ -74,7 +83,7 @@ class BookmarkViewModel(
             tags = emptyList(),
             createArchive = getCreateArchive(),
             makeArchivePublic = makeArchivePublic.value,
-            createEbook = getCreateEbook()
+            createEbook = createEbook.value
         )
     }
 
@@ -166,18 +175,6 @@ class BookmarkViewModel(
             settingsPreferenceDataSource.getCreateArchive()
         }
     }
-
-    fun getCreateEbook(): Boolean {
-        return runBlocking {
-            settingsPreferenceDataSource.getCreateEbook()
-        }
-    }
-
-//    fun getMakeArchivePublic(): Boolean {
-//        return runBlocking {
-//            settingsPreferenceDataSource.getMakeArchivePublic()
-//        }
-//    }
 
     fun userHasSession() = runBlocking {
         userPreferences.getUser().first().hasSession()
