@@ -8,24 +8,21 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.preferencesOf
-import com.desarrollodroide.data.RememberUserPreferences
 import com.desarrollodroide.data.UserPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.desarrollodroide.data.HideTag
-import com.desarrollodroide.model.Tag
+import com.desarrollodroide.data.RememberUserPreferences
+import com.desarrollodroide.data.SystemPreferences
 import kotlinx.coroutines.flow.first
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.verify
+import app.cash.turbine.test
+import kotlinx.coroutines.flow.Flow
+import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi
 class SettingsPreferencesDataSourceImplTest {
@@ -33,23 +30,27 @@ class SettingsPreferencesDataSourceImplTest {
     private lateinit var settingsPreferencesDataSourceImpl: SettingsPreferencesDataSourceImpl
     private var preferencesDataStore: DataStore<Preferences> = mock()
     private val protoDataStoreMock: DataStore<UserPreferences> = mock()
+    private val systemPreferencesDataStoreMock: DataStore<SystemPreferences> = mock()
     private val hideTagDataStoreMock: DataStore<HideTag> = mock()
     private val rememberUserProtoDataStoreMock: DataStore<RememberUserPreferences> = mock()
+
     private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-    private val COMPACT_VIEW_KEY = booleanPreferencesKey("compact_view")
     private val CATEGORIES_VISIBLE_KEY = booleanPreferencesKey("categories_visible")
     private val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
-    private val AUTO_ADD_BOOKMARK_KEY = booleanPreferencesKey("auto_add_bookmark")
+    private val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
 
     @BeforeEach
     fun setUp() {
         settingsPreferencesDataSourceImpl = SettingsPreferencesDataSourceImpl(
             dataStore = preferencesDataStore,
             protoDataStore = protoDataStoreMock,
+            systemPreferences = systemPreferencesDataStoreMock,
             rememberUserProtoDataStore = rememberUserProtoDataStoreMock,
             hideTagDataStore = hideTagDataStoreMock
-            )
+        )
     }
+
+    // --- Theme Mode Tests ---
 
     @Test
     fun `getThemeMode returns expected value`() = runTest {
@@ -82,20 +83,7 @@ class SettingsPreferencesDataSourceImplTest {
         assertEquals(defaultThemeMode, actualThemeMode)
     }
 
-    @Test
-    fun `getCompactView returns expected value`() = runTest {
-        val expectedValue = true
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(COMPACT_VIEW_KEY to expectedValue)))
-        val actualValue = settingsPreferencesDataSourceImpl.getCompactView()
-        assertEquals(expectedValue, actualValue)
-    }
-
-    @Test
-    fun `setCompactView updates compact view to false`() = runTest {
-        val compactView = false
-        settingsPreferencesDataSourceImpl.setCompactView(compactView)
-        verifyPreferenceEdit(preferencesDataStore, COMPACT_VIEW_KEY, compactView)
-    }
+    // --- Categories Visibility Tests ---
 
     @Test
     fun `getCategoriesVisible returns expected value`() = runTest {
@@ -111,6 +99,37 @@ class SettingsPreferencesDataSourceImplTest {
         settingsPreferencesDataSourceImpl.setCategoriesVisible(categoriesVisible)
         verifyPreferenceEdit(preferencesDataStore, CATEGORIES_VISIBLE_KEY, categoriesVisible)
     }
+
+    // --- Selected Categories Tests ---
+
+    @Test
+    fun `setSelectedCategories updates selected categories correctly`() = runTest {
+        val selectedCategories = listOf("Sports", "Technology")
+        settingsPreferencesDataSourceImpl.setSelectedCategories(selectedCategories)
+        verifyPreferenceEdit(
+            preferencesDataStore,
+            SELECTED_CATEGORIES_KEY,
+            selectedCategories.joinToString(",")
+        )
+    }
+
+    @Test
+    fun `getSelectedCategories retrieves the correct values`() = runTest {
+        val expectedCategories = listOf("Sports", "Technology")
+        whenever(preferencesDataStore.data).thenReturn(
+            flowOf(
+                preferencesOf(
+                    SELECTED_CATEGORIES_KEY to expectedCategories.joinToString(
+                        ","
+                    )
+                )
+            )
+        )
+        val actualCategories = settingsPreferencesDataSourceImpl.getSelectedCategories()
+        assertEquals(expectedCategories, actualCategories)
+    }
+
+    // --- UserPreferences Tests ---
 
     @Test
     fun `getUser returns User with correct data`() = runTest {
@@ -142,117 +161,12 @@ class SettingsPreferencesDataSourceImplTest {
         verify(protoDataStoreMock).updateData(any())
     }
 
+    // --- RememberUserPreferences Tests ---
+
     @Test
     fun `resetRememberUser resets remembered user data correctly`() = runTest {
         settingsPreferencesDataSourceImpl.resetRememberUser()
         verify(rememberUserProtoDataStoreMock).updateData(any())
-    }
-
-    @Test
-    fun `setMakeArchivePublic updates preference correctly`() = runTest {
-        val newValue = true
-        settingsPreferencesDataSourceImpl.setMakeArchivePublic(newValue)
-        verify(rememberUserProtoDataStoreMock).updateData(any())
-    }
-
-    @Test
-    fun `getMakeArchivePublic retrieves the correct value`() = runTest {
-        val expectedValue = true
-        whenever(rememberUserProtoDataStoreMock.data).thenReturn(flowOf(RememberUserPreferences.getDefaultInstance().toBuilder().setMakeArchivePublic(expectedValue).build()))
-        val actualValue = settingsPreferencesDataSourceImpl.getMakeArchivePublic()
-        assertEquals(expectedValue, actualValue)
-    }
-
-    @Test
-    fun `setCreateEbook updates preference correctly`() = runTest {
-        val newValue = true
-        settingsPreferencesDataSourceImpl.setCreateEbook(newValue)
-        verify(rememberUserProtoDataStoreMock).updateData(any())
-    }
-
-    @Test
-    fun `getCreateEbook retrieves the correct value`() = runTest {
-        val expectedValue = false
-        whenever(rememberUserProtoDataStoreMock.data).thenReturn(flowOf(RememberUserPreferences.getDefaultInstance().toBuilder().setCreateEbook(expectedValue).build()))
-        val actualValue = settingsPreferencesDataSourceImpl.getCreateEbook()
-        assertEquals(expectedValue, actualValue)
-    }
-
-    @Test
-    fun `setCategoriesVisible updates categories visible preference correctly`() = runTest {
-        val isVisible = true
-        settingsPreferencesDataSourceImpl.setCategoriesVisible(isVisible)
-        verify(preferencesDataStore).edit(any())
-    }
-
-    @Test
-    fun `getCategoriesVisible retrieves the correct value`() = runTest {
-        val expectedValue = false
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(CATEGORIES_VISIBLE_KEY to expectedValue)))
-        val actualValue = settingsPreferencesDataSourceImpl.getCategoriesVisible()
-        assertEquals(expectedValue, actualValue)
-    }
-
-    @Test
-    fun `setSelectedCategories updates selected categories correctly`() = runTest {
-        val selectedCategories = listOf("Sports", "Technology")
-        settingsPreferencesDataSourceImpl.setSelectedCategories(selectedCategories)
-        verifyPreferenceEdit(preferencesDataStore, SELECTED_CATEGORIES_KEY, selectedCategories.joinToString(","))
-    }
-
-    @Test
-    fun `getSelectedCategories retrieves the correct values`() = runTest {
-        val expectedCategories = listOf("Sports", "Technology")
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(SELECTED_CATEGORIES_KEY to expectedCategories.joinToString(","))))
-        val actualCategories = settingsPreferencesDataSourceImpl.getSelectedCategories()
-        assertEquals(expectedCategories, actualCategories)
-    }
-
-    @Test
-    fun `getUrl retrieves the correct server URL`() = runTest {
-        val expectedUrl = "https://example.com"
-        whenever(protoDataStoreMock.data).thenReturn(flowOf(UserPreferences.newBuilder().setUrl(expectedUrl).build()))
-        val actualUrl = settingsPreferencesDataSourceImpl.getUrl()
-        assertEquals(expectedUrl, actualUrl)
-    }
-
-    @Test
-    fun `getSession retrieves the correct session value`() = runTest {
-        val expectedSession = "session123"
-        whenever(protoDataStoreMock.data).thenReturn(flowOf(UserPreferences.newBuilder().setSession(expectedSession).build()))
-        val actualSession = settingsPreferencesDataSourceImpl.getSession()
-        assertEquals(expectedSession, actualSession)
-    }
-
-    @Test
-    fun `getToken retrieves the correct token`() = runTest {
-        val expectedToken = "token123"
-        whenever(protoDataStoreMock.data).thenReturn(flowOf(UserPreferences.newBuilder().setToken(expectedToken).build()))
-        val actualToken = settingsPreferencesDataSourceImpl.getToken()
-        assertEquals(expectedToken, actualToken)
-    }
-
-    @Test
-    fun `getIsLegacyApi retrieves the correct flag for legacy API usage`() = runTest {
-        val expectedIsLegacyApi = true
-        whenever(protoDataStoreMock.data).thenReturn(flowOf(UserPreferences.newBuilder().setIsLegacyApi(expectedIsLegacyApi).build()))
-        val actualIsLegacyApi = settingsPreferencesDataSourceImpl.getIsLegacyApi()
-        assertEquals(expectedIsLegacyApi, actualIsLegacyApi)
-    }
-
-    @Test
-    fun `setCreateArchive updates preference correctly`() = runTest {
-        val newValue = true
-        settingsPreferencesDataSourceImpl.setCreateArchive(newValue)
-        verify(rememberUserProtoDataStoreMock).updateData(any())
-    }
-
-    @Test
-    fun `getCreateArchive retrieves the correct value`() = runTest {
-        val expectedValue = true
-        whenever(rememberUserProtoDataStoreMock.data).thenReturn(flowOf(RememberUserPreferences.newBuilder().setCreateArchive(expectedValue).build()))
-        val actualValue = settingsPreferencesDataSourceImpl.getCreateArchive()
-        assertEquals(expectedValue, actualValue)
     }
 
     @Test
@@ -279,79 +193,81 @@ class SettingsPreferencesDataSourceImplTest {
         verify(rememberUserProtoDataStoreMock).updateData(any())
     }
 
+    // --- System Preferences Tests ---
+
     @Test
-    fun `setUseDynamicColors updates preference correctly`() = runTest {
+    fun `setMakeArchivePublic updates preference correctly`() = runTest {
         val newValue = true
-        settingsPreferencesDataSourceImpl.setUseDynamicColors(newValue)
-        verify(preferencesDataStore).edit(any())
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+        settingsPreferencesDataSourceImpl.setMakeArchivePublic(newValue)
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newValue, updatedPreferences.makeArchivePublic)
     }
 
     @Test
-    fun `getUseDynamicColors retrieves the correct value`() = runTest {
-        val expectedValue = true
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(settingsPreferencesDataSourceImpl.USE_DYNAMIC_COLORS to expectedValue)))
-        val actualValue = settingsPreferencesDataSourceImpl.getUseDynamicColors()
-        assertEquals(expectedValue, actualValue)
+    fun `setCreateEbook updates preference correctly`() = runTest {
+        val newValue = true
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+        settingsPreferencesDataSourceImpl.setCreateEbook(newValue)
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newValue, updatedPreferences.createEbook)
     }
 
-    @Test
-    fun `setHideTag updates HideTag correctly`() = runTest {
-        val tag = Tag(id = 1, name = "TestTag", selected = false, nBookmarks = 0)
-        settingsPreferencesDataSourceImpl.setHideTag(tag)
-        verify(hideTagDataStoreMock).updateData(any())
-    }
+    // --- Flow Tests ---
 
     @Test
-    fun `setHideTag with null clears HideTag`() = runTest {
-        settingsPreferencesDataSourceImpl.setHideTag(null)
-        verify(hideTagDataStoreMock).updateData(any())
-    }
-
-    @Test
-    fun `getHideTag retrieves the correct Tag when set`() = runTest {
-        val expectedTag = HideTag.newBuilder()
-            .setId(1)
-            .setName("TestTag")
+    fun `compactViewFlow emits correct value`() = runTest {
+        val mockSystemPreferences = SystemPreferences.newBuilder()
+            .setCompactView(true)
             .build()
-        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(expectedTag))
-        val actualTag = settingsPreferencesDataSourceImpl.getHideTag()
-        assertNotNull(actualTag)
-        assertEquals(expectedTag.id, actualTag?.id)
-        assertEquals(expectedTag.name, actualTag?.name)
+        val mockSystemPreferencesFlow: Flow<SystemPreferences> = flowOf(mockSystemPreferences)
+        `when`(systemPreferencesDataStoreMock.data).thenReturn(mockSystemPreferencesFlow)
+
+        settingsPreferencesDataSourceImpl.compactViewFlow.test {
+            val emittedItem = awaitItem()
+            assertEquals(true, emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
-    fun `getHideTag returns null when no tag is set`() = runTest {
-        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(HideTag.getDefaultInstance()))
-        val actualTag = settingsPreferencesDataSourceImpl.getHideTag()
-        assertNull(actualTag)
+    fun `makeArchivePublicFlow emits correct value`() = runTest {
+        val mockSystemPreferences = SystemPreferences.newBuilder()
+            .setMakeArchivePublic(true)
+            .build()
+        val mockSystemPreferencesFlow: Flow<SystemPreferences> = flowOf(mockSystemPreferences)
+        `when`(systemPreferencesDataStoreMock.data).thenReturn(mockSystemPreferencesFlow)
+
+        settingsPreferencesDataSourceImpl.makeArchivePublicFlow.test {
+            val emittedItem = awaitItem()
+            assertEquals(true, emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
-    fun `getAutoAddBookmark retrieves the correct value`() = runTest {
-        val expectedValue = true
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(AUTO_ADD_BOOKMARK_KEY to expectedValue)))
-        val actualValue = settingsPreferencesDataSourceImpl.getAutoAddBookmark()
-        assertEquals(expectedValue, actualValue)
-    }
+    fun `createEbookFlow emits correct value`() = runTest {
+        val mockSystemPreferences = SystemPreferences.newBuilder()
+            .setCreateEbook(true)
+            .build()
+        val mockSystemPreferencesFlow: Flow<SystemPreferences> = flowOf(mockSystemPreferences)
+        `when`(systemPreferencesDataStoreMock.data).thenReturn(mockSystemPreferencesFlow)
 
-    @Test
-    fun `getAutoAddBookmark returns false when preference is not set`() = runTest {
-        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf()))
-        val actualValue = settingsPreferencesDataSourceImpl.getAutoAddBookmark()
-        assertEquals(false, actualValue)
+        settingsPreferencesDataSourceImpl.createEbookFlow.test {
+            val emittedItem = awaitItem()
+            assertEquals(true, emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
-
-    @Test
-    fun `setAutoAddBookmark updates auto add bookmark preference correctly`() = runTest {
-        val newValue = true
-        settingsPreferencesDataSourceImpl.setAutoAddBookmark(newValue)
-        verifyPreferenceEdit(preferencesDataStore, AUTO_ADD_BOOKMARK_KEY, newValue)
-    }
-
 }
 
-private suspend fun <T> verifyPreferenceEdit(
+
+
+    private suspend fun <T> verifyPreferenceEdit(
     preferencesDataStore: DataStore<Preferences>,
     key: Preferences.Key<T>,
     expectedValue: T

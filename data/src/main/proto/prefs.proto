@@ -23,9 +23,16 @@ message RememberUserPreferences {
   string username = 2;
   string password = 3;
   string url = 4;
-  bool makeArchivePublic = 5;
-  bool createEbook = 6;
-  bool createArchive = 7;
+
+}
+
+message SystemPreferences {
+
+  bool makeArchivePublic = 1;
+  bool createEbook = 2;
+  bool createArchive = 3;
+  bool autoAddBookmark = 4;
+  bool compactView = 5;
 
 }
 

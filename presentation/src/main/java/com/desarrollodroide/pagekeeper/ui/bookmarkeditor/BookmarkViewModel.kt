@@ -55,6 +55,12 @@ class BookmarkViewModel(
     val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val autoAddBookmark: StateFlow<Boolean> = settingsPreferenceDataSource.autoAddBookmarkFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val createArchive: StateFlow<Boolean> = settingsPreferenceDataSource.createArchiveFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setMakeArchivePublic(value: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setMakeArchivePublic(value)
@@ -64,6 +70,18 @@ class BookmarkViewModel(
     fun setCreateEbook(value: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCreateEbook(value)
+        }
+    }
+
+    fun setAutoAddBookmark(value: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setAutoAddBookmark(value)
+        }
+    }
+
+    fun setCreateArchive(value: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateArchive(value)
         }
     }
 
@@ -81,7 +99,7 @@ class BookmarkViewModel(
         saveBookmark(
             url = url,
             tags = emptyList(),
-            createArchive = getCreateArchive(),
+            createArchive = createArchive.value,
             makeArchivePublic = makeArchivePublic.value,
             createEbook = createEbook.value
         )
@@ -170,25 +188,13 @@ class BookmarkViewModel(
         }
     }
 
-    fun getCreateArchive(): Boolean {
-        return runBlocking {
-            settingsPreferenceDataSource.getCreateArchive()
-        }
-    }
-
     fun userHasSession() = runBlocking {
         userPreferences.getUser().first().hasSession()
     }
 
-    fun getAutoAddBookmark(): Boolean {
-        return runBlocking {
-            settingsPreferenceDataSource.getAutoAddBookmark()
-        }
-    }
-
     private fun emitToastIfAutoAdd(message: String) {
         viewModelScope.launch {
-            if (getAutoAddBookmark()) {
+            if (autoAddBookmark.value) {
                 _toastMessage.value = message
             }
         }

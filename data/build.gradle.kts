@@ -86,6 +86,7 @@ dependencies {
     testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
     testImplementation(libs.androidx.paging.common) // Common Paging library for testing.
+    testImplementation("app.cash.turbine:turbine:1.1.0") // Turbine for testing flows.
 
 
     // Android Testing libraries

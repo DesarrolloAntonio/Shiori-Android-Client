@@ -62,6 +62,8 @@ fun SettingsScreen(
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
     val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
     val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
+    val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
+    val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -101,12 +103,18 @@ fun SettingsScreen(
                 onCreateEbookChanged = { isEbook ->
                     settingsViewModel.setCreateEbook(isEbook)
                 },
-                createArchive = settingsViewModel.createArchive,
+                createArchive = createArchive,
+                onCreateArchive = { isArchive ->
+                    settingsViewModel.setCreateArchive(isArchive)
+                },
                 compactView = compactView,
                 onCompactViewChanged = { isCompact ->
                     settingsViewModel.setCompactView(isCompact)
                 },
-                autoAddBookmark = settingsViewModel.autoAddBookmark,
+                autoAddBookmark = autoAddBookmark,
+                onAutoAddBookmarkChanged = { isAuto ->
+                    settingsViewModel.setAutoAddBookmark(isAuto)
+                },
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSourceCode = onNavigateToSourceCode,
@@ -126,10 +134,12 @@ fun SettingsContent(
     settingsUiState: UiState<String>,
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
-    createEbook:Boolean,
+    createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
-    createArchive: MutableStateFlow<Boolean>,
-    autoAddBookmark: MutableStateFlow<Boolean>,
+    createArchive: Boolean,
+    onCreateArchive: (Boolean) -> Unit,
+    autoAddBookmark: Boolean,
+    onAutoAddBookmarkChanged: (Boolean) -> Unit,
     compactView: Boolean,
     onCompactViewChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
@@ -196,7 +206,9 @@ fun SettingsContent(
                 createEbook = createEbook,
                 onCreateEbookChanged = onCreateEbookChanged,
                 createArchive = createArchive,
-                autoAddBookmark = autoAddBookmark
+                onCreateArchive = onCreateArchive,
+                autoAddBookmark = autoAddBookmark,
+                onAutoAddBookmarkChanged = onAutoAddBookmarkChanged
             )
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
@@ -263,9 +275,11 @@ fun SettingsScreenPreview() {
     SettingsContent(
         settingsUiState = UiState(isLoading = false),
         makeArchivePublic = false,
+        onMakeArchivePublicChanged = {},
         createEbook = false,
-        createArchive = remember { MutableStateFlow(false) },
-        autoAddBookmark = remember { MutableStateFlow(false) },
+        onCreateEbookChanged = {},
+        createArchive = false,
+        autoAddBookmark = false,
         compactView = false,
         onCompactViewChanged = {},
         onLogout = {},
@@ -281,7 +295,7 @@ fun SettingsScreenPreview() {
         hideTag = null,
         cacheSize = MutableStateFlow("Calculating..."),
         onClearCache = {},
-        onMakeArchivePublicChanged = {},
-        onCreateEbookChanged = {}
+        onAutoAddBookmarkChanged = { },
+        onCreateArchive = {}
     )
 }

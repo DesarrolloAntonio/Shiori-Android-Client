@@ -18,13 +18,10 @@ import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -50,10 +47,8 @@ class SettingsViewModel(
     private val _cacheSize = MutableStateFlow("Calculating...")
     val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
 
-    val createArchive = MutableStateFlow<Boolean>(false)
-    val autoAddBookmark = MutableStateFlow<Boolean>(false)
-    val useDynamicColors = MutableStateFlow<Boolean>(false)
-    val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
+    val useDynamicColors = MutableStateFlow(false)
+    val themeMode = MutableStateFlow(ThemeMode.AUTO)
     private var token = ""
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
@@ -64,6 +59,19 @@ class SettingsViewModel(
 
     val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val autoAddBookmark: StateFlow<Boolean> = settingsPreferenceDataSource.autoAddBookmarkFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val createArchive: StateFlow<Boolean> = settingsPreferenceDataSource.createArchiveFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+
+    fun setAutoAddBookmark(value: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setAutoAddBookmark(value)
+        }
+    }
 
     fun setCompactView(isCompact: Boolean) {
         viewModelScope.launch {
@@ -80,6 +88,12 @@ class SettingsViewModel(
     fun setCreateEbook(ebook: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCreateEbook(ebook)
+        }
+    }
+
+    fun setCreateArchive(archive: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateArchive(archive)
         }
     }
 
@@ -118,8 +132,6 @@ class SettingsViewModel(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            createArchive.value = settingsPreferenceDataSource.getCreateArchive()
-            autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             token = settingsPreferenceDataSource.getToken()
@@ -134,7 +146,7 @@ class SettingsViewModel(
                 token = token,
             )
                 .distinctUntilChanged()
-                .collect() { result ->
+                .collect { result ->
                     when (result) {
                         is Result.Error -> {
                             Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
@@ -178,11 +190,6 @@ class SettingsViewModel(
 
     private fun observeDefaultsSettings() {
         viewModelScope.launch {
-            createArchive.collect { newValue ->
-                settingsPreferenceDataSource.setCreateArchive(newValue)
-            }
-        }
-        viewModelScope.launch {
             useDynamicColors.collect { newValue ->
                 settingsPreferenceDataSource.setUseDynamicColors(newValue)
                 themeManager.useDynamicColors.value = newValue
@@ -192,11 +199,6 @@ class SettingsViewModel(
             themeMode.collect { newValue ->
                 settingsPreferenceDataSource.setTheme(newValue)
                 themeManager.themeMode.value = newValue
-            }
-        }
-        viewModelScope.launch {
-            autoAddBookmark.collect { newValue ->
-                settingsPreferenceDataSource.setAutoAddBookmark(newValue)
             }
         }
     }

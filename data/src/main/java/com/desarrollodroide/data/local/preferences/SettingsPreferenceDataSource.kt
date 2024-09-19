@@ -13,6 +13,10 @@ interface SettingsPreferenceDataSource {
     val compactViewFlow: Flow<Boolean>
     val makeArchivePublicFlow: Flow<Boolean>
     val createEbookFlow: Flow<Boolean>
+    val autoAddBookmarkFlow: Flow<Boolean>
+    val createArchiveFlow: Flow<Boolean>
+//    val categoriesVisibleFlow: Flow<Boolean>
+//    val selectedCategoriesFlow: Flow<List<String>>
 
     fun getUser(): Flow<User>
     suspend fun saveUser(
@@ -35,15 +39,11 @@ interface SettingsPreferenceDataSource {
     suspend fun resetRememberUser()
     fun setTheme(mode: ThemeMode)
     fun getThemeMode(): ThemeMode
-//    suspend fun getMakeArchivePublic(): Boolean
     suspend fun setMakeArchivePublic(newValue: Boolean)
     suspend fun setCreateEbook(newValue: Boolean)
-    suspend fun getCreateArchive(): Boolean
     suspend fun setCreateArchive(newValue: Boolean)
     suspend fun getIsLegacyApi(): Boolean
-//    suspend fun getCompactView(): Boolean
     suspend fun setCompactView(isCompactView: Boolean)
-    suspend fun getAutoAddBookmark(): Boolean
     suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean)
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)

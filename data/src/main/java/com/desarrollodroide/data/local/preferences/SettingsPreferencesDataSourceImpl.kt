@@ -17,6 +17,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.desarrollodroide.data.HideTag
 import com.desarrollodroide.data.RememberUserPreferences
+import com.desarrollodroide.data.SystemPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.firstOrNull
@@ -26,13 +27,12 @@ class SettingsPreferencesDataSourceImpl(
     private val dataStore: DataStore<Preferences>,
     private val protoDataStore: DataStore<UserPreferences>,
     private val rememberUserProtoDataStore: DataStore<RememberUserPreferences>,
+    private val systemPreferences: DataStore<SystemPreferences>,
     private val hideTagDataStore: DataStore<HideTag>,
 
     ) : SettingsPreferenceDataSource {
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-    val COMPACT_VIEW = booleanPreferencesKey("compact_view")
-    val AUTO_ADD_BOOKMARK = booleanPreferencesKey("auto_add_bookmark")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
     val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
     val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
@@ -177,18 +177,16 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
-    override suspend fun setCompactView(isCompactView: Boolean) {
-        runBlocking {
-            dataStore.edit { preferences ->
-                preferences[COMPACT_VIEW] = isCompactView
-            }
-        }
+    override val compactViewFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.compactView }
     }
 
-    override val compactViewFlow: Flow<Boolean> = dataStore.data
-        .map { preferences ->
-            preferences[COMPACT_VIEW] ?: false
+    override suspend fun setCompactView(isCompactView: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setCompactView(isCompactView).build()
         }
+    }
 
     override suspend fun setCategoriesVisible(isCategoriesVisible: Boolean) {
         runBlocking {
@@ -201,31 +199,25 @@ class SettingsPreferencesDataSourceImpl(
         dataStore.data.firstOrNull()?.get(CATEGORIES_VISIBLE) ?: false
     }
 
-    override val makeArchivePublicFlow: Flow<Boolean> = rememberUserProtoDataStore.data
-        .map { it.makeArchivePublic }
+    override val makeArchivePublicFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.makeArchivePublic }
+    }
 
     override suspend fun setMakeArchivePublic(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
+        systemPreferences.updateData { preferences ->
             preferences.toBuilder().setMakeArchivePublic(newValue).build()
         }
     }
 
-    override val createEbookFlow: Flow<Boolean> = rememberUserProtoDataStore.data
-        .map { it.createEbook }
+    override val createEbookFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.createEbook }
+    }
 
     override suspend fun setCreateEbook(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
+        systemPreferences.updateData { preferences ->
             preferences.toBuilder().setCreateEbook(newValue).build()
-        }
-    }
-
-    override suspend fun getCreateArchive(): Boolean {
-        return rememberUserProtoDataStore.data.map { it.createArchive }.first()
-    }
-
-    override suspend fun setCreateArchive(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
-            preferences.toBuilder().setCreateArchive(newValue).build()
         }
     }
 
@@ -241,7 +233,7 @@ class SettingsPreferencesDataSourceImpl(
     }
 
 
-    override  fun getUseDynamicColors(): Boolean = runBlocking {
+    override fun getUseDynamicColors(): Boolean = runBlocking {
         dataStore.data.firstOrNull()?.get(USE_DYNAMIC_COLORS) ?: false
     }
 
@@ -272,13 +264,26 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
+    override val autoAddBookmarkFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.autoAddBookmark }
+    }
+
     override suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[AUTO_ADD_BOOKMARK] = isAutoAddBookmark
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setAutoAddBookmark(isAutoAddBookmark).build()
         }
     }
-    override suspend fun getAutoAddBookmark(): Boolean = runBlocking {
-        dataStore.data.firstOrNull()?.get(AUTO_ADD_BOOKMARK) ?: false
+
+    override val createArchiveFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.createArchive }
+    }
+
+    override suspend fun setCreateArchive(newValue: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setCreateArchive(newValue).build()
+        }
     }
 
 }

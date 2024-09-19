@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun DefaultsSection(
@@ -23,8 +22,10 @@ fun DefaultsSection(
     onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
-    createArchive: MutableStateFlow<Boolean>,
-    autoAddBookmark: MutableStateFlow<Boolean>,
+    createArchive: Boolean,
+    onCreateArchive: (Boolean) -> Unit,
+    autoAddBookmark: Boolean,
+    onAutoAddBookmarkChanged: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -41,22 +42,22 @@ fun DefaultsSection(
             onCheckedChange = onMakeArchivePublicChanged
         )
         SwitchOption(
+            title = "Create archive",
+            icon = Icons.Filled.Archive,
+            checked = createArchive,
+            onCheckedChange = onCreateArchive
+        )
+        SwitchOption(
             title = "Create Ebook",
             icon = Icons.Filled.Book,
             checked = createEbook,
             onCheckedChange = onCreateEbookChanged
         )
-        val items = listOf(
-            //Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
-            Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
-            //Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook),
-            Item("Add bookmark automatically", icon = Icons.Filled.BookmarkAdd, switchState = autoAddBookmark)
+        SwitchOption(
+            title = "Add bookmark automatically",
+            icon = Icons.Filled.BookmarkAdd,
+            checked = autoAddBookmark,
+            onCheckedChange = onAutoAddBookmarkChanged
         )
-        items.forEach { item ->
-            SwitchOption(
-                item = item,
-                switchState = item.switchState
-            )
-        }
     }
 }

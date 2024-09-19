@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.data.local.datastore.HideTagSerializer
 import com.desarrollodroide.data.local.datastore.RememberUserPreferencesSerializer
+import com.desarrollodroide.data.local.datastore.SystemPreferencesSerializer
 import com.desarrollodroide.data.local.datastore.UserPreferencesSerializer
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.preferences.SettingsPreferencesDataSourceImpl
@@ -35,6 +36,7 @@ fun dataModule() = module {
     val protoDataStoreQualifier = named("protoDataStore")
     val protoRememberUserDataStoreQualifier = named("protoRememberUserDataStore")
     val protoHideTagDataStoreQualifier = named("protoHideTagDataStore")
+    val protoSystemDataStoreQualifier = named("protoSystemDataStore")
 
     single(preferencesDataStoreQualifier) {
         PreferenceDataStoreFactory.create(
@@ -69,12 +71,23 @@ fun dataModule() = module {
         )
     }
 
+    single(protoSystemDataStoreQualifier) {
+        DataStoreFactory.create(
+            serializer = SystemPreferencesSerializer,
+            produceFile = { androidContext().preferencesDataStoreFile("system_data")},
+            corruptionHandler = null,
+        )
+    }
+
     single { SettingsPreferencesDataSourceImpl(
         dataStore = get(preferencesDataStoreQualifier),
         protoDataStore = get(protoDataStoreQualifier),
+        systemPreferences = get(protoSystemDataStoreQualifier),
         rememberUserProtoDataStore = get(protoRememberUserDataStoreQualifier),
         hideTagDataStore = get(protoHideTagDataStoreQualifier)
     ) as SettingsPreferenceDataSource }
+
+
 
     single { AuthRepositoryImpl(
         apiService = get(),

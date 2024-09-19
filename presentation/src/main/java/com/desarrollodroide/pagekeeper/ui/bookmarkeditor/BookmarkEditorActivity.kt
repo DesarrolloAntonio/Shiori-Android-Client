@@ -49,7 +49,7 @@ class BookmarkEditorActivity : ComponentActivity() {
         lifecycleScope.launch {
             if (sharedUrl.isNotEmpty()) {
                 if (bookmarkViewModel.userHasSession()) {
-                    if (bookmarkViewModel.getAutoAddBookmark()) {
+                    if (bookmarkViewModel.autoAddBookmark.value) {
                         // Auto-add bookmark without showing the editor screen
                         bookmarkViewModel.autoAddBookmark(sharedUrl)
                     } else {
@@ -63,6 +63,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                                 ) {
                                     val makeArchivePublic by bookmarkViewModel.makeArchivePublic.collectAsState()
                                     val createEbook by bookmarkViewModel.createEbook.collectAsState()
+                                    val createArchive by bookmarkViewModel.createArchive.collectAsState()
                                     BookmarkEditorScreen(
                                         title = "Add",
                                         bookmarkEditorType = BookmarkEditorType.ADD,
@@ -70,7 +71,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                                             url = sharedUrl,
                                             tags = emptyList(),
                                             public = if (makeArchivePublic) 1 else 0,
-                                            createArchive = bookmarkViewModel.getCreateArchive(),
+                                            createArchive = createArchive,
                                             createEbook = createEbook
                                         ),
                                         onBack = { finish() },
