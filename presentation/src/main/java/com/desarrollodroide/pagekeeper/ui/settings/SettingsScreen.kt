@@ -260,14 +260,6 @@ data class Item(
     val switchState: MutableStateFlow<Boolean> = MutableStateFlow(false)
 )
 
-data class Item2(
-    val title: String,
-    val icon: ImageVector,
-    val subtitle: String = "",
-    val isChecked: Boolean = false,
-    val onCheckedChange: ((Boolean) -> Unit)? = null,
-    val onClick: (() -> Unit)? = null
-)
 
 @Preview(showBackground = true)
 @Composable

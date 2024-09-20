@@ -293,29 +293,34 @@ fun FeedScreen(
             },
             sheetState = sheetStateCategories,
         ) {
-            val categories = tagsState.data?.let { mutableStateOf(it) } ?: remember { mutableStateOf(emptyList<Tag>()) }
             CategoriesView(
-                uniqueCategories = categories,
-                onApply = { selectedTagsList ->
+                onDismiss = {
                     scope.launch {
-                        //sheetStateCategories.hide()
-                        //isCategoriesVisible.value = false
-                        val tags: List<Tag> = if (feedViewModel.showOnlyHiddenTag.value) {
-                            listOfNotNull(tagToHide)
-                        } else {
-                            selectedTagsList
-                        }
-                        feedViewModel.selectedTags.value = selectedTagsList
-                        feedViewModel.getLocalPagingBookmarks(tags)
+                        sheetStateCategories.hide()
+                        isCategoriesVisible.value = false
                     }
                 },
-                onDismiss = {},
+                uniqueCategories = tagsState.data ?: emptyList(),
                 tagToHide = tagToHide,
                 onFilterHiddenTag = { value ->
                     feedViewModel.showOnlyHiddenTag.value = value
+                    scope.launch {
+                        val tags = if (value) listOfNotNull(tagToHide) else feedViewModel.selectedTags.value
+                        feedViewModel.getLocalPagingBookmarks(tags)
+                    }
                 },
-                selectedOptionIndex = feedViewModel.selectedOptionIndex,
-                selectedTags = feedViewModel.selectedTags
+                selectedOptionIndex = feedViewModel.selectedOptionIndex.value,
+                onSelectedOptionIndexChanged = { newIndex ->
+                    feedViewModel.selectedOptionIndex.value = newIndex
+                },
+                selectedTags = feedViewModel.selectedTags.value,
+                onUpdateSelectedTags = { updatedTags ->
+                    feedViewModel.selectedTags.value = updatedTags
+                    scope.launch {
+                        val tags = if (feedViewModel.showOnlyHiddenTag.value) listOfNotNull(tagToHide) else updatedTags
+                        feedViewModel.getLocalPagingBookmarks(tags)
+                    }
+                }
             )
         }
     }

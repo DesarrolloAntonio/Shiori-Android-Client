@@ -5,61 +5,37 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesView(
-    onApply: (List<Tag>) -> Unit,
     onDismiss: () -> Unit,
-    uniqueCategories: MutableState<List<Tag>>,
+    uniqueCategories: List<Tag>,
     tagToHide: Tag?,
     onFilterHiddenTag: (Boolean) -> Unit,
-    selectedOptionIndex: MutableState<Int>,
-    selectedTags: MutableState<List<Tag>>
+    selectedOptionIndex: Int,
+    onSelectedOptionIndexChanged: (Int) -> Unit,
+    selectedTags: List<Tag>,
+    onUpdateSelectedTags: (List<Tag>) -> Unit
 ) {
-    // Filter out the tagToHide from uniqueCategories
-    val filteredCategories = remember(uniqueCategories.value, tagToHide) {
-        mutableStateOf(uniqueCategories.value.filter { it.name != tagToHide?.name })
+    val filteredCategories = remember(uniqueCategories, tagToHide) {
+        uniqueCategories.filter { it.name != tagToHide?.name }
     }
 
     Column(
@@ -108,22 +84,20 @@ fun CategoriesView(
                 Spacer(Modifier.height(8.dp))
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
-                        selected = selectedOptionIndex.value == 0,
+                        selected = selectedOptionIndex == 0,
                         onClick = {
-                            selectedOptionIndex.value = 0
+                            onSelectedOptionIndexChanged(0)
                             onFilterHiddenTag(false)
-                            onApply(selectedTags.value)
                         },
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                     ) {
                         Text("All", style = MaterialTheme.typography.titleMedium)
                     }
                     SegmentedButton(
-                        selected = selectedOptionIndex.value == 1,
+                        selected = selectedOptionIndex == 1,
                         onClick = {
-                            selectedOptionIndex.value = 1
+                            onSelectedOptionIndexChanged(1)
                             onFilterHiddenTag(true)
-                            onApply(selectedTags.value)
                         },
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                     ) {
@@ -133,7 +107,7 @@ fun CategoriesView(
                 Spacer(Modifier.height(8.dp))
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = if (selectedOptionIndex.value == 0)
+                    text = if (selectedOptionIndex == 0)
                         "Filter by all bookmarks\n"
                     else
                         "Showing only bookmarks with the '${tagToHide?.name}' tag",
@@ -144,7 +118,7 @@ fun CategoriesView(
         }
 
         AnimatedVisibility(
-            visible = selectedOptionIndex.value == 0,
+            visible = selectedOptionIndex == 0,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
@@ -155,7 +129,7 @@ fun CategoriesView(
                 Text("Categories", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
 
-                if (uniqueCategories.value.isEmpty()) {
+                if (filteredCategories.isEmpty()) {
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
@@ -180,8 +154,11 @@ fun CategoriesView(
                         showCategories = true,
                         uniqueCategories = filteredCategories,
                         selectedTags = selectedTags,
-                        onCategoriesSelectedChanged = { tags ->
-                            selectedTags.value = tags
+                        onCategorySelected = { tag ->
+                            onUpdateSelectedTags(selectedTags + tag)
+                        },
+                        onCategoryDeselected = { tag ->
+                            onUpdateSelectedTags(selectedTags - tag)
                         }
                     )
                 }
@@ -192,8 +169,9 @@ fun CategoriesView(
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Button(
+                enabled = selectedOptionIndex == 0,
                 onClick = {
-                    selectedTags.value = listOf()
+                    onUpdateSelectedTags(emptyList())
                     onFilterHiddenTag(false)
                 },
                 modifier = Modifier.weight(1f)
@@ -204,39 +182,41 @@ fun CategoriesView(
             Spacer(Modifier.width(8.dp))
 
             Button(
-                onClick = {
-                    onApply(selectedTags.value)
-                },
+                onClick = onDismiss,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Apply")
+                Text("Close")
             }
         }
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun SortAndFilterScreenPreview() {
-    val regionOptions = remember {
-        mutableStateOf(
-            listOf(
-                Tag("Northern Europe"), Tag("Western Europe"),
-                Tag("Southern Europe"), Tag("Southeast Europe"),
-                Tag("Central Europe"), Tag("Eastern Europe")
-            )
-        )
-    }
+    val regionOptions = listOf(
+        Tag("Northern Europe"),
+        Tag("Western Europe"),
+        Tag("Southern Europe"),
+        Tag("Southeast Europe"),
+        Tag("Central Europe"),
+        Tag("Eastern Europe")
+    )
+
+    val selectedOptionIndex = remember { mutableStateOf(0) }
+    val selectedTags = remember { mutableStateOf(listOf(Tag("Southern Europe"))) }
+
     MaterialTheme {
         CategoriesView(
-            onApply = {},
             onDismiss = {},
             uniqueCategories = regionOptions,
             tagToHide = Tag("Southeast Europe"),
             onFilterHiddenTag = {},
-            selectedOptionIndex = remember { mutableStateOf(0) },
-            selectedTags = remember { mutableStateOf(listOf<Tag>(Tag("Southern Europe"))) }
+            selectedOptionIndex = selectedOptionIndex.value,
+            onSelectedOptionIndexChanged = { selectedOptionIndex.value = it },
+            selectedTags = selectedTags.value,
+            onUpdateSelectedTags = { selectedTags.value = it }
         )
     }
 }

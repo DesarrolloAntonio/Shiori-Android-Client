@@ -168,11 +168,22 @@ fun BookmarkEditorView(
                 .padding(horizontal = 6.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+//            Categories(
+//                categoriesType = CategoriesType.REMOVEABLES,
+//                showCategories = true,
+//                uniqueCategories = assignedTags,
+//                onCategoriesSelectedChanged = {}
+//            )
+
             Categories(
                 categoriesType = CategoriesType.REMOVEABLES,
                 showCategories = true,
-                uniqueCategories = assignedTags,
-                onCategoriesSelectedChanged = {}
+                uniqueCategories = assignedTags.value,
+                selectedTags = assignedTags.value,
+                onCategorySelected = { /* No se usa en modo REMOVEABLES */ },
+                onCategoryDeselected = { deselectedTag ->
+                    assignedTags.value = assignedTags.value.filter { it != deselectedTag }
+                }
             )
         }
         Spacer(modifier = Modifier.heightIn(10.dp))

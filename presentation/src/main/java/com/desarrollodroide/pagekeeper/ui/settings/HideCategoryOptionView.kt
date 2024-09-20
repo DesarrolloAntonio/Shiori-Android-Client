@@ -17,8 +17,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,10 +32,11 @@ import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
 @Composable
 fun HideCategoryOptionView(
     onApply: (Tag?) -> Unit,
-    uniqueCategories: MutableState<List<Tag>>,
-    hideTag: Tag?,
+    uniqueCategories: List<Tag>,
+    hideTag: Tag?
 ) {
-    val selectedTags = remember { mutableStateOf(hideTag?.let { listOf(it) } ?: listOf()) }
+    var selectedTag by remember { mutableStateOf(hideTag) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +45,7 @@ fun HideCategoryOptionView(
     ) {
         Text("Select category to hide", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))
-        if (uniqueCategories.value.isEmpty()) {
+        if (uniqueCategories.isEmpty()) {
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
@@ -66,9 +69,12 @@ fun HideCategoryOptionView(
                 categoriesType = CategoriesType.SELECTABLES,
                 showCategories = true,
                 uniqueCategories = uniqueCategories,
-                selectedTags = selectedTags,
-                onCategoriesSelectedChanged = { tags ->
-                    selectedTags.value = tags
+                selectedTags = listOfNotNull(selectedTag),
+                onCategorySelected = { tag ->
+                    selectedTag = tag
+                },
+                onCategoryDeselected = {
+                    selectedTag = null
                 },
                 singleSelection = true
             )
@@ -78,7 +84,7 @@ fun HideCategoryOptionView(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Button(
                 onClick = {
-                    selectedTags.value = listOf()
+                    selectedTag = null
                     onApply(null)
                 },
                 modifier = Modifier.weight(1f)
@@ -88,10 +94,10 @@ fun HideCategoryOptionView(
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = {
-                    onApply(selectedTags.value.firstOrNull())
+                    onApply(selectedTag)
                 },
                 modifier = Modifier.weight(1f),
-                enabled = uniqueCategories.value.isNotEmpty()
+                enabled = uniqueCategories.isNotEmpty()
             ) {
                 Text("Apply")
             }
@@ -103,15 +109,13 @@ fun HideCategoryOptionView(
 @Preview(showBackground = true)
 @Composable
 fun SortAndFilterScreenPreview() {
-    val regionOptions = remember {
-        mutableStateOf(
+    val regionOptions =
             listOf(
                 Tag("Northern Europe"), Tag("Western Europe"),
                 Tag("Southern Europe"), Tag("Southeast Europe"),
                 Tag("Central Europe"), Tag("Eastern Europe")
             )
-        )
-    }
+
     MaterialTheme {
         HideCategoryOptionView(
             onApply = {},
