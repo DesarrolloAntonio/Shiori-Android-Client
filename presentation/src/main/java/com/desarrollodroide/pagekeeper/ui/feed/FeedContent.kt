@@ -96,27 +96,29 @@ fun FeedContent(
                     else -> bookmark?.tags?.none { it.id == tagToHide.id } == true
                 }
                 if (bookmark != null && shouldShowBookmark) {
+
                     BookmarkItem(
-                        bookmark = bookmark,
+                        getBookmark = { bookmark },
                         serverURL = serverURL,
                         xSessionId = xSessionId,
                         token = token,
                         isLegacyApi = isLegacyApi,
                         viewType = viewType,
                         actions = BookmarkActions(
-                            onClickEdit = { actions.onEditBookmark(bookmark) },
-                            onClickDelete = { actions.onDeleteBookmark(bookmark) },
-                            onClickShare = { actions.onShareBookmark(bookmark) },
-                            onClickBookmark = { actions.onBookmarkSelect(bookmark) },
-                            onClickEpub = { actions.onBookmarkEpub(bookmark) },
-                            onClickSync = { actions.onClickSync(bookmark) },
-                            onClickCategory = { category -> }),
+                            onClickEdit = { getBookmark -> actions.onEditBookmark(getBookmark()) },
+                            onClickDelete = { getBookmark -> actions.onDeleteBookmark(getBookmark()) },
+                            onClickShare = { getBookmark -> actions.onShareBookmark(getBookmark()) },
+                            onClickBookmark = { getBookmark -> actions.onBookmarkSelect(getBookmark()) },
+                            onClickEpub = { getBookmark -> actions.onBookmarkEpub(getBookmark()) },
+                            onClickSync = { getBookmark -> actions.onClickSync(getBookmark()) },
+                            onClickCategory = { category -> }
+                        ),
                     )
-                    if (index < bookmarksPagingItems.itemCount) {
+                    if (index < bookmarksPagingItems.itemCount - 1) {
                         HorizontalDivider(
                             modifier = Modifier
                                 .height(1.dp)
-                                .padding(horizontal = 6.dp,),
+                                .padding(horizontal = 6.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                         )
                     }
