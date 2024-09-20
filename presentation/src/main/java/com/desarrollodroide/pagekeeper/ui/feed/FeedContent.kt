@@ -1,11 +1,18 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -17,10 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -61,9 +70,12 @@ fun FeedContent(
     }
 
     val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
+    val coroutineScope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxHeight()) {
+        val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(horizontal = 10.dp)
@@ -71,7 +83,12 @@ fun FeedContent(
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(bookmarksPagingItems.itemCount) { index ->
+            items(
+                count = bookmarksPagingItems.itemCount,
+                key = { index ->
+                    bookmarksPagingItems[index]?.id ?: index
+                }
+            ) { index ->
                 val bookmark = bookmarksPagingItems[index]
                 val shouldShowBookmark = when {
                     tagToHide == null -> true
@@ -145,6 +162,28 @@ fun FeedContent(
             refreshing = isRefreshing,
             state = refreshState,
         )
+        val showScrollToTopButton by remember {
+            derivedStateOf { listState.firstVisibleItemIndex > 0 }
+        }
+
+        AnimatedVisibility(
+            visible = showScrollToTopButton,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                }
+            ) {
+                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
+            }
+        }
     }
 }
 
