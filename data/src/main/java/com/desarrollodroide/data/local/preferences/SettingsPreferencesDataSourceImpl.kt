@@ -245,24 +245,24 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
-    override suspend fun setHideTag(tag: Tag?) {
-        hideTagDataStore.updateData { currentHideTag ->
-            when (tag) {
-                null -> HideTag.getDefaultInstance()
-                else -> currentHideTag.toBuilder()
-                    .setId(tag.id)
-                    .setName(tag.name)
-                    .build()
-            }
-        }
-    }
+//    override suspend fun setHideTag(tag: Tag?) {
+//        hideTagDataStore.updateData { currentHideTag ->
+//            when (tag) {
+//                null -> HideTag.getDefaultInstance()
+//                else -> currentHideTag.toBuilder()
+//                    .setId(tag.id)
+//                    .setName(tag.name)
+//                    .build()
+//            }
+//        }
+//    }
 
-    override suspend fun getHideTag(): Tag? {
-        return hideTagDataStore.data.first().let { hideTag ->
-            if (hideTag == HideTag.getDefaultInstance()) null
-            else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
-        }
-    }
+//    override suspend fun getHideTag(): Tag? {
+//        return hideTagDataStore.data.first().let { hideTag ->
+//            if (hideTag == HideTag.getDefaultInstance()) null
+//            else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
+//        }
+//    }
 
     override val autoAddBookmarkFlow: Flow<Boolean> by lazy {
         systemPreferences.data
@@ -283,6 +283,26 @@ class SettingsPreferencesDataSourceImpl(
     override suspend fun setCreateArchive(newValue: Boolean) {
         systemPreferences.updateData { preferences ->
             preferences.toBuilder().setCreateArchive(newValue).build()
+        }
+    }
+
+    override val hideTagFlow: Flow<Tag?> by lazy {
+        hideTagDataStore.data
+            .map { hideTag ->
+                if (hideTag == HideTag.getDefaultInstance()) null
+                else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
+            }
+    }
+
+    override suspend fun setHideTag(tag: Tag?) {
+        hideTagDataStore.updateData { currentHideTag ->
+            when (tag) {
+                null -> HideTag.getDefaultInstance()
+                else -> currentHideTag.toBuilder()
+                    .setId(tag.id)
+                    .setName(tag.name)
+                    .build()
+            }
         }
     }
 

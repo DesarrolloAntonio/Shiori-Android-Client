@@ -120,7 +120,7 @@ fun SettingsScreen(
                 onNavigateToSourceCode = onNavigateToSourceCode,
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
-                onSelectHideDialogOption = settingsViewModel::setHideTag,
+                onHideTagChanged = settingsViewModel::setHideTag,
                 hideTag = tagToHide,
                 cacheSize = settingsViewModel.cacheSize,
                 onClearCache = settingsViewModel::clearImageCache
@@ -151,7 +151,7 @@ fun SettingsContent(
     useDynamicColors: MutableStateFlow<Boolean>,
     tagsUiState: UiState<List<Tag>>,
     onClickHideDialogOption: () -> Unit,
-    onSelectHideDialogOption: (Tag?) -> Unit,
+    onHideTagChanged: (Tag?) -> Unit,
     hideTag: Tag?,
     cacheSize: StateFlow<String>,
     onClearCache: () -> Unit,
@@ -194,7 +194,7 @@ fun SettingsContent(
                 compactView = compactView,
                 onCompactViewChanged = onCompactViewChanged,
                 tagsUiState = tagsUiState,
-                onSelectHideDialogOption = onSelectHideDialogOption,
+                onHideTagChanged = onHideTagChanged,
                 onClickHideDialogOption = onClickHideDialogOption,
                 hideTag = hideTag
             )
@@ -291,7 +291,7 @@ fun SettingsScreenPreview() {
         useDynamicColors = remember { MutableStateFlow(false) },
         tagsUiState = UiState(isLoading = false),
         onClickHideDialogOption = {},
-        onSelectHideDialogOption = {},
+        onHideTagChanged = {},
         hideTag = null,
         cacheSize = MutableStateFlow("Calculating..."),
         onClearCache = {},

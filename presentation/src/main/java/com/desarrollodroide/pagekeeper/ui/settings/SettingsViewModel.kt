@@ -41,9 +41,6 @@ class SettingsViewModel(
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
 
-    private val _tagToHide = MutableStateFlow<Tag?>(null)
-    val tagToHide = _tagToHide.asStateFlow()
-
     private val _cacheSize = MutableStateFlow("Calculating...")
     val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
 
@@ -65,6 +62,9 @@ class SettingsViewModel(
 
     val createArchive: StateFlow<Boolean> = settingsPreferenceDataSource.createArchiveFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
 
     fun setAutoAddBookmark(value: Boolean) {
@@ -94,6 +94,12 @@ class SettingsViewModel(
     fun setCreateArchive(archive: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCreateArchive(archive)
+        }
+    }
+
+    fun setHideTag(tag: Tag?) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setHideTag(tag)
         }
     }
 
@@ -135,7 +141,6 @@ class SettingsViewModel(
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             token = settingsPreferenceDataSource.getToken()
-            _tagToHide.value = settingsPreferenceDataSource.getHideTag()
         }
     }
 
@@ -161,13 +166,6 @@ class SettingsViewModel(
                         }
                     }
                 }
-        }
-    }
-
-    fun setHideTag(tag: Tag?) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setHideTag(tag)
-            _tagToHide.value = tag
         }
     }
 

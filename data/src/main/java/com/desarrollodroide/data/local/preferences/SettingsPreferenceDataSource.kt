@@ -15,6 +15,7 @@ interface SettingsPreferenceDataSource {
     val createEbookFlow: Flow<Boolean>
     val autoAddBookmarkFlow: Flow<Boolean>
     val createArchiveFlow: Flow<Boolean>
+    val hideTagFlow: Flow<Tag?>
 //    val categoriesVisibleFlow: Flow<Boolean>
 //    val selectedCategoriesFlow: Flow<List<String>>
 
@@ -52,6 +53,6 @@ interface SettingsPreferenceDataSource {
 
     fun getUseDynamicColors(): Boolean
     fun setUseDynamicColors(newValue: Boolean)
-    suspend fun getHideTag(): Tag?
+    //suspend fun getHideTag(): Tag?
     suspend fun setHideTag(tag: Tag?)
 }

@@ -81,7 +81,6 @@ class FeedViewModel(
     val bookmarkSelected = mutableStateOf<Bookmark?>(null)
     val bookmarkToDelete = mutableStateOf<Bookmark?>(null)
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
-    val tagToHide = MutableStateFlow<Tag?>(null)
     val showOnlyHiddenTag = MutableStateFlow<Boolean>(false)
     val selectedOptionIndex = mutableStateOf(0)
     val selectedTags = mutableStateOf<List<Tag>>(emptyList())
@@ -89,6 +88,8 @@ class FeedViewModel(
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     suspend fun initializeIfNeeded() {
         if (!isInitialized) {
@@ -104,7 +105,6 @@ class FeedViewModel(
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
-            tagToHide.value = settingsPreferenceDataSource.getHideTag()
             if (bookmarkDatabase.isEmpty()) {
                 retrieveAllLocalBookmarks()
             }

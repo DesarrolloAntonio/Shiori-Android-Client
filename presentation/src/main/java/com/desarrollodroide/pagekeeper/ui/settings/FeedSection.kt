@@ -32,7 +32,7 @@ fun FeedSection(
     compactView: Boolean,
     onCompactViewChanged: (Boolean) -> Unit,
     onClickHideDialogOption: () -> Unit,
-    onSelectHideDialogOption: (Tag?) -> Unit,
+    onHideTagChanged: (Tag?) -> Unit,
     tagsUiState: UiState<List<Tag>>,
     hideTag: Tag?,
     ) {
@@ -94,7 +94,7 @@ fun FeedSection(
                         scope.launch {
                             sheetStateCategories.hide()
                             isCategoriesVisible.value = false
-                            onSelectHideDialogOption(selectedTag)
+                            onHideTagChanged(selectedTag)
                         }
                     },
                 )
