@@ -58,7 +58,8 @@ fun BookmarkEditorView(
     availableTags: State<List<Tag>>,
     saveBookmark: (BookmarkEditorType) -> Unit,
     onBackClick: () -> Unit,
-    createArchive: MutableState<Boolean>,
+    createArchive: Boolean,
+    onCreateArchiveChanged: (Boolean) -> Unit,
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: Boolean,
@@ -105,8 +106,8 @@ fun BookmarkEditorView(
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {
                 Checkbox(
-                    checked = createArchive.value,
-                    onCheckedChange = { createArchive.value = it }
+                    checked = createArchive,
+                    onCheckedChange = onCreateArchiveChanged
                 )
                 Text("Create archive")
             }
@@ -249,10 +250,11 @@ fun BookmarkEditorPreview() {
         newTag = newTag,
         onBackClick = {},
         makeArchivePublic = true,
-        createArchive = remember { mutableStateOf(false) },
+        createArchive = false,
         createEbook = false,
         onMakeArchivePublicChanged = {},
-        onCreateEbookChanged = {}
+        onCreateEbookChanged = {},
+        onCreateArchiveChanged = {}
     )
 
 }

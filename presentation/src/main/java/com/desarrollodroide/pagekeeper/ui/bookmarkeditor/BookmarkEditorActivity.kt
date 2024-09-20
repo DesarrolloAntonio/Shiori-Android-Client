@@ -61,9 +61,9 @@ class BookmarkEditorActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .background(MaterialTheme.colorScheme.inverseOnSurface)
                                 ) {
-                                    val makeArchivePublic by bookmarkViewModel.makeArchivePublic.collectAsState()
-                                    val createEbook by bookmarkViewModel.createEbook.collectAsState()
-                                    val createArchive by bookmarkViewModel.createArchive.collectAsState()
+                                    val makeArchivePublic = bookmarkViewModel.makeArchivePublic
+                                    val createEbook = bookmarkViewModel.createEbook
+                                    val createArchive = bookmarkViewModel.createArchive
                                     BookmarkEditorScreen(
                                         title = "Add",
                                         bookmarkEditorType = BookmarkEditorType.ADD,

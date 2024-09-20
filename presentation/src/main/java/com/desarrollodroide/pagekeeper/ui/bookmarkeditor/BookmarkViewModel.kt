@@ -46,44 +46,22 @@ class BookmarkViewModel(
     init {
         viewModelScope.launch {
             backendUrl = userPreferences.getUrl()
+            initializePreferences()
         }
     }
 
-    val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    private suspend fun initializePreferences() {
+        makeArchivePublic = settingsPreferenceDataSource.makeArchivePublicFlow.first()
+        createEbook = settingsPreferenceDataSource.createEbookFlow.first()
+        createArchive = settingsPreferenceDataSource.createArchiveFlow.first()
+    }
 
     val autoAddBookmark: StateFlow<Boolean> = settingsPreferenceDataSource.autoAddBookmarkFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val createArchive: StateFlow<Boolean> = settingsPreferenceDataSource.createArchiveFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    fun setMakeArchivePublic(value: Boolean) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setMakeArchivePublic(value)
-        }
-    }
-
-    fun setCreateEbook(value: Boolean) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setCreateEbook(value)
-        }
-    }
-
-    fun setAutoAddBookmark(value: Boolean) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setAutoAddBookmark(value)
-        }
-    }
-
-    fun setCreateArchive(value: Boolean) {
-        viewModelScope.launch {
-            settingsPreferenceDataSource.setCreateArchive(value)
-        }
-    }
+    var makeArchivePublic: Boolean = false
+    var createEbook: Boolean = false
+    var createArchive: Boolean = false
 
     val availableTags: StateFlow<List<Tag>> = bookmarkDatabase.getAll()
         .map { bookmarks ->
@@ -99,9 +77,9 @@ class BookmarkViewModel(
         saveBookmark(
             url = url,
             tags = emptyList(),
-            createArchive = createArchive.value,
-            makeArchivePublic = makeArchivePublic.value,
-            createEbook = createEbook.value
+            createArchive = createArchive,
+            makeArchivePublic = makeArchivePublic,
+            createEbook = createEbook
         )
     }
 

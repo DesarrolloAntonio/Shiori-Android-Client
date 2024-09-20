@@ -23,7 +23,7 @@ fun DefaultsSection(
     createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
     createArchive: Boolean,
-    onCreateArchive: (Boolean) -> Unit,
+    onCreateArchiveChanged: (Boolean) -> Unit,
     autoAddBookmark: Boolean,
     onAutoAddBookmarkChanged: (Boolean) -> Unit,
 ) {
@@ -45,7 +45,7 @@ fun DefaultsSection(
             title = "Create archive",
             icon = Icons.Filled.Archive,
             checked = createArchive,
-            onCheckedChange = onCreateArchive
+            onCheckedChange = onCreateArchiveChanged
         )
         SwitchOption(
             title = "Create Ebook",

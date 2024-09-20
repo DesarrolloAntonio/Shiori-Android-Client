@@ -104,7 +104,7 @@ fun SettingsScreen(
                     settingsViewModel.setCreateEbook(isEbook)
                 },
                 createArchive = createArchive,
-                onCreateArchive = { isArchive ->
+                onCreateArchiveChanged = { isArchive ->
                     settingsViewModel.setCreateArchive(isArchive)
                 },
                 compactView = compactView,
@@ -137,7 +137,7 @@ fun SettingsContent(
     createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
     createArchive: Boolean,
-    onCreateArchive: (Boolean) -> Unit,
+    onCreateArchiveChanged: (Boolean) -> Unit,
     autoAddBookmark: Boolean,
     onAutoAddBookmarkChanged: (Boolean) -> Unit,
     compactView: Boolean,
@@ -206,7 +206,7 @@ fun SettingsContent(
                 createEbook = createEbook,
                 onCreateEbookChanged = onCreateEbookChanged,
                 createArchive = createArchive,
-                onCreateArchive = onCreateArchive,
+                onCreateArchiveChanged = onCreateArchiveChanged,
                 autoAddBookmark = autoAddBookmark,
                 onAutoAddBookmarkChanged = onAutoAddBookmarkChanged
             )
@@ -296,6 +296,6 @@ fun SettingsScreenPreview() {
         cacheSize = MutableStateFlow("Calculating..."),
         onClearCache = {},
         onAutoAddBookmarkChanged = { },
-        onCreateArchive = {}
+        onCreateArchiveChanged = {}
     )
 }
