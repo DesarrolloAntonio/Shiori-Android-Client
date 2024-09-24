@@ -5,6 +5,10 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -181,7 +185,6 @@ fun HomeScreen(
                 isRtl = bookmarkIsRtl
             )
         }
-
     }
 }
 
@@ -234,7 +237,11 @@ fun TopBar(
                             tint = MaterialTheme.colorScheme.secondary,
                         )
                     }
-                    if (selectedTagsCount > 0) {
+                    this@TopAppBar.AnimatedVisibility(
+                        visible = selectedTagsCount > 0,
+                        enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
                         Badge(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)

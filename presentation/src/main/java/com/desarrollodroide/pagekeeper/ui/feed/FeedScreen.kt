@@ -73,9 +73,6 @@ fun FeedScreen(
             feedViewModel.getTags()
         }
     }
-    LaunchedEffect(feedViewModel.selectedTags) {
-        Log.v("FeedScreen1", "Selected tags: ${feedViewModel.selectedTags.value}")
-    }
 
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()

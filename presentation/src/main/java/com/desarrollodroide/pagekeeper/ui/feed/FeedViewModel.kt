@@ -91,14 +91,12 @@ class FeedViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val selectedTags: StateFlow<List<Tag>> = combine(
-        settingsPreferenceDataSource.selectedCategoriesFlow, // IDs seleccionados
+        settingsPreferenceDataSource.selectedCategoriesFlow,
         _tagsState
     ) { selectedIds, tagsState ->
         val allTags = tagsState.data ?: emptyList()
         allTags.filter { it.id.toString() in selectedIds }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-
 
     suspend fun initializeIfNeeded() {
         if (!isInitialized) {
@@ -109,11 +107,19 @@ class FeedViewModel(
 
     init {
         viewModelScope.launch {
-            selectedTags.flatMapLatest { selectedTagObjects ->
+            combine(
+                selectedTags,
+                showOnlyHiddenTag,
+                tagToHide
+            ) { selectedTags, showOnlyHidden, hiddenTag ->
+                Triple(selectedTags, showOnlyHidden, hiddenTag)
+            }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag) ->
                 getLocalPagingBookmarksUseCase.invoke(
                     serverUrl = serverUrl,
                     xSession = settingsPreferenceDataSource.getSession(),
-                    tags = selectedTagObjects,
+                    tags = if (showOnlyHidden) emptyList() else selectedTags,
+                    showOnlyHiddenTag = showOnlyHidden,
+                    tagToHide = hiddenTag
                 )
             }.cachedIn(viewModelScope)
                 .collect { pagingData ->

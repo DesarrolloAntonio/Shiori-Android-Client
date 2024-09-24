@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -90,13 +91,7 @@ fun FeedContent(
                 }
             ) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                val shouldShowBookmark = when {
-                    tagToHide == null -> true
-                    showOnlyHiddenTag -> bookmark?.tags?.any { it.id == tagToHide.id } == true
-                    else -> bookmark?.tags?.none { it.id == tagToHide.id } == true
-                }
-                if (bookmark != null && shouldShowBookmark) {
-
+                if (bookmark != null ) {
                     BookmarkItem(
                         getBookmark = { bookmark },
                         serverURL = serverURL,
