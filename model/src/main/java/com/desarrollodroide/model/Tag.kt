@@ -7,6 +7,9 @@ data class Tag (
     var selected: Boolean,
     val nBookmarks: Int
 ){
-    constructor(name: String) : this(-1, name, false, 0)
+    constructor(
+        id: Int,
+        name: String
+    ) : this(id, name, false, 0)
 
 }

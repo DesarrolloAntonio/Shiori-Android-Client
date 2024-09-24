@@ -54,7 +54,7 @@ data class Bookmark (
             hasEbook = false,
             createArchive = true,
             createEbook = true,
-            tags = listOf(Tag("tag1"), Tag("tag2")),
+            tags = listOf(Tag(id = 1 ,name = "tag1"), Tag(id = 2, name = "tag2")),
         )
     }
 }

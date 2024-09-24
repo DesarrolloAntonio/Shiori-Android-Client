@@ -19,4 +19,9 @@ class GetTagsUseCase(
             serverUrl = serverUrl
         ).flowOn(Dispatchers.IO)
     }
+
+    fun getLocalTags(): Flow<List<Tag>> {
+        return tagsRepository.getLocalTags()
+            .flowOn(Dispatchers.IO)
+    }
 }

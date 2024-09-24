@@ -111,9 +111,9 @@ fun HideCategoryOptionView(
 fun SortAndFilterScreenPreview() {
     val regionOptions =
             listOf(
-                Tag("Northern Europe"), Tag("Western Europe"),
-                Tag("Southern Europe"), Tag("Southeast Europe"),
-                Tag("Central Europe"), Tag("Eastern Europe")
+                Tag(id = 1, name = "Northern Europe"), Tag(id = 2, name = "Western Europe"),
+                Tag(id = 3, name = "Southern Europe"), Tag(id = 4, name = "Southeast Europe"),
+                Tag(id = 5, name = "Central Europe"), Tag(id = 6, name = "Eastern Europe")
             )
 
     MaterialTheme {

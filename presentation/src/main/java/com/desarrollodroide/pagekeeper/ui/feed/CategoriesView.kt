@@ -21,7 +21,6 @@ import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesView(
@@ -32,7 +31,9 @@ fun CategoriesView(
     selectedOptionIndex: Int,
     onSelectedOptionIndexChanged: (Int) -> Unit,
     selectedTags: List<Tag>,
-    onUpdateSelectedTags: (List<Tag>) -> Unit
+    onCategorySelected: (Tag) -> Unit,
+    onCategoryDeselected: (Tag) -> Unit,
+    onResetAll: () -> Unit
 ) {
     val filteredCategories = remember(uniqueCategories, tagToHide) {
         uniqueCategories.filter { it.name != tagToHide?.name }
@@ -155,10 +156,12 @@ fun CategoriesView(
                         uniqueCategories = filteredCategories,
                         selectedTags = selectedTags,
                         onCategorySelected = { tag ->
-                            onUpdateSelectedTags(selectedTags + tag)
+                            onCategorySelected(tag)
+                            onFilterHiddenTag(false)
                         },
                         onCategoryDeselected = { tag ->
-                            onUpdateSelectedTags(selectedTags - tag)
+                            onCategoryDeselected(tag)
+                            onFilterHiddenTag(false)
                         }
                     )
                 }
@@ -171,7 +174,8 @@ fun CategoriesView(
             Button(
                 enabled = selectedOptionIndex == 0,
                 onClick = {
-                    onUpdateSelectedTags(emptyList())
+                    //onUpdateSelectedTags(emptyList())
+                    onResetAll()
                     onFilterHiddenTag(false)
                 },
                 modifier = Modifier.weight(1f)
@@ -196,27 +200,29 @@ fun CategoriesView(
 @Composable
 fun SortAndFilterScreenPreview() {
     val regionOptions = listOf(
-        Tag("Northern Europe"),
-        Tag("Western Europe"),
-        Tag("Southern Europe"),
-        Tag("Southeast Europe"),
-        Tag("Central Europe"),
-        Tag("Eastern Europe")
+        Tag(id = 1, name = "Northern Europe"),
+        Tag(id = 2, name = "Western Europe"),
+        Tag(id = 3, name = "Southern Europe"),
+        Tag(id = 4, name = "Southeast Europe"),
+        Tag(id = 5, name = "Central Europe"),
+        Tag(id = 6, name = "Eastern Europe")
     )
 
     val selectedOptionIndex = remember { mutableStateOf(0) }
-    val selectedTags = remember { mutableStateOf(listOf(Tag("Southern Europe"))) }
+    val selectedTags = remember { mutableStateOf(listOf(Tag(id = 3, name = "Southern Europe"))) }
 
     MaterialTheme {
         CategoriesView(
             onDismiss = {},
             uniqueCategories = regionOptions,
-            tagToHide = Tag("Southeast Europe"),
+            tagToHide = Tag(id = 3, name = "Southeast Europe"),
             onFilterHiddenTag = {},
             selectedOptionIndex = selectedOptionIndex.value,
             onSelectedOptionIndexChanged = { selectedOptionIndex.value = it },
             selectedTags = selectedTags.value,
-            onUpdateSelectedTags = { selectedTags.value = it }
+            onCategorySelected = { },
+            onCategoryDeselected = { },
+            onResetAll = { }
         )
     }
 }

@@ -16,8 +16,7 @@ interface SettingsPreferenceDataSource {
     val autoAddBookmarkFlow: Flow<Boolean>
     val createArchiveFlow: Flow<Boolean>
     val hideTagFlow: Flow<Tag?>
-//    val categoriesVisibleFlow: Flow<Boolean>
-//    val selectedCategoriesFlow: Flow<List<String>>
+    val selectedCategoriesFlow: Flow<List<String>>
 
     fun getUser(): Flow<User>
     suspend fun saveUser(
@@ -49,10 +48,9 @@ interface SettingsPreferenceDataSource {
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
     suspend fun setSelectedCategories(categories: List<String>)
-    suspend fun getSelectedCategories(): List<String>
-
     fun getUseDynamicColors(): Boolean
     fun setUseDynamicColors(newValue: Boolean)
-    //suspend fun getHideTag(): Tag?
     suspend fun setHideTag(tag: Tag?)
+    suspend fun addSelectedCategory(tag: Tag)
+    suspend fun removeSelectedCategory(tag: Tag)
 }

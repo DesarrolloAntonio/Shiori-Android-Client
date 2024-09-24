@@ -147,7 +147,7 @@ fun BookmarkEditorView(
                     .padding(top = 4.dp),
                 onClick = {
                     if (newTag.value.isNotBlank() && !assignedTags.value.map { it.name }.contains(newTag.value)) {
-                        assignedTags.value = assignedTags.value + Tag(newTag.value)
+                        assignedTags.value = assignedTags.value + Tag(id = -1, name = newTag.value)
                         newTag.value = ""
                     }
                 }
@@ -279,6 +279,6 @@ private fun generateRandomTagName(length: Int): String {
 
 private fun generateRandomTags(count: Int): List<Tag> {
     return List(count) {
-        Tag(name = generateRandomTagName(10))
+        Tag(id = count,name = generateRandomTagName(10))
     }
 }

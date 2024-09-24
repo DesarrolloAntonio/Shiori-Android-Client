@@ -113,21 +113,21 @@ class SettingsPreferencesDataSourceImplTest {
         )
     }
 
-    @Test
-    fun `getSelectedCategories retrieves the correct values`() = runTest {
-        val expectedCategories = listOf("Sports", "Technology")
-        whenever(preferencesDataStore.data).thenReturn(
-            flowOf(
-                preferencesOf(
-                    SELECTED_CATEGORIES_KEY to expectedCategories.joinToString(
-                        ","
-                    )
-                )
-            )
-        )
-        val actualCategories = settingsPreferencesDataSourceImpl.getSelectedCategories()
-        assertEquals(expectedCategories, actualCategories)
-    }
+//    @Test
+//    fun `getSelectedCategories retrieves the correct values`() = runTest {
+//        val expectedCategories = listOf("Sports", "Technology")
+//        whenever(preferencesDataStore.data).thenReturn(
+//            flowOf(
+//                preferencesOf(
+//                    SELECTED_CATEGORIES_KEY to expectedCategories.joinToString(
+//                        ","
+//                    )
+//                )
+//            )
+//        )
+//        val actualCategories = settingsPreferencesDataSourceImpl.getSelectedCategories()
+//        assertEquals(expectedCategories, actualCategories)
+//    }
 
     // --- UserPreferences Tests ---
 

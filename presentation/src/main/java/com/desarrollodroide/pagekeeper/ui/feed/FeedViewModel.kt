@@ -31,7 +31,6 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
-import androidx.paging.map
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.SyncStatus
@@ -42,7 +41,8 @@ import com.desarrollodroide.pagekeeper.ui.components.success
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
@@ -83,7 +83,6 @@ class FeedViewModel(
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
     val showOnlyHiddenTag = MutableStateFlow<Boolean>(false)
     val selectedOptionIndex = mutableStateOf(0)
-    val selectedTags = mutableStateOf<List<Tag>>(emptyList())
     private var isInitialized = false
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
@@ -91,11 +90,35 @@ class FeedViewModel(
     val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val selectedTags: StateFlow<List<Tag>> = combine(
+        settingsPreferenceDataSource.selectedCategoriesFlow, // IDs seleccionados
+        _tagsState
+    ) { selectedIds, tagsState ->
+        val allTags = tagsState.data ?: emptyList()
+        allTags.filter { it.id.toString() in selectedIds }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+
+
     suspend fun initializeIfNeeded() {
         if (!isInitialized) {
             isInitialized = true
             loadInitialData()
-            getLocalPagingBookmarks()
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            selectedTags.flatMapLatest { selectedTagObjects ->
+                getLocalPagingBookmarksUseCase.invoke(
+                    serverUrl = serverUrl,
+                    xSession = settingsPreferenceDataSource.getSession(),
+                    tags = selectedTagObjects,
+                )
+            }.cachedIn(viewModelScope)
+                .collect { pagingData ->
+                    _bookmarksState.value = pagingData
+                }
         }
     }
 
@@ -108,22 +131,23 @@ class FeedViewModel(
             if (bookmarkDatabase.isEmpty()) {
                 retrieveAllLocalBookmarks()
             }
+            getLocalTags()
         }
     }
 
-    suspend fun getLocalPagingBookmarks(
-        tags: List<Tag> = emptyList(),
-    ) {
-        getLocalPagingBookmarksUseCase.invoke(
-            serverUrl = serverUrl,
-            xSession = settingsPreferenceDataSource.getSession(),
-            tags = tags,
-        )
-            .distinctUntilChanged()
-            .cachedIn(viewModelScope)
-            .collect { loadResult: PagingData<Bookmark> ->
-                bookmarksState.value = loadResult
-            }
+    fun getLocalTags() {
+        tagsJob?.cancel()
+        tagsJob = viewModelScope.launch {
+            getTagsUseCase.getLocalTags()
+                .distinctUntilChanged()
+                .collect { localTags ->
+                    if (localTags.isNotEmpty()) {
+                        _tagsState.success(localTags)
+                    } else {
+                        _tagsState.success(emptyList())
+                    }
+                }
+        }
     }
 
     private fun retrieveAllLocalBookmarks() {
@@ -152,6 +176,7 @@ class FeedViewModel(
                                 }
                                 handleSyncError(status.error)
                             }
+                            SyncStatus.Started -> { }
                         }
                     },
                     onFailure = { throwable ->
@@ -173,7 +198,8 @@ class FeedViewModel(
 
     fun refreshFeed() {
         viewModelScope.launch {
-            getLocalPagingBookmarks()
+            //TODO do sync
+            //getLocalPagingBookmarks()
         }
     }
 
@@ -261,7 +287,6 @@ class FeedViewModel(
         }
     }
 
-
     fun resetData() {
         _bookmarksUiState.idle(true)
         viewModelScope.launch {
@@ -339,7 +364,6 @@ class FeedViewModel(
                 _downloadUiState.value = UiState(data = downloadedFile)
                 showEpubOptionsDialog.value = true
             } catch (e: Exception) {
-                Log.e("DownloadFile", "Error al descargar el archivo: ${e.message}")
                 _downloadUiState.value = UiState(error = e.message)
             }
         }
@@ -355,6 +379,27 @@ class FeedViewModel(
 
     fun isLegacyApi(): Boolean = runBlocking {
         settingsPreferenceDataSource.getIsLegacyApi()
+    }
+
+    fun addSelectedTag(tag: Tag) {
+        viewModelScope.launch {
+            val currentTags = selectedTags.value
+            if (tag !in currentTags) {
+                settingsPreferenceDataSource.addSelectedCategory(tag)
+            }
+        }
+    }
+
+    fun removeSelectedTag(tag: Tag) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.removeSelectedCategory(tag)
+        }
+    }
+
+    fun resetTags() {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setSelectedCategories(emptyList())
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.components
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -40,7 +41,7 @@ fun Categories(
         Column {
             FlowRow {
                 uniqueCategories.forEach { category ->
-                    val selected = selectedTags.any { it.id == category.id }
+                    val selected = selectedTags.any { it.name == category.name }
                     FilterChip(
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
@@ -58,19 +59,37 @@ fun Categories(
                         modifier = Modifier.padding(horizontal = 4.dp),
                         shape = RoundedCornerShape(12.dp),
                         onClick = {
+                            Log.v("Categories", "Category clicked: ${category.name}")
                             when (categoriesType) {
                                 CategoriesType.SELECTABLES -> {
+                                    Log.d("CategoriesView", "Processing category: $category, selected: $selected, singleSelection: $singleSelection")
+                                    Log.d("CategoriesView", "Current selectedTags: $selectedTags")
+
                                     if (singleSelection) {
-                                        selectedTags.forEach { onCategoryDeselected(it) }
+                                        Log.d("CategoriesView", "Single selection mode")
+                                        selectedTags.forEach {
+                                            Log.d("CategoriesView", "Deselecting: $it")
+                                            onCategoryDeselected(it)
+                                        }
                                         if (!selected) {
+                                            Log.d("CategoriesView", "Selecting new category: $category")
                                             onCategorySelected(category)
                                         } else {
+                                            Log.d("CategoriesView", "Category already selected, no action taken")
                                             //onCategoryDeselected(category)
                                         }
                                     } else {
-                                        if (selected) onCategoryDeselected(category)
-                                        else onCategorySelected(category)
+                                        Log.d("CategoriesView", "Multi-selection mode")
+                                        if (selected) {
+                                            Log.d("CategoriesView", "Deselecting category: $category")
+                                            onCategoryDeselected(category)
+                                        } else {
+                                            Log.d("CategoriesView", "Selecting category: $category")
+                                            onCategorySelected(category)
+                                        }
                                     }
+
+                                    Log.d("CategoriesView", "After processing, selectedTags: $selectedTags")
                                 }
                                 CategoriesType.REMOVEABLES -> {
                                     onCategoryDeselected(category)

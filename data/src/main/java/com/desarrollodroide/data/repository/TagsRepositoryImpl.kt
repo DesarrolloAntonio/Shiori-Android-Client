@@ -45,5 +45,11 @@ class TagsRepositoryImpl(
 
     }.asFlow().flowOn(Dispatchers.IO)
 
+    override fun getLocalTags(): Flow<List<Tag>> {
+        return tagsDao.getAllTags().map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
 }
 

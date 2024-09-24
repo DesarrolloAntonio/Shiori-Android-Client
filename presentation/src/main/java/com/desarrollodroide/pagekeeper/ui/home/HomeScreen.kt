@@ -18,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +67,7 @@ fun HomeScreen(
     val isSearchBarVisible = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
+    val selectedTags by feedViewModel.selectedTags.collectAsState()
 
     BackHandler {
         onFinish()
@@ -87,7 +90,8 @@ fun HomeScreen(
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             scrollBehavior = scrollBehavior,
                             hasBookmarks = hasBookmarks,
-                            )
+                            selectedTagsCount = selectedTags.size
+                        )
                     }
                 }
             ) { paddingValues ->
@@ -189,6 +193,7 @@ fun TopBar(
     onSettingsClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
     hasBookmarks: Boolean,
+    selectedTagsCount: Int,
 ) {
     TopAppBar(
         scrollBehavior = scrollBehavior,
@@ -218,15 +223,28 @@ fun TopBar(
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
-                        tint =  MaterialTheme.colorScheme.secondary,
+                        tint = MaterialTheme.colorScheme.secondary,
                     )
                 }
-                IconButton(onClick = { toggleCategoryVisibility() }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Sell,
-                        contentDescription = "Filter",
-                        tint =  MaterialTheme.colorScheme.secondary,
-                       )
+                Box {
+                    IconButton(onClick = { toggleCategoryVisibility() }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Sell,
+                            contentDescription = "Filter",
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                    if (selectedTagsCount > 0) {
+                        Badge(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                        ) {
+                            Text(
+                                text = selectedTagsCount.toString(),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
                 }
             }
             IconButton(onClick = onSettingsClick ) {
@@ -237,7 +255,8 @@ fun TopBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.smallTopAppBarColors(
+
+            colors = TopAppBarDefaults.smallTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.background, // Sets the background color of the TopAppBar
             titleContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the title color if needed
             navigationIconContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the navigation icon color if needed

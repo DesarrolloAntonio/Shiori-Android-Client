@@ -33,6 +33,7 @@ message SystemPreferences {
   bool createArchive = 3;
   bool autoAddBookmark = 4;
   bool compactView = 5;
+  repeated string selectedCategories = 6;
 
 }
 

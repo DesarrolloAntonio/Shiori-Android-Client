@@ -34,7 +34,6 @@ class SettingsPreferencesDataSourceImpl(
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
-    val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
     val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
 
     // Use with stateIn
@@ -221,18 +220,6 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
-    override suspend fun setSelectedCategories(categories: List<String>) {
-        dataStore.edit { preferences ->
-            val categoriesString = categories.joinToString(",")
-            preferences[SELECTED_CATEGORIES_KEY] = categoriesString
-        }
-    }
-
-    override suspend fun getSelectedCategories(): List<String> = runBlocking {
-        dataStore.data.firstOrNull()?.get(SELECTED_CATEGORIES_KEY)?.split(",") ?: emptyList()
-    }
-
-
     override fun getUseDynamicColors(): Boolean = runBlocking {
         dataStore.data.firstOrNull()?.get(USE_DYNAMIC_COLORS) ?: false
     }
@@ -244,25 +231,6 @@ class SettingsPreferencesDataSourceImpl(
             }
         }
     }
-
-//    override suspend fun setHideTag(tag: Tag?) {
-//        hideTagDataStore.updateData { currentHideTag ->
-//            when (tag) {
-//                null -> HideTag.getDefaultInstance()
-//                else -> currentHideTag.toBuilder()
-//                    .setId(tag.id)
-//                    .setName(tag.name)
-//                    .build()
-//            }
-//        }
-//    }
-
-//    override suspend fun getHideTag(): Tag? {
-//        return hideTagDataStore.data.first().let { hideTag ->
-//            if (hideTag == HideTag.getDefaultInstance()) null
-//            else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
-//        }
-//    }
 
     override val autoAddBookmarkFlow: Flow<Boolean> by lazy {
         systemPreferences.data
@@ -303,6 +271,37 @@ class SettingsPreferencesDataSourceImpl(
                     .setName(tag.name)
                     .build()
             }
+        }
+    }
+
+    override val selectedCategoriesFlow: Flow<List<String>> = systemPreferences.data
+        .map { preferences ->
+            preferences.selectedCategoriesList.distinct()
+        }
+
+    override suspend fun setSelectedCategories(categories: List<String>) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .clearSelectedCategories()
+                .addAllSelectedCategories(categories.distinct())
+                .build()
+        }
+    }
+
+    override suspend fun addSelectedCategory(tag: Tag) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .addSelectedCategories(tag.id.toString())
+                .build()
+        }
+    }
+
+    override suspend fun removeSelectedCategory(tag: Tag) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .clearSelectedCategories()
+                .addAllSelectedCategories(preferences.selectedCategoriesList.filter { it != tag.id.toString() })
+                .build()
         }
     }
 
