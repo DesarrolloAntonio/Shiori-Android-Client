@@ -1,5 +1,6 @@
 package com.desarrollodroide.domain.usecase
 
+import android.util.Log
 import androidx.paging.PagingData
 import androidx.paging.filter
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -24,8 +25,13 @@ class GetLocalPagingBookmarksUseCase(
                 pagingData.filter { bookmark ->
                     when {
                         showOnlyHiddenTag -> tagToHide?.let { bookmark.tags.any { tag -> tag.id == it.id } } ?: false
-                        tagToHide != null -> bookmark.tags.none { it.id == tagToHide.id }
-                        else -> true
+                        else -> {
+                            if (tags.isEmpty()) {
+                                !bookmark.tags.any { it.id == tagToHide?.id }
+                            } else {
+                                bookmark.tags.any { tags.any { t -> t.id == it.id } }
+                            }
+                        }
                     }
                 }
             }

@@ -150,6 +150,8 @@ class SettingsPreferencesDataSourceImpl(
             session = SessionDTO(null, null, null).toProtoEntity(),
             serverUrl = "",
         )
+        setHideTag(null)
+        setSelectedCategories(emptyList())
     }
 
     override suspend fun resetRememberUser() {

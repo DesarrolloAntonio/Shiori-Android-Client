@@ -21,6 +21,7 @@ import com.desarrollodroide.data.RememberUserPreferences
 import com.desarrollodroide.data.SystemPreferences
 import kotlinx.coroutines.flow.first
 import app.cash.turbine.test
+import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.Flow
 import org.mockito.Mockito.`when`
 
@@ -36,7 +37,6 @@ class SettingsPreferencesDataSourceImplTest {
 
     private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
     private val CATEGORIES_VISIBLE_KEY = booleanPreferencesKey("categories_visible")
-    private val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
     private val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
 
     @BeforeEach
@@ -104,30 +104,50 @@ class SettingsPreferencesDataSourceImplTest {
 
     @Test
     fun `setSelectedCategories updates selected categories correctly`() = runTest {
-        val selectedCategories = listOf("Sports", "Technology")
+        val selectedCategories = listOf("1", "2", "3")
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
         settingsPreferencesDataSourceImpl.setSelectedCategories(selectedCategories)
-        verifyPreferenceEdit(
-            preferencesDataStore,
-            SELECTED_CATEGORIES_KEY,
-            selectedCategories.joinToString(",")
-        )
+
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(selectedCategories, updatedPreferences.selectedCategoriesList)
     }
 
-//    @Test
-//    fun `getSelectedCategories retrieves the correct values`() = runTest {
-//        val expectedCategories = listOf("Sports", "Technology")
-//        whenever(preferencesDataStore.data).thenReturn(
-//            flowOf(
-//                preferencesOf(
-//                    SELECTED_CATEGORIES_KEY to expectedCategories.joinToString(
-//                        ","
-//                    )
-//                )
-//            )
-//        )
-//        val actualCategories = settingsPreferencesDataSourceImpl.getSelectedCategories()
-//        assertEquals(expectedCategories, actualCategories)
-//    }
+    @Test
+    fun `addSelectedCategory adds category correctly`() = runTest {
+        val newTag = Tag(id = 4, name = "New Category", selected = false, nBookmarks = 0)
+        val existingCategories = listOf("1", "2", "3")
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        val initialPreferences = SystemPreferences.newBuilder()
+            .addAllSelectedCategories(existingCategories)
+            .build()
+
+        settingsPreferencesDataSourceImpl.addSelectedCategory(newTag)
+
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val updatedPreferences = captor.firstValue.invoke(initialPreferences)
+        assertEquals(existingCategories + "4", updatedPreferences.selectedCategoriesList)
+    }
+
+    @Test
+    fun `removeSelectedCategory removes category correctly`() = runTest {
+        val tagToRemove = Tag(id = 2, name = "Category to Remove", selected = false, nBookmarks = 0)
+        val existingCategories = listOf("1", "2", "3")
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        val initialPreferences = SystemPreferences.newBuilder()
+            .addAllSelectedCategories(existingCategories)
+            .build()
+
+        settingsPreferencesDataSourceImpl.removeSelectedCategory(tagToRemove)
+
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val updatedPreferences = captor.firstValue.invoke(initialPreferences)
+        assertEquals(listOf("1", "3"), updatedPreferences.selectedCategoriesList)
+    }
 
     // --- UserPreferences Tests ---
 
@@ -265,9 +285,7 @@ class SettingsPreferencesDataSourceImplTest {
     }
 }
 
-
-
-    private suspend fun <T> verifyPreferenceEdit(
+private suspend fun <T> verifyPreferenceEdit(
     preferencesDataStore: DataStore<Preferences>,
     key: Preferences.Key<T>,
     expectedValue: T

@@ -35,9 +35,9 @@ fun CategoriesView(
     onCategoryDeselected: (Tag) -> Unit,
     onResetAll: () -> Unit
 ) {
-    val filteredCategories = remember(uniqueCategories, tagToHide) {
-        uniqueCategories.filter { it.name != tagToHide?.name }
-    }
+//    val filteredCategories = remember(uniqueCategories, tagToHide) {
+//        uniqueCategories.filter { it.name != tagToHide?.name }
+//    }
 
     Column(
         modifier = Modifier
@@ -130,7 +130,7 @@ fun CategoriesView(
                 Text("Categories", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
 
-                if (filteredCategories.isEmpty()) {
+                if (uniqueCategories.isEmpty()) {
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
@@ -153,7 +153,7 @@ fun CategoriesView(
                     Categories(
                         categoriesType = CategoriesType.SELECTABLES,
                         showCategories = true,
-                        uniqueCategories = filteredCategories,
+                        uniqueCategories = uniqueCategories,
                         selectedTags = selectedTags,
                         onCategorySelected = { tag ->
                             onCategorySelected(tag)

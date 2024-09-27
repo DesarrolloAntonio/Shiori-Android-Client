@@ -57,6 +57,7 @@ android {
             applicationId = "com.desarrollodroide.pagekeeper.staging"
             signingConfig = signingConfigs.getByName("staging")
             versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Shiori-dev")
         }
     }
 

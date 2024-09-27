@@ -134,10 +134,10 @@ class FeedViewModel(
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
+            getLocalTags()
             if (bookmarkDatabase.isEmpty()) {
                 retrieveAllLocalBookmarks()
             }
-            getLocalTags()
         }
     }
 
@@ -294,6 +294,7 @@ class FeedViewModel(
     }
 
     fun resetData() {
+        isInitialized = false
         _bookmarksUiState.idle(true)
         viewModelScope.launch {
             settingsPreferenceDataSource.saveUser(

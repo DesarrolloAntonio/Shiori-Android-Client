@@ -21,9 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
@@ -72,6 +73,7 @@ fun HomeScreen(
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
     val selectedTags by feedViewModel.selectedTags.collectAsState()
+    val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
 
     BackHandler {
         onFinish()
@@ -94,7 +96,8 @@ fun HomeScreen(
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             scrollBehavior = scrollBehavior,
                             hasBookmarks = hasBookmarks,
-                            selectedTagsCount = selectedTags.size
+                            selectedTagsCount = selectedTags.size,
+                            showOnlyHiddenTag = showOnlyHiddenTag
                         )
                     }
                 }
@@ -197,6 +200,7 @@ fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     hasBookmarks: Boolean,
     selectedTagsCount: Int,
+    showOnlyHiddenTag: Boolean,
 ) {
     TopAppBar(
         scrollBehavior = scrollBehavior,
@@ -221,36 +225,35 @@ fun TopBar(
             )
         },
         actions = {
-            if (hasBookmarks) {
-                IconButton(onClick = { toggleSearchBarVisibility() }) {
+            IconButton(onClick = { toggleSearchBarVisibility() }) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            Box(
+                contentAlignment = Alignment.TopEnd
+            ) {
+                IconButton(onClick = { toggleCategoryVisibility() }) {
                     Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
+                        imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
+                        contentDescription = if (showOnlyHiddenTag) "Hidden Tags" else "Filter",
                         tint = MaterialTheme.colorScheme.secondary,
                     )
                 }
-                Box {
-                    IconButton(onClick = { toggleCategoryVisibility() }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Sell,
-                            contentDescription = "Filter",
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
-                    this@TopAppBar.AnimatedVisibility(
-                        visible = selectedTagsCount > 0,
-                        enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut()
+                this@TopAppBar.AnimatedVisibility(
+                    visible = selectedTagsCount > 0 && !showOnlyHiddenTag,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    Badge(
+                        modifier = Modifier.padding(2.dp)
                     ) {
-                        Badge(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                        ) {
-                            Text(
-                                text = selectedTagsCount.toString(),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                        Text(
+                            text = selectedTagsCount.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
@@ -270,5 +273,22 @@ fun TopBar(
             actionIconContentColor = MaterialTheme.colorScheme.primary // Optional: Set the action icons color if needed
         )
     )
-
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreview() {
+    MaterialTheme {
+        TopBar(
+            toggleCategoryVisibility = { },
+            toggleSearchBarVisibility = { },
+            onSettingsClick = { },
+            scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
+            hasBookmarks = true,
+            selectedTagsCount = 2,
+            showOnlyHiddenTag = false
+        )
+    }
+}
+

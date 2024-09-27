@@ -20,7 +20,7 @@ import java.util.concurrent.Executors
 
 @Database(
     entities = [BookmarkEntity::class, TagEntity::class, BookmarkHtmlEntity::class, BookmarkTagCrossRef::class],
-    version = 6
+    version = 7
 )
 @TypeConverters(TagsConverter::class)
 abstract class BookmarksDatabase : RoomDatabase() {
@@ -83,6 +83,12 @@ abstract class BookmarksDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE bookmarks ADD COLUMN created_at TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun create(context: Context): BookmarksDatabase {
             return Room.databaseBuilder(
                 context,
@@ -94,7 +100,8 @@ abstract class BookmarksDatabase : RoomDatabase() {
                     MIGRATION_2_3,
                     MIGRATION_3_4,
                     MIGRATION_4_5,
-                    MIGRATION_5_6
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
                 )
                 .setQueryCallback({ sqlQuery, bindArgs ->
                     Log.d("SQL Query", "SQL Query: $sqlQuery SQL Args: $bindArgs")
