@@ -70,7 +70,7 @@ fun FeedScreen(
     LaunchedEffect(isCategoriesVisible.value) {
         if (isCategoriesVisible.value) {
             // TODO remove when sync functionality is implemented
-            feedViewModel.getTags()
+            //feedViewModel.getTags()
         }
     }
 

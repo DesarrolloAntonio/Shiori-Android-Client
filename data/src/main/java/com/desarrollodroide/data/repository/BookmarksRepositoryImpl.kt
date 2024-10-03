@@ -17,12 +17,15 @@ import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
+import com.desarrollodroide.model.SyncBookmarksRequestPayload
+import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
+import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
@@ -350,6 +353,44 @@ class BookmarksRepositoryImpl(
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
+
+    /**
+     * Syncs the bookmarks between the remote server and the local database.
+     *
+     * This method performs the following steps:
+     * 1. Sends a sync request to the remote server.
+     * 2. If the server update is successful, updates the local database.
+     * 3. Emits the sync status if both operations are successful.
+     *
+     * The method uses a NetworkNoCacheResource to handle the network operation and error handling.
+     *
+     * @param xSession The session token for authentication with the remote API.
+     * @param serverUrl The base URL of the server API.
+     * @param syncBookmarksRequestPayload The payload containing the bookmarks to be synced.
+     * @return A Flow emitting a Result<SyncBookmarksResponse> representing the outcome of the sync operation.
+     *         It can emit Loading, Success with the sync result, or Error states.
+     */
+    override fun syncBookmarks(
+        xSession: String,
+        serverUrl: String,
+        syncBookmarksRequestPayload: SyncBookmarksRequestPayload
+    ): Flow<Result<SyncBookmarksResponse>> {
+        return object : NetworkNoCacheResource<SyncBookmarksResponseDTO, SyncBookmarksResponse>(errorHandler = errorHandler) {
+            override suspend fun fetchFromRemote(): Response<SyncBookmarksResponseDTO> {
+                return apiService.syncBookmarks(
+                    url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/sync",
+                    authorization = xSession,
+                    body = syncBookmarksRequestPayload.toJson()
+                )
+            }
+
+            override fun fetchResult(data: SyncBookmarksResponseDTO): Flow<SyncBookmarksResponse> {
+                return flow {
+                    emit(data.toDomainModel())
+                }
+            }
+        }.asFlow().flowOn(Dispatchers.IO)
+    }
 }
 
 sealed class SyncStatus {
