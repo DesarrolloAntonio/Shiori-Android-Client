@@ -74,7 +74,7 @@ interface BookmarksRepository {
   ): Flow<PagingData<Bookmark>>
 
   fun syncBookmarks(
-    xSession: String,
+    token: String,
     serverUrl: String,
     syncBookmarksRequestPayload: SyncBookmarksRequestPayload
   ): Flow<Result<SyncBookmarksResponse>>

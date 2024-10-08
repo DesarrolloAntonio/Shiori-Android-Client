@@ -53,4 +53,6 @@ interface SettingsPreferenceDataSource {
     suspend fun setHideTag(tag: Tag?)
     suspend fun addSelectedCategory(tag: Tag)
     suspend fun removeSelectedCategory(tag: Tag)
+    suspend fun getLastSyncTimestamp(): Long
+    suspend fun setLastSyncTimestamp(timestamp: Long)
 }

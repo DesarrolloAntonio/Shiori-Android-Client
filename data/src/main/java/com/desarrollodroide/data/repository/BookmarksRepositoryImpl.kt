@@ -364,14 +364,14 @@ class BookmarksRepositoryImpl(
      *
      * The method uses a NetworkNoCacheResource to handle the network operation and error handling.
      *
-     * @param xSession The session token for authentication with the remote API.
+     * @param token The session token for authentication with the remote API.
      * @param serverUrl The base URL of the server API.
      * @param syncBookmarksRequestPayload The payload containing the bookmarks to be synced.
      * @return A Flow emitting a Result<SyncBookmarksResponse> representing the outcome of the sync operation.
      *         It can emit Loading, Success with the sync result, or Error states.
      */
     override fun syncBookmarks(
-        xSession: String,
+        token: String,
         serverUrl: String,
         syncBookmarksRequestPayload: SyncBookmarksRequestPayload
     ): Flow<Result<SyncBookmarksResponse>> {
@@ -379,7 +379,7 @@ class BookmarksRepositoryImpl(
             override suspend fun fetchFromRemote(): Response<SyncBookmarksResponseDTO> {
                 return apiService.syncBookmarks(
                     url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/sync",
-                    authorization = xSession,
+                    authorization = "Bearer $token",
                     body = syncBookmarksRequestPayload.toJson()
                 )
             }

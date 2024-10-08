@@ -122,7 +122,9 @@ fun appModule() = module {
 
     single {
         SyncBookmarksUseCase(
-            bookmarksRepository = get()
+            bookmarksRepository = get(),
+            settingsPreferenceDataSource = get(),
+            bookmarkDatabase = get()
         )
     }
 

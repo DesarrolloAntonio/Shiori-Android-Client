@@ -152,6 +152,7 @@ class SettingsPreferencesDataSourceImpl(
         )
         setHideTag(null)
         setSelectedCategories(emptyList())
+        setLastSyncTimestamp(0)
     }
 
     override suspend fun resetRememberUser() {
@@ -303,6 +304,20 @@ class SettingsPreferencesDataSourceImpl(
             preferences.toBuilder()
                 .clearSelectedCategories()
                 .addAllSelectedCategories(preferences.selectedCategoriesList.filter { it != tag.id.toString() })
+                .build()
+        }
+    }
+
+    override suspend fun getLastSyncTimestamp(): Long {
+        return systemPreferences.data.map { preferences ->
+            preferences.lastSyncTimestamp
+        }.first()
+    }
+
+    override suspend fun setLastSyncTimestamp(timestamp: Long) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastSyncTimestamp(timestamp)
                 .build()
         }
     }

@@ -2,5 +2,5 @@ package com.desarrollodroide.network.model
 
 data class SyncBookmarksResponseDTO(
     val deleted: List<Int>?,
-    val modified: ModifiedBookmarksDTO?
+    val message: SyncBookmarksMessageDTO
 )

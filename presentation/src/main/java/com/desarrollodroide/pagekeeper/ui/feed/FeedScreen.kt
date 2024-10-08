@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -76,6 +77,17 @@ fun FeedScreen(
 
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { bookmarksPagingItems.itemSnapshotList.items }
+            .collect { updatedItems ->
+                // Acción cuando hay una actualización
+                Log.d("FeedScreen", "Los bookmarks se han modificado: ${updatedItems.size} items")
+            }
+    }
+
+
+
     val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
     val downloadUiState = feedViewModel.downloadUiState.collectAsState()
     val isCompactView by feedViewModel.compactView.collectAsState()

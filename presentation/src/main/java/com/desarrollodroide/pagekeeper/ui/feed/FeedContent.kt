@@ -87,7 +87,11 @@ fun FeedContent(
             items(
                 count = bookmarksPagingItems.itemCount,
                 key = { index ->
-                    bookmarksPagingItems[index]?.id ?: index
+                    // Including 'modified' in the key ensures that when a bookmark's 'modified' field changes,
+                    // Compose recognizes it as a new item and recomposes it. This updates the UI immediately
+                    // after data changes
+                    val bookmark = bookmarksPagingItems[index]
+                    "${bookmark?.id}_${bookmark?.modified}" ?: index
                 }
             ) { index ->
                 val bookmark = bookmarksPagingItems[index]

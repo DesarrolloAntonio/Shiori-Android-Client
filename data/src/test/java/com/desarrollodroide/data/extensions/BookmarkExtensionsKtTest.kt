@@ -18,6 +18,7 @@ class BookmarkExtensionTest {
             excerpt = "An example excerpt",
             author = "Author Name",
             public = 1,
+            createAt = "2023-01-01T12:00:00",
             modified = "2023-01-01T12:00:00",
             imageURL = "https://example.com/image.jpg",
             hasContent = true,

@@ -116,6 +116,24 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     createEbook = createEbook,
 )
 
+fun Bookmark.toEntityModel() = BookmarkEntity(
+    id = id,
+    url = url,
+    title = title,
+    excerpt = excerpt,
+    author = author,
+    isPublic = public,
+    createdAt = createAt,
+    modified = modified,
+    imageURL = imageURL,
+    hasContent = hasContent,
+    hasArchive = hasArchive,
+    hasEbook = hasEbook,
+    tags = tags,
+    createArchive = createArchive,
+    createEbook = createEbook,
+)
+
 fun UpdateCachePayload.toDTO() = UpdateCachePayloadDTO(
     createArchive = createArchive,
     createEbook = createEbook,
@@ -171,8 +189,8 @@ fun ReadableMessageDto.toDomainModel() = ReadableMessage(
 
 fun SyncBookmarksResponseDTO.toDomainModel(): SyncBookmarksResponse {
     return SyncBookmarksResponse(
-        deleted = deleted ?: emptyList(),
-        modified = modified?.toDomainModel() ?: ModifiedBookmarks(emptyList(), 0, 0)
+        deleted = message.deleted ?: emptyList(),
+        modified = message.modified?.toDomainModel() ?: ModifiedBookmarks(emptyList(), 0, 0)
     )
 }
 

@@ -163,4 +163,55 @@ interface BookmarksDao {
    */
   @Update
   suspend fun updateBookmark(bookmark: BookmarkEntity)
+
+  /**
+   * Retrieves a list of all bookmark IDs from the local database.
+   * This can be useful for performing operations on all bookmarks, such as
+   * deleting or updating them.
+   *
+   * @return A list of all bookmark IDs in the database.
+   */
+  @Query("SELECT id FROM bookmarks")
+  suspend fun getAllBookmarkIds(): List<Int>
+
+  /**
+   * Retrieves a bookmark by its ID.
+   * This can be useful to determine if a bookmark already exists in the database
+   * and if its version is outdated.
+   *
+   * @param bookmarkId The ID of the bookmark to retrieve.
+   * @return The BookmarkEntity if found, or null otherwise.
+   */
+  @Query("SELECT * FROM bookmarks WHERE id = :bookmarkId")
+  suspend fun getBookmarkById(bookmarkId: Int): BookmarkEntity?
+
+  /**
+   * Updates an existing bookmark in the local database, including its associated tags.
+   *
+   * This method performs the following steps in a single transaction:
+   * 1. Updates the bookmark entity
+   * 2. Deletes all existing tag associations for the bookmark
+   * 3. Inserts new tag associations for the bookmark
+   *
+   * @param bookmark The BookmarkEntity to be updated in the database.
+   *                 It must have a valid ID that matches an existing entry.
+   */
+  @Transaction
+  suspend fun updateBookmarkWithTags(bookmark: BookmarkEntity) {
+    updateBookmark(bookmark)
+    deleteBookmarkTagCrossRefs(bookmark.id)
+    val newCrossRefs = bookmark.tags.map { tag ->
+      BookmarkTagCrossRef(bookmarkId = bookmark.id, tagId = tag.id)
+    }
+    insertBookmarkTagCrossRefs(newCrossRefs)
+  }
+
+  /**
+   * Deletes all bookmark-tag cross references associated with a bookmark.
+   *
+   * @param bookmarkId The ID of the bookmark to delete associated tags for.
+   */
+  @Query("DELETE FROM bookmark_tag_cross_ref WHERE bookmarkId = :bookmarkId")
+  suspend fun deleteBookmarkTagCrossRefs(bookmarkId: Int)
+
 }

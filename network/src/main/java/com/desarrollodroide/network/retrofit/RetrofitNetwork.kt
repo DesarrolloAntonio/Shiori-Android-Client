@@ -135,7 +135,7 @@ interface RetrofitNetwork {
         @Header("Authorization") authorization: String,
     ): Response<ReadableContentResponseDTO>
 
-    @POST("/api/v1/bookmarks/sync")
+    @POST()
     suspend fun syncBookmarks(
         @Url url: String,
         @Header("Authorization") authorization: String,

@@ -33,10 +33,14 @@ import androidx.paging.cachedIn
 import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.mapper.toEntityModel
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
+import com.desarrollodroide.model.SyncBookmarksRequestPayload
+import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.pagekeeper.ui.components.success
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,6 +60,8 @@ class FeedViewModel(
     private val downloadFileUseCase: DownloadFileUseCase,
     private val syncInitialBookmarksUseCase: SyncInitialBookmarksUseCase,
     private val deleteLocalBookmarkUseCase: DeleteLocalBookmarkUseCase,
+    private val syncBookmarksUseCase: SyncBookmarksUseCase
+
 ) : ViewModel() {
 
     private val TAG = "FeedViewModel"
@@ -98,6 +104,10 @@ class FeedViewModel(
         allTags.filter { it.id.toString() in selectedIds }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _syncState = MutableStateFlow<UiState<SyncBookmarksResponse>>(UiState(idle = true))
+    val syncState: StateFlow<UiState<SyncBookmarksResponse>> = _syncState.asStateFlow()
+
+
     suspend fun initializeIfNeeded() {
         if (!isInitialized) {
             isInitialized = true
@@ -138,6 +148,7 @@ class FeedViewModel(
             if (bookmarkDatabase.isEmpty()) {
                 retrieveAllLocalBookmarks()
             }
+        refreshFeed()
         }
     }
 
@@ -153,6 +164,40 @@ class FeedViewModel(
                         _tagsState.success(emptyList())
                     }
                 }
+        }
+    }
+
+    fun syncBookmarks(ids: List<Int>, lastSync: Long, page: Int = 1) {
+        viewModelScope.launch {
+            _syncState.value = UiState(isLoading = true)
+            val syncBookmarksRequestPayload = SyncBookmarksRequestPayload(
+                ids = ids,
+                last_sync = lastSync,
+                page = page
+            )
+            syncBookmarksUseCase(
+                token = token,
+                serverUrl = serverUrl,
+                syncBookmarksRequestPayload = syncBookmarksRequestPayload
+            ).collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        result.data?.let { response ->
+                            Log.v(TAG, "Sync response: $response")
+                            _syncState.value = UiState(data = response)
+                            syncBookmarksUseCase.handleSuccessfulSync(response, lastSync)
+                        } ?: run {
+                            _syncState.value = UiState(error = "Sync response was null")
+                            Log.e(TAG, "Sync response was null")
+                        }
+                    }
+                    is Result.Error -> {
+                        _syncState.value = UiState(error = result.error?.message)
+                        Log.e(TAG, "Error syncing bookmarks: ${result.error?.message}")
+                    }
+                    is Result.Loading -> {}
+                }
+            }
         }
     }
 
@@ -204,8 +249,8 @@ class FeedViewModel(
 
     fun refreshFeed() {
         viewModelScope.launch {
-            //TODO do sync
-            //getLocalPagingBookmarks()
+            val localBookmarkIds = bookmarkDatabase.getAllBookmarkIds()
+            syncBookmarks(localBookmarkIds, settingsPreferenceDataSource.getLastSyncTimestamp())
         }
     }
 

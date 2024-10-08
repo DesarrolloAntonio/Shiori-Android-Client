@@ -34,6 +34,7 @@ message SystemPreferences {
   bool autoAddBookmark = 4;
   bool compactView = 5;
   repeated string selectedCategories = 6;
+  int64 lastSyncTimestamp = 7;
 
 }
 
