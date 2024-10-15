@@ -1,24 +1,15 @@
 package com.desarrollodroide.domain.usecase
 
-import com.desarrollodroide.data.repository.BookmarksRepository
-import com.desarrollodroide.model.Bookmark
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
-import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.repository.SyncManager
+import com.desarrollodroide.data.repository.SyncOperationType
 
 class DeleteBookmarkUseCase(
-    private val bookmarksRepository: BookmarksRepository,
+    private val bookmarksDao: BookmarksDao,
+    private val syncManager: SyncManager
 ) {
-    operator fun invoke(
-        serverUrl: String,
-        xSession: String,
-        bookmark: Bookmark
-    ): Flow<Result<Unit?>> {
-        return bookmarksRepository.deleteBookmark(
-            xSession = xSession,
-            serverUrl = serverUrl,
-            bookmarkId = bookmark.id
-        ).flowOn(Dispatchers.IO)
+    suspend operator fun invoke(bookmarkId: Int) {
+        bookmarksDao.deleteBookmarkById(bookmarkId)
+        syncManager.scheduleSyncWork(SyncOperationType.DELETE, bookmarkId)
     }
 }

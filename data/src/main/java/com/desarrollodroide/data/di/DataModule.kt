@@ -1,10 +1,12 @@
 package com.desarrollodroide.data.di
 
+import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.work.WorkManager
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.data.local.datastore.HideTagSerializer
 import com.desarrollodroide.data.local.datastore.RememberUserPreferencesSerializer
@@ -21,10 +23,13 @@ import com.desarrollodroide.data.repository.FileRepository
 import com.desarrollodroide.data.repository.FileRepositoryImpl
 import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
+import com.desarrollodroide.data.repository.SyncManager
+import com.desarrollodroide.data.repository.SyncManagerImpl
 import com.desarrollodroide.data.repository.SystemRepository
 import com.desarrollodroide.data.repository.SystemRepositoryImpl
 import com.desarrollodroide.data.repository.TagsRepository
 import com.desarrollodroide.data.repository.TagsRepositoryImpl
+import com.desarrollodroide.data.repository.workers.SyncWorker
 import com.desarrollodroide.network.retrofit.FileRemoteDataSource
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -128,5 +133,13 @@ fun dataModule() = module {
 
     single { FileRemoteDataSource() }
     single { ErrorHandlerImpl() as ErrorHandler }
+
+    single { WorkManager.getInstance(get<Context>()) }
+    single { SyncWorker.Factory() }
+
+    single { SyncManagerImpl(
+        workManager = get()
+        ) as SyncManager
+    }
 
 }

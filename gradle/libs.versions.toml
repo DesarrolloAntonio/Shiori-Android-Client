@@ -17,6 +17,7 @@ protobuf = "3.21.9"
 coil = "2.7.0"
 koin = "3.3.3"
 room = "2.6.1"
+work = "2.7.1"
 
 androidxnavigation = "2.7.7"
 androidxLifecycle = "2.7.0"
@@ -51,6 +52,7 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidxnavigation" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "pagingCompose" }
+androidx-work = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }

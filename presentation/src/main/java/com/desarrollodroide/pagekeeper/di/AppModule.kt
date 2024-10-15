@@ -50,7 +50,8 @@ fun appModule() = module {
 
     single {
         DeleteBookmarkUseCase(
-            bookmarksRepository = get()
+            bookmarksDao = get(),
+            syncManager = get()
         )
     }
 
@@ -74,13 +75,15 @@ fun appModule() = module {
 
     single {
         AddBookmarkUseCase(
-            bookmarksRepository = get()
+            bookmarksDao = get(),
+            syncManager = get()
         )
     }
 
     single {
         EditBookmarkUseCase(
-            bookmarksRepository = get()
+            bookmarksDao = get(),
+            syncManager = get()
         )
     }
 

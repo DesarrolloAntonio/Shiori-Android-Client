@@ -219,41 +219,66 @@ class BookmarksRepositoryImpl(
         return currentPage < maxPage && bookmarks?.isNotEmpty() == true
     }
 
-    override fun addBookmark(
+    override suspend fun addBookmark(
         xSession: String,
         serverUrl: String,
         bookmark: Bookmark
-    ) = object :
-        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
-        override suspend fun fetchFromRemote() = apiService.addBookmark(
+    ): Bookmark {
+        val response = apiService.addBookmark(
             url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
-
-        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
-            return flow {
-                emit(data.toDomainModel())
+        if (response.isSuccessful) {
+            response.body()?.let {
+                return it.toDomainModel()
             }
+            throw IllegalStateException("Response body is null")
+        } else {
+            throw IllegalStateException("Error adding bookmark: ${response.errorBody()?.string()}")
         }
-    }.asFlow().flowOn(Dispatchers.IO)
+    }
 
+    /**
+     * Deletes a bookmark from the remote server.
+     * The method uses a NetworkNoCacheResource to handle the network operation and error handling.
+     *
+     * @param xSession The session token for authentication with the remote API.
+     * @param serverUrl The base URL of the server API.
+     * @param bookmarkId The ID of the bookmark to be added.
+     * @return A Flow emitting a Result<Bookmark> representing the outcome of the add operation.
+     *         It can emit Loading, Success with the added bookmark, or Error states.
+     */
+//    override fun deleteBookmark(
+//        xSession: String,
+//        serverUrl: String,
+//        bookmarkId: Int
+//    ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
+//            override suspend fun fetchFromRemote()  =
+//                apiService.deleteBookmarks(
+//                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
+//                    xSessionId = xSession,
+//                    bookmarkIds = listOf(bookmarkId)
+//                )
+//
+//            override fun fetchResult(data: Unit): Flow<Unit> =
+//                flow { emit(Unit) }
+//        }.asFlow().flowOn(Dispatchers.IO)
 
-    override fun deleteBookmark(
+    override suspend fun deleteBookmark(
         xSession: String,
         serverUrl: String,
         bookmarkId: Int
-    ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
-            override suspend fun fetchFromRemote()  =
-                apiService.deleteBookmarks(
-                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
-                    xSessionId = xSession,
-                    bookmarkIds = listOf(bookmarkId)
-                )
-
-            override fun fetchResult(data: Unit): Flow<Unit> =
-                flow { emit(Unit) }
-        }.asFlow().flowOn(Dispatchers.IO)
+    ) {
+        val response = apiService.deleteBookmarks(
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
+            xSessionId = xSession,
+            bookmarkIds = listOf(bookmarkId)
+        )
+        if (!response.isSuccessful) {
+            throw IllegalStateException("Error deleting bookmark: ${response.errorBody()?.string()}")
+        }
+    }
 
     /**
      * Edits an existing bookmark both on the remote server and in the local database.
@@ -271,25 +296,45 @@ class BookmarksRepositoryImpl(
      * @return A Flow emitting a Result<Bookmark> representing the outcome of the edit operation.
      *         It can emit Loading, Success with the updated bookmark, or Error states.
      */
-    override fun editBookmark(
+//    override fun editBookmark(
+//        xSession: String,
+//        serverUrl: String,
+//        bookmark: Bookmark
+//    ) = object :
+//        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
+//        override suspend fun fetchFromRemote() = apiService.editBookmark(
+//            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
+//            xSessionId = xSession,
+//            body = bookmark.toBodyJson()
+//        )
+//
+//        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
+//            return flow {
+//                bookmarksDao.updateBookmark(data.toEntityModel())
+//                emit(data.toDomainModel())
+//            }
+//        }
+//    }.asFlow().flowOn(Dispatchers.IO)
+    override suspend fun  editBookmark(
         xSession: String,
         serverUrl: String,
         bookmark: Bookmark
-    ) = object :
-        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
-        override suspend fun fetchFromRemote() = apiService.editBookmark(
+    ): Bookmark {
+        val response = apiService.editBookmark(
             url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
             body = bookmark.toBodyJson()
         )
-
-        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
-            return flow {
-                bookmarksDao.updateBookmark(data.toEntityModel())
-                emit(data.toDomainModel())
+        if (response.isSuccessful) {
+            response.body()?.let {
+                bookmarksDao.updateBookmark(it.toEntityModel())
+                return it.toDomainModel()
             }
+            throw IllegalStateException("Response body is null")
+        } else {
+            throw IllegalStateException("Error editing bookmark: ${response.errorBody()?.string()}")
         }
-    }.asFlow().flowOn(Dispatchers.IO)
+    }
 
     override fun updateBookmarkCache(
         xSession: String,

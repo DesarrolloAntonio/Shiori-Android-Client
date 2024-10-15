@@ -24,6 +24,14 @@ interface BookmarksDao {
   fun getAll(): Flow<List<BookmarkEntity>>
 
   /**
+   * Inserts a single bookmark into the database and returns the new rowId.
+   * @param bookmark The BookmarkEntity to insert.
+   * @return The new rowId for the inserted item.
+   */
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insertBookmark(bookmark: BookmarkEntity): Long
+
+  /**
    * Inserts a list of bookmarks into the database, replacing any existing entries with the same IDs.
    * @param bookmarks The list of BookmarkEntity objects to insert.
    */

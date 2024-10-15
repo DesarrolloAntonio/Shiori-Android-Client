@@ -25,24 +25,24 @@ interface BookmarksRepository {
       saveToLocal: Boolean
   ): Flow<PagingData<Bookmark>>
 
-  fun addBookmark(
+  suspend fun addBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark
-  ): Flow<Result<Bookmark>>
+  ): Bookmark
 
 
-  fun deleteBookmark(
+  suspend fun deleteBookmark(
     xSession: String,
     serverUrl: String,
     bookmarkId: Int
-  ): Flow<Result<Unit>>
+  )
 
-  fun editBookmark(
+  suspend fun editBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark
-  ): Flow<Result<Bookmark>>
+  ): Bookmark
 
   suspend fun deleteAllLocalBookmarks()
   fun updateBookmarkCache(

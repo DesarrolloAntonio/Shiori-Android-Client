@@ -77,6 +77,9 @@ dependencies {
     ksp(libs.androidx.room.compiler) // Kotlin Symbol Processing (KSP) for Room to generate database access code at compile time.
     implementation(libs.androidx.room.paging) // Replace with the appropriate version if different.
 
+    // WorkManager
+    implementation(libs.androidx.work) // WorkManager for managing background tasks.
+
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
     testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.

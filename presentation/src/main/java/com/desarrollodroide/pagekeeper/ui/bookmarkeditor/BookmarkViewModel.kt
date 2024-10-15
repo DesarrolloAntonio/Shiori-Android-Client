@@ -91,8 +91,6 @@ class BookmarkViewModel(
         createEbook: Boolean
     ) = viewModelScope.launch {
         bookmarkAdditionUseCase.invoke(
-            serverUrl = backendUrl,
-            xSession = userPreferences.getSession(),
             bookmark = Bookmark(
                 url = url,
                 tags = tags,
@@ -101,68 +99,76 @@ class BookmarkViewModel(
                 public = if (makeArchivePublic) 1 else 0
             )
         )
-            .collect { result ->
-                when (result) {
-                    is Result.Error -> {
-                        if (result.error is Result.ErrorType.SessionExpired) {
-                            settingsPreferenceDataSource.resetUser()
-                            bookmarksRepository.deleteAllLocalBookmarks()
-                            sessionExpired = true
-                            _bookmarkUiState.error(
-                                errorMessage = result.error?.message ?: ""
-                            )
-                            emitToastIfAutoAdd(result.error?.message ?: "")
-                        } else {
-                            Log.v("Add BookmarkViewModel", result.error?.message ?: "")
-                            _bookmarkUiState.error(
-                                errorMessage = result.error?.message ?: "Unknown error"
-                            )
-                            emitToastIfAutoAdd("Error: ${result.error?.message ?: "Unknown error"}")
-                        }
-                    }
-
-                    is Result.Loading -> {
-                        Log.v("Add BookmarkViewModel", "Loading")
-                        _bookmarkUiState.isLoading(true)
-                    }
-
-                    is Result.Success -> {
-                        Log.v("Add BookmarkViewModel", "Success")
-                        _bookmarkUiState.success(result.data)
-                        emitToastIfAutoAdd("Bookmark saved successfully")
-                    }
-                }
-            }
+//            .collect { result ->
+//                when (result) {
+//                    is Result.Error -> {
+//                        if (result.error is Result.ErrorType.SessionExpired) {
+//                            settingsPreferenceDataSource.resetUser()
+//                            bookmarksRepository.deleteAllLocalBookmarks()
+//                            sessionExpired = true
+//                            _bookmarkUiState.error(
+//                                errorMessage = result.error?.message ?: ""
+//                            )
+//                            emitToastIfAutoAdd(result.error?.message ?: "")
+//                        } else {
+//                            Log.v("Add BookmarkViewModel", result.error?.message ?: "")
+//                            _bookmarkUiState.error(
+//                                errorMessage = result.error?.message ?: "Unknown error"
+//                            )
+//                            emitToastIfAutoAdd("Error: ${result.error?.message ?: "Unknown error"}")
+//                        }
+//                    }
+//
+//                    is Result.Loading -> {
+//                        Log.v("Add BookmarkViewModel", "Loading")
+//                        _bookmarkUiState.isLoading(true)
+//                    }
+//
+//                    is Result.Success -> {
+//                        Log.v("Add BookmarkViewModel", "Success")
+//                        _bookmarkUiState.success(result.data)
+//                        emitToastIfAutoAdd("Bookmark saved successfully")
+//                    }
+//                }
+//            }
     }
+
+//    fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
+//        viewModelScope.launch {
+//            editBookmarkUseCase.invoke(
+//                serverUrl = backendUrl,
+//                xSession = userPreferences.getSession(),
+//                bookmark = bookmark
+//            )
+//                .collect { result ->
+//                    when (result) {
+//                        is Result.Error -> {
+//                            val errorMessage =
+//                                result.error?.message ?: result.error?.throwable?.message
+//                                ?: "Unknown error"
+//                            Log.v("Edit BookmarkViewModel", errorMessage)
+//                            _bookmarkUiState.error(errorMessage = errorMessage)
+//                        }
+//
+//                        is Result.Loading -> {
+//                            Log.v("Edit BookmarkViewModel", "Loading")
+//                            _bookmarkUiState.isLoading(true)
+//                        }
+//
+//                        is Result.Success -> {
+//                            Log.v("Edit BookmarkViewModel", "Success")
+//                            _bookmarkUiState.success(result.data)
+//                        }
+//                    }
+//                }
+//        }
+//    }
 
     fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
         viewModelScope.launch {
             editBookmarkUseCase.invoke(
-                serverUrl = backendUrl,
-                xSession = userPreferences.getSession(),
                 bookmark = bookmark
             )
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            val errorMessage =
-                                result.error?.message ?: result.error?.throwable?.message
-                                ?: "Unknown error"
-                            Log.v("Edit BookmarkViewModel", errorMessage)
-                            _bookmarkUiState.error(errorMessage = errorMessage)
-                        }
-
-                        is Result.Loading -> {
-                            Log.v("Edit BookmarkViewModel", "Loading")
-                            _bookmarkUiState.isLoading(true)
-                        }
-
-                        is Result.Success -> {
-                            Log.v("Edit BookmarkViewModel", "Success")
-                            _bookmarkUiState.success(result.data)
-                        }
-                    }
-                }
         }
     }
 

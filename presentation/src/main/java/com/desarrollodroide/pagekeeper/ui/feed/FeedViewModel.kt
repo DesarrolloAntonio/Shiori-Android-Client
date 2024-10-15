@@ -360,32 +360,33 @@ class FeedViewModel(
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
-            deleteBookmarkUseCase.invoke(
-                serverUrl = serverUrl,
-                xSession = settingsPreferenceDataSource.getSession(),
-                bookmark = bookmark
-            )
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            Log.v("FeedViewModel","Error deleting bookmark: ${result.error?.message}")
-                            _bookmarksUiState.error(
-                                errorMessage = result.error?.message ?: "Unknown error"
-                            )
-                        }
-                        is Result.Loading -> {
-                            Log.v("FeedViewModel", "Deleting bookmark...")
-                            _bookmarksUiState.isLoading(true)
-                        }
-
-                        is Result.Success -> {
-                            Log.v("FeedViewModel", "Bookmark deleted successfully.")
-                            _bookmarksUiState.isLoading(false)
-                            refreshFeed()
-                        }
-                        else -> {}
-                    }
-                }
+            deleteBookmarkUseCase.invoke(bookmarkId = bookmark.id)
+//            deleteBookmarkUseCase.invoke(
+//                serverUrl = serverUrl,
+//                xSession = settingsPreferenceDataSource.getSession(),
+//                bookmark = bookmark
+//            )
+//                .collect { result ->
+//                    when (result) {
+//                        is Result.Error -> {
+//                            Log.v("FeedViewModel","Error deleting bookmark: ${result.error?.message}")
+//                            _bookmarksUiState.error(
+//                                errorMessage = result.error?.message ?: "Unknown error"
+//                            )
+//                        }
+//                        is Result.Loading -> {
+//                            Log.v("FeedViewModel", "Deleting bookmark...")
+//                            _bookmarksUiState.isLoading(true)
+//                        }
+//
+//                        is Result.Success -> {
+//                            Log.v("FeedViewModel", "Bookmark deleted successfully.")
+//                            _bookmarksUiState.isLoading(false)
+//                            refreshFeed()
+//                        }
+//                        else -> {}
+//                    }
+//                }
         }
     }
 
@@ -393,6 +394,7 @@ class FeedViewModel(
         viewModelScope.launch {
             deleteLocalBookmarkUseCase(bookmark).collect { result ->
                 if (result is Result.Success) {
+                    deleteBookmark(bookmark = bookmark)
                     // TODO
                 } else if (result is Result.Error){
                     Log.v("FeedViewModel","Error deleting local bookmark: ${result.error?.message}")
