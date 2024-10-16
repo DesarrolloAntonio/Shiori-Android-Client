@@ -31,6 +31,7 @@ fun presenterModule() = module {
             syncInitialBookmarksUseCase = get(),
             deleteLocalBookmarkUseCase = get(),
             syncBookmarksUseCase = get(),
+            syncManager = get(),
         )
     }
 

@@ -4,7 +4,7 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toEntityModel
 import com.desarrollodroide.data.repository.SyncManager
-import com.desarrollodroide.data.repository.SyncOperationType
+import com.desarrollodroide.model.SyncOperationType
 
 class AddBookmarkUseCase(
     private val bookmarksDao: BookmarksDao,

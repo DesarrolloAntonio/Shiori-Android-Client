@@ -34,6 +34,7 @@ import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toEntityModel
+import com.desarrollodroide.data.repository.SyncManager
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
@@ -60,7 +61,8 @@ class FeedViewModel(
     private val downloadFileUseCase: DownloadFileUseCase,
     private val syncInitialBookmarksUseCase: SyncInitialBookmarksUseCase,
     private val deleteLocalBookmarkUseCase: DeleteLocalBookmarkUseCase,
-    private val syncBookmarksUseCase: SyncBookmarksUseCase
+    private val syncBookmarksUseCase: SyncBookmarksUseCase,
+    private val syncManager: SyncManager,
 
 ) : ViewModel() {
 
@@ -455,5 +457,8 @@ class FeedViewModel(
             settingsPreferenceDataSource.setSelectedCategories(emptyList())
         }
     }
+
+    fun getPendingWorks() =
+        syncManager.getPendingJobs()
 
 }

@@ -9,9 +9,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
@@ -21,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.Badge
@@ -28,17 +36,24 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,6 +61,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
+import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
@@ -56,6 +72,7 @@ import java.io.File
 import com.desarrollodroide.pagekeeper.R
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,6 +102,8 @@ fun HomeScreen(
     ) {
         composable(NavItem.HomeNavItem.route) {
             val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+            val pendingJobsCount by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
+            val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -97,7 +116,12 @@ fun HomeScreen(
                             scrollBehavior = scrollBehavior,
                             hasBookmarks = hasBookmarks,
                             selectedTagsCount = selectedTags.size,
-                            showOnlyHiddenTag = showOnlyHiddenTag
+                            showOnlyHiddenTag = showOnlyHiddenTag,
+                            pendingJobsCount = pendingJobsCount.size,
+                            onSyncButtonClick = {
+
+                            },
+                            pendingJobs = pendingJobs
                         )
                     }
                 }
@@ -191,17 +215,24 @@ fun HomeScreen(
     }
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     toggleCategoryVisibility: () -> Unit,
     toggleSearchBarVisibility: () -> Unit,
     onSettingsClick: () -> Unit,
+    onSyncButtonClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
     hasBookmarks: Boolean,
     selectedTagsCount: Int,
     showOnlyHiddenTag: Boolean,
+    pendingJobsCount: Int,
+    pendingJobs: List<PendingJob>
 ) {
+    var showTooltip by remember { mutableStateOf(false) }
+
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
@@ -209,8 +240,7 @@ fun TopBar(
                 Text(
                     color = MaterialTheme.colorScheme.primary,
                     text = "Shiori",
-                    modifier = Modifier
-                        .align(Alignment.CenterStart),
+                    modifier = Modifier.align(Alignment.CenterStart),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)
                 )
             }
@@ -232,9 +262,7 @@ fun TopBar(
                     tint = MaterialTheme.colorScheme.secondary,
                 )
             }
-            Box(
-                contentAlignment = Alignment.TopEnd
-            ) {
+            Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(onClick = { toggleCategoryVisibility() }) {
                     Icon(
                         imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
@@ -247,9 +275,7 @@ fun TopBar(
                     enter = fadeIn() + scaleIn(),
                     exit = fadeOut() + scaleOut()
                 ) {
-                    Badge(
-                        modifier = Modifier.padding(2.dp)
-                    ) {
+                    Badge(modifier = Modifier.padding(2.dp)) {
                         Text(
                             text = selectedTagsCount.toString(),
                             style = MaterialTheme.typography.labelSmall
@@ -257,7 +283,46 @@ fun TopBar(
                     }
                 }
             }
-            IconButton(onClick = onSettingsClick ) {
+            Box {
+                IconButton(
+                    onClick = {
+                        showTooltip = !showTooltip
+                        onSyncButtonClick()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = "Sync",
+                        tint = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+                this@TopAppBar.AnimatedVisibility(
+                    visible = pendingJobsCount > 0,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    Badge(modifier = Modifier.padding(2.dp)) {
+                        Text(
+                            text = pendingJobsCount.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+
+                if (showTooltip) {
+                    Popup(
+                        onDismissRequest = { showTooltip = false },
+                        alignment = Alignment.TopEnd
+                    ) {
+                        SyncJobsTooltip(
+                            pendingJobs = pendingJobs,
+                            modifier = Modifier.padding(top = 8.dp, end = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Settings",
@@ -275,6 +340,53 @@ fun TopBar(
     )
 }
 
+@Composable
+fun SyncJobsTooltip(pendingJobs: List<PendingJob>, modifier: Modifier = Modifier) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 4.dp,
+        shadowElevation = 4.dp,
+        modifier = modifier.width(250.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Pending Sync Jobs",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            if (pendingJobs.isEmpty()) {
+                Text(
+                    "No pending jobs",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                pendingJobs.take(3).forEach { job ->
+                    Text(
+                        "${job.operationType}: ${job.state}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (job.bookmarkId != null) {
+                        Text(
+                            "Bookmark ID: ${job.bookmarkId}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                if (pendingJobs.size > 3) {
+                    Text(
+                        "... and ${pendingJobs.size - 3} more",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
@@ -287,7 +399,10 @@ fun TopBarPreview() {
             scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
             hasBookmarks = true,
             selectedTagsCount = 2,
-            showOnlyHiddenTag = false
+            showOnlyHiddenTag = false,
+            pendingJobsCount = 0,
+            onSyncButtonClick = { },
+            pendingJobs = emptyList(),
         )
     }
 }

@@ -332,7 +332,7 @@ class BookmarksRepositoryImpl(
             }
             throw IllegalStateException("Response body is null")
         } else {
-            throw IllegalStateException("Error editing bookmark: ${response.errorBody()?.string()}")
+            throw IllegalStateException("${response.errorBody()?.string()}")
         }
     }
 

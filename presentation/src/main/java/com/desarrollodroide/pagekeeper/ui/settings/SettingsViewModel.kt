@@ -116,19 +116,12 @@ class SettingsViewModel(
             ).collect { result ->
                 when (result) {
                     is Result.Error -> {
-                        Log.v("SettingsViewModel", "Error: ${result.error?.throwable?.message}")
                         _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
-                        settingsPreferenceDataSource.resetUser()
-                        bookmarksRepository.deleteAllLocalBookmarks()
                     }
                     is Result.Loading -> {
-                        Log.v("SettingsViewModel", "Loading: ${result.data}")
                         _settingsUiState.isLoading(true)
                     }
                     is Result.Success -> {
-                        Log.v("SettingsViewModel", "Success: ${result.data}")
-                        settingsPreferenceDataSource.resetUser()
-                        bookmarksRepository.deleteAllLocalBookmarks()
                         _settingsUiState.success(result.data)
                     }
                 }

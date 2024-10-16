@@ -2,7 +2,7 @@ package com.desarrollodroide.domain.usecase
 
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.SyncManager
-import com.desarrollodroide.data.repository.SyncOperationType
+import com.desarrollodroide.model.SyncOperationType
 
 class DeleteBookmarkUseCase(
     private val bookmarksDao: BookmarksDao,

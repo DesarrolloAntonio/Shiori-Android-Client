@@ -69,7 +69,10 @@ fun appModule() = module {
 
     single {
         SendLogoutUseCase(
-            authRepository = get()
+            authRepository = get(),
+            syncManager = get(),
+            settingsPreferenceDataSource = get(),
+            bookmarksRepository = get()
         )
     }
 
