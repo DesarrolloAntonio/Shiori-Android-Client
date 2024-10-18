@@ -437,4 +437,10 @@ class FeedViewModel(
     fun getPendingWorks() =
         syncManager.getPendingJobs()
 
+    fun retryAllPendingJobs() {
+        viewModelScope.launch {
+            syncManager.retryAllPendingJobs()
+        }
+    }
+
 }

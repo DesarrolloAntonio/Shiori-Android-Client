@@ -2,6 +2,8 @@ package com.desarrollodroide.data.repository
 
 import android.util.Log
 import androidx.work.*
+import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.repository.workers.SyncWorker
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.PendingJob
@@ -15,7 +17,8 @@ import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 class SyncWorksImpl(
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val bookmarksDao: BookmarksDao,
 ) : SyncWorks {
     override fun scheduleSyncWork(
         operationType: SyncOperationType,
@@ -81,6 +84,25 @@ class SyncWorksImpl(
 
     override fun cancelAllSyncWorkers() {
         workManager.cancelAllWorkByTag(SyncWorker::class.java.name)
+    }
+
+    override suspend fun retryAllPendingJobs() {
+        val allWorkInfos = withContext(Dispatchers.IO) {
+            workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
+        }.filter { !it.state.isFinished }
+
+        allWorkInfos.forEach { workInfo ->
+            val operationType = workInfo.getSyncOperationType()
+            val bookmarkId = workInfo.getBookmarkId()
+
+            if (operationType != null && bookmarkId != null) {
+                val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
+
+                if (bookmark != null) {
+                    scheduleSyncWork(operationType, bookmark)
+                }
+            }
+        }
     }
 
     fun WorkInfo.getSyncOperationType(): SyncOperationType? {

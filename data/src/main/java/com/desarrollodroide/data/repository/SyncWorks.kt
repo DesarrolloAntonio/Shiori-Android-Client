@@ -10,5 +10,6 @@ interface SyncWorks {
     fun scheduleSyncWork(operationType: SyncOperationType, bookmark: Bookmark)
     fun getPendingJobs(): Flow<List<PendingJob>>
     fun cancelAllSyncWorkers()
+    suspend fun retryAllPendingJobs()
 
 }

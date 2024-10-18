@@ -138,7 +138,8 @@ fun dataModule() = module {
     single { SyncWorker.Factory() }
 
     single { SyncWorksImpl(
-        workManager = get()
+        workManager = get(),
+        bookmarksDao = get(),
         ) as SyncWorks
     }
 

@@ -118,8 +118,7 @@ fun HomeScreen(
             SyncJobsBottomSheetContent(
                 pendingJobs = feedViewModel.getPendingWorks().collectAsState(initial = emptyList()).value,
                 onDismiss = { showBottomSheet.value = false },
-                onRetryJob = {  },
-                onRetryAll = {  }
+                onRetryAll = { feedViewModel.retryAllPendingJobs() }
             )
         }
     }
@@ -422,7 +421,6 @@ fun SyncJobsTooltip(pendingJobs: List<PendingJob>, modifier: Modifier = Modifier
 fun SyncJobsBottomSheetContent(
     pendingJobs: List<PendingJob>,
     onDismiss: () -> Unit,
-    onRetryJob: (Int) -> Unit,
     onRetryAll: () -> Unit
 ) {
     Column(
@@ -531,7 +529,6 @@ fun SyncJobsBottomSheetContentPreview() {
             PendingJob(operationType = SyncOperationType.DELETE, state = "In Progress", bookmarkId = 3, "Bookmark 3")
         ),
         onDismiss = {},
-        onRetryJob = {},
         onRetryAll = {}
     )
 }
