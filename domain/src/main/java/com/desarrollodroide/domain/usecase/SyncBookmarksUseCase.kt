@@ -1,6 +1,8 @@
 package com.desarrollodroide.domain.usecase
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.model.SyncBookmarksRequestPayload
@@ -34,6 +36,7 @@ class SyncBookmarksUseCase(
         ).flowOn(Dispatchers.IO)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun handleSuccessfulSync(
         syncResponse: SyncBookmarksResponse,
         currentLastSync: Long
@@ -45,15 +48,23 @@ class SyncBookmarksUseCase(
                     bookmarkDatabase.deleteBookmarkById(id)
                 }
 
-                // Handle modified bookmarks
-                val bookmarkEntities = syncResponse.modified.bookmarks.filter { remoteBookmark ->
+                // Handle new and modified bookmarks
+                val bookmarkEntities = syncResponse.modified.bookmarks.map { remoteBookmark ->
                     val localBookmark = bookmarkDatabase.getBookmarkById(remoteBookmark.id)
-                    Log.d("TAG", "Comparing local bookmark ID: ${remoteBookmark.id}, Local Modified: ${localBookmark?.modified}, Remote Modified: ${remoteBookmark.modified}")
-                    localBookmark == null || remoteBookmark.modified > localBookmark.modified
-                }.map { it.toEntityModel() }
+                    Log.d("TAG", "Processing bookmark ID: ${remoteBookmark.id}, Local Modified: ${localBookmark?.modified}, Remote Modified: ${remoteBookmark.modified}")
+                    remoteBookmark.toEntityModel()
+                }
+
                 if (bookmarkEntities.isNotEmpty()) {
                     bookmarkEntities.forEach { bookmark ->
-                        bookmarkDatabase.updateBookmarkWithTags(bookmark)
+                        val existingBookmark = bookmarkDatabase.getBookmarkById(bookmark.id)
+                        if (existingBookmark == null) {
+                            // New bookmark, insert it
+                            bookmarkDatabase.insertBookmark(bookmark)
+                        } else {
+                            // Existing bookmark, update it
+                            bookmarkDatabase.updateBookmarkWithTags(bookmark)
+                        }
                     }
                 }
 

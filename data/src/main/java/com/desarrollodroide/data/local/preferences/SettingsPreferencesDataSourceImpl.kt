@@ -22,6 +22,8 @@ import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class SettingsPreferencesDataSourceImpl(
     private val dataStore: DataStore<Preferences>,
@@ -322,4 +324,11 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
+    override suspend fun setCurrentTimeStamp() {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastSyncTimestamp(ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond())
+                .build()
+        }
+    }
 }

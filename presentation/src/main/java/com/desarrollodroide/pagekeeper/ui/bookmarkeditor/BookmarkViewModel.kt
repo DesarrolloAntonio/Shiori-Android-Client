@@ -1,13 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.pagekeeper.ui.components.UiState
-import com.desarrollodroide.pagekeeper.ui.components.error
-import com.desarrollodroide.pagekeeper.ui.components.isLoading
-import com.desarrollodroide.pagekeeper.ui.components.success
-import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -73,9 +68,13 @@ class BookmarkViewModel(
             initialValue = listOf()
         )
 
-    fun autoAddBookmark(url: String) = viewModelScope.launch {
+    fun autoAddBookmark(
+        url: String,
+        title: String,
+    ) = viewModelScope.launch {
         saveBookmark(
             url = url,
+            title = title,
             tags = emptyList(),
             createArchive = createArchive,
             makeArchivePublic = makeArchivePublic,
@@ -85,6 +84,7 @@ class BookmarkViewModel(
 
     fun saveBookmark(
         url: String,
+        title: String,
         tags: List<Tag>,
         createArchive: Boolean,
         makeArchivePublic: Boolean,
@@ -93,6 +93,7 @@ class BookmarkViewModel(
         bookmarkAdditionUseCase.invoke(
             bookmark = Bookmark(
                 url = url,
+                title = title,
                 tags = tags,
                 createArchive = createArchive,
                 createEbook = createEbook,
@@ -132,37 +133,6 @@ class BookmarkViewModel(
 //                }
 //            }
     }
-
-//    fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
-//        viewModelScope.launch {
-//            editBookmarkUseCase.invoke(
-//                serverUrl = backendUrl,
-//                xSession = userPreferences.getSession(),
-//                bookmark = bookmark
-//            )
-//                .collect { result ->
-//                    when (result) {
-//                        is Result.Error -> {
-//                            val errorMessage =
-//                                result.error?.message ?: result.error?.throwable?.message
-//                                ?: "Unknown error"
-//                            Log.v("Edit BookmarkViewModel", errorMessage)
-//                            _bookmarkUiState.error(errorMessage = errorMessage)
-//                        }
-//
-//                        is Result.Loading -> {
-//                            Log.v("Edit BookmarkViewModel", "Loading")
-//                            _bookmarkUiState.isLoading(true)
-//                        }
-//
-//                        is Result.Success -> {
-//                            Log.v("Edit BookmarkViewModel", "Success")
-//                            _bookmarkUiState.success(result.data)
-//                        }
-//                    }
-//                }
-//        }
-//    }
 
     fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
         viewModelScope.launch {

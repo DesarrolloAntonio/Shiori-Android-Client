@@ -23,8 +23,8 @@ import com.desarrollodroide.data.repository.FileRepository
 import com.desarrollodroide.data.repository.FileRepositoryImpl
 import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
-import com.desarrollodroide.data.repository.SyncManager
-import com.desarrollodroide.data.repository.SyncManagerImpl
+import com.desarrollodroide.data.repository.SyncWorks
+import com.desarrollodroide.data.repository.SyncWorksImpl
 import com.desarrollodroide.data.repository.SystemRepository
 import com.desarrollodroide.data.repository.SystemRepositoryImpl
 import com.desarrollodroide.data.repository.TagsRepository
@@ -137,9 +137,9 @@ fun dataModule() = module {
     single { WorkManager.getInstance(get<Context>()) }
     single { SyncWorker.Factory() }
 
-    single { SyncManagerImpl(
+    single { SyncWorksImpl(
         workManager = get()
-        ) as SyncManager
+        ) as SyncWorks
     }
 
 }

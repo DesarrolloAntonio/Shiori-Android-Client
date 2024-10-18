@@ -39,7 +39,8 @@ fun FullBookmarkView(
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
     val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
-    val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}" } }
+    //val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}" } }
+    val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" } }
 
     Column {
         if (bookmark.imageURL.isNotEmpty()) {

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 
-class SyncInitialBookmarksUseCase(
+class GetAllRemoteBookmarksUseCase(
     private val bookmarksRepository: BookmarksRepository,
 ) {
     private val TAG = "SyncInitialBookmarksUseCase"

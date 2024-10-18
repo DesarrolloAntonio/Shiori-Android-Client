@@ -5,14 +5,14 @@ import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.repository.BookmarksRepository
-import com.desarrollodroide.data.repository.SyncManager
+import com.desarrollodroide.data.repository.SyncWorks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 class SendLogoutUseCase(
     private val authRepository: AuthRepository,
-    private val syncManager: SyncManager,
+    private val syncManager: SyncWorks,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val bookmarksRepository: BookmarksRepository
 ) {
@@ -26,15 +26,12 @@ class SendLogoutUseCase(
         ).collect { result ->
             when (result) {
                 is Result.Success -> {
-                    syncManager.cancelAllSyncWorkers()
-                    settingsPreferenceDataSource.resetUser()
-                    bookmarksRepository.deleteAllLocalBookmarks()
+                    performCleanup()
                     emit(Result.Success(result.data))
                 }
                 is Result.Error -> {
-                    settingsPreferenceDataSource.resetUser()
-                    bookmarksRepository.deleteAllLocalBookmarks()
-                    emit(Result.Error<String?>(result.error, result.data))
+                    performCleanup()
+                    emit(Result.Error(result.error, result.data))
                 }
                 is Result.Loading -> {
                     emit(result)
@@ -42,4 +39,10 @@ class SendLogoutUseCase(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    private suspend fun performCleanup() {
+        syncManager.cancelAllSyncWorkers()
+        settingsPreferenceDataSource.resetUser()
+        bookmarksRepository.deleteAllLocalBookmarks()
+    }
 }

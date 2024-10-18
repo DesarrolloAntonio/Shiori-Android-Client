@@ -73,7 +73,10 @@ fun FeedContent(
     val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
     val coroutineScope = rememberCoroutineScope()
 
-    Box(Modifier.fillMaxHeight()) {
+    Box(
+        Modifier.fillMaxHeight()
+            .padding(bottom = 10.dp)
+    ) {
         val listState = rememberLazyListState()
         LazyColumn(
             state = listState,
@@ -155,7 +158,7 @@ fun FeedContent(
                     }
                 }
             }
-            item { Spacer(modifier = Modifier.padding(4.dp)) }
+            item {  Spacer(modifier = Modifier.height(30.dp))  }
         }
 
         PullRefreshIndicator(

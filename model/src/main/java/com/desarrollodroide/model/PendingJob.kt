@@ -3,7 +3,8 @@ package com.desarrollodroide.model
 data class PendingJob(
     val operationType: SyncOperationType,
     val state: String,
-    val bookmarkId: Int? = null
+    val bookmarkId: Int,
+    val bookmarkTitle: String
 )
 
 enum class SyncOperationType {

@@ -3,26 +3,35 @@ package com.desarrollodroide.data.repository
 import android.util.Log
 import androidx.work.*
 import com.desarrollodroide.data.repository.workers.SyncWorker
+import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.model.SyncOperationType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-class SyncManagerImpl(
+class SyncWorksImpl(
     private val workManager: WorkManager
-) : SyncManager {
-    override fun scheduleSyncWork(operationType: SyncOperationType, bookmarkId: Int) {
+) : SyncWorks {
+    override fun scheduleSyncWork(
+        operationType: SyncOperationType,
+        bookmark: Bookmark
+    ) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        val encodedTitle = URLEncoder.encode(bookmark.title, "UTF-8")
         val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setInputData(workDataOf(
                 "operationType" to operationType.name,
-                "bookmarkId" to bookmarkId
+                "bookmarkId" to bookmark.id
             ))
-            .addTag(SyncWorker::class.java.name)
-            .addTag(operationType.name)
+            .addTag("worker_${SyncWorker::class.java.name}")
+            .addTag("operationType_${operationType.name}")
+            .addTag("bookmarkId_${bookmark.id}")
+            .addTag("bookmarkTitle_$encodedTitle")
             .setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 WorkRequest.MIN_BACKOFF_MILLIS,
@@ -32,7 +41,7 @@ class SyncManagerImpl(
             .build()
 
         workManager.beginUniqueWork(
-            "sync_bookmark_${operationType.name}_$bookmarkId",
+            "sync_bookmark_${operationType.name}_${bookmark.id}",
             ExistingWorkPolicy.REPLACE,
             listOf(syncWorkRequest)
         ).enqueue()
@@ -40,10 +49,13 @@ class SyncManagerImpl(
 
     override fun getPendingJobs(): Flow<List<PendingJob>> = flow {
         val allWorkInfos = withContext(Dispatchers.IO) {
-            workManager.getWorkInfosByTag(SyncWorker::class.java.name).get()
+            workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
         }
 
         Log.d("SyncManager", "Total WorkInfos: ${allWorkInfos.size}")
+        allWorkInfos.forEach {
+            Log.d("SyncManagerInfo", "WorkInfo: id=${it.id}, state=${it.state}, tags=${it.tags}")
+        }
 
         val pendingJobs = allWorkInfos
             .filter { !it.state.isFinished }
@@ -57,7 +69,8 @@ class SyncManagerImpl(
                     PendingJob(
                         operationType = it,
                         state = workInfo.state.name,
-                        bookmarkId = workInfo.getBookmarkId()
+                        bookmarkId = workInfo.getBookmarkId()?:-1,
+                        bookmarkTitle = workInfo.getBookmarkTitle()?:"Unknown",
                     )
                 }
             }
@@ -71,17 +84,26 @@ class SyncManagerImpl(
     }
 
     fun WorkInfo.getSyncOperationType(): SyncOperationType? {
-        val operationTypeString = tags.firstOrNull { it != SyncWorker::class.java.name }
-        return SyncOperationType.fromString(operationTypeString ?: return null).also {
-            Log.d("SyncManager", "Parsed SyncOperationType: $it from tag: $operationTypeString")
-        }
+        return tags
+            .firstOrNull { it.startsWith("operationType_") }
+            ?.substringAfter("operationType_")
+            ?.let { SyncOperationType.fromString(it) }
+            .also { Log.d("SyncManager", "Parsed SyncOperationType: $it") }
     }
 
     fun WorkInfo.getBookmarkId(): Int? {
-        val bookmarkIdString = id.toString().split("_").lastOrNull()
-        return bookmarkIdString?.toIntOrNull().also {
-            Log.d("SyncManager", "BookmarkId: $it")
-        }
+        return tags
+            .firstOrNull { it.startsWith("bookmarkId_") }
+            ?.substringAfter("bookmarkId_")
+            ?.toIntOrNull()
+            .also { Log.d("SyncManager", "BookmarkId: $it") }
     }
 
+    fun WorkInfo.getBookmarkTitle(): String? {
+        return tags
+            .firstOrNull { it.startsWith("bookmarkTitle_") }
+            ?.substringAfter("bookmarkTitle_")
+            ?.let { URLDecoder.decode(it, "UTF-8") }
+            .also { Log.d("SyncManager", "BookmarkTitle: $it") }
+    }
 }

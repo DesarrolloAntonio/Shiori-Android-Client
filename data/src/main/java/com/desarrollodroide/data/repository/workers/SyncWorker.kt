@@ -21,7 +21,6 @@ import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.firstOrNull
 
-
 class SyncWorker(
     context: Context,
     params: WorkerParameters
@@ -63,7 +62,7 @@ class SyncWorker(
                         }
                     } else {
                         Log.e("SyncWorker", "Failed to refresh session")
-                        Result.failure()
+                        Result.retry()
                     }
                 } else {
                     Log.e("SyncWorker", "Error during sync: ${e.message}", e)
@@ -72,22 +71,22 @@ class SyncWorker(
             }
         } catch (e: Exception) {
             Log.e("SyncWorker", "Unexpected error: ${e.message}")
-            Result.failure()
+            Result.retry()
         }
     }
 
 
     private suspend fun refreshSession(): Boolean {
         val serverUrl = settingsPreferenceDataSource.getUrl()
-        val rememberedUser = settingsPreferenceDataSource.getRememberUser().first()
+        val rememberedUser = settingsPreferenceDataSource.getUser().first()
 
-        if (rememberedUser.userName.isEmpty() || rememberedUser.password.isEmpty()) {
+        if (rememberedUser.account.userName.isEmpty() || rememberedUser.account.password.isEmpty()) {
             return false
         }
 
         return authRepository.sendLoginV1(
-            username = rememberedUser.userName,
-            password = rememberedUser.password,
+            username = rememberedUser.account.userName,
+            password = rememberedUser.account.password,
             serverUrl = serverUrl
         )
             .filterNot { it is com.desarrollodroide.common.result.Result.Loading }
@@ -98,8 +97,6 @@ class SyncWorker(
                 }
             } ?: false
     }
-
-
 
     private suspend fun performSyncOperation(
         xSession: String,

@@ -27,12 +27,13 @@ class BookmarkEditorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var sharedUrl = ""
+        var title = ""
         intent?.let { intent ->
             if (intent.action == Intent.ACTION_SEND) {
-                intent.getStringExtra(Intent.EXTRA_TEXT)?.let {
-                    sharedUrl = it
-                    Log.v("Shared link", it)
-                }
+                sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+                Log.v("Shared link", sharedUrl)
+                title = intent.getStringExtra(Intent.EXTRA_TITLE) ?: sharedUrl
+                Log.v("Shared title", title)
             } else {
                 Toast.makeText(this, "Invalid shared link", Toast.LENGTH_LONG).show()
                 finish()
@@ -51,7 +52,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                 if (bookmarkViewModel.userHasSession()) {
                     if (bookmarkViewModel.autoAddBookmark.value) {
                         // Auto-add bookmark without showing the editor screen
-                        bookmarkViewModel.autoAddBookmark(sharedUrl)
+                        bookmarkViewModel.autoAddBookmark(sharedUrl, title)
                     } else {
                         // Show the bookmark editor screen
                         setContent {
@@ -69,6 +70,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                                         bookmarkEditorType = BookmarkEditorType.ADD,
                                         bookmark = Bookmark(
                                             url = sharedUrl,
+                                            title = title,
                                             tags = emptyList(),
                                             public = if (makeArchivePublic) 1 else 0,
                                             createArchive = createArchive,

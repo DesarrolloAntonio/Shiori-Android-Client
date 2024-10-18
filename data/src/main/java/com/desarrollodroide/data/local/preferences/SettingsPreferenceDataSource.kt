@@ -55,4 +55,5 @@ interface SettingsPreferenceDataSource {
     suspend fun removeSelectedCategory(tag: Tag)
     suspend fun getLastSyncTimestamp(): Long
     suspend fun setLastSyncTimestamp(timestamp: Long)
+    suspend fun setCurrentTimeStamp()
 }

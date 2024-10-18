@@ -75,6 +75,7 @@ fun BookmarkEditorScreen(
                 BookmarkEditorType.ADD -> {
                     bookmarkViewModel.saveBookmark(
                         url = bookmark.url,
+                        title = bookmark.title,
                         tags = assignedTags.value,
                         createArchive = localCreateArchive,
                         makeArchivePublic = localMakeArchivePublic,
@@ -92,6 +93,7 @@ fun BookmarkEditorScreen(
                     )
                 }
             }
+            onBack()
         },
         onBackClick = onBack,
         createArchive = localCreateArchive,

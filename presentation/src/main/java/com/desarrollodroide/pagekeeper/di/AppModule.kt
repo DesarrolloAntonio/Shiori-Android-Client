@@ -20,7 +20,7 @@ import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
-import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
+import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import okhttp3.OkHttpClient
@@ -121,7 +121,7 @@ fun appModule() = module {
     }
 
     single {
-        SyncInitialBookmarksUseCase(
+        GetAllRemoteBookmarksUseCase(
             bookmarksRepository = get()
         )
     }

@@ -16,11 +16,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.Modifier
 import org.koin.androidx.compose.get
 import androidx.compose.runtime.*
@@ -32,10 +34,15 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -44,12 +51,14 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +71,7 @@ import androidx.navigation.navArgument
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
 import com.desarrollodroide.model.PendingJob
+import com.desarrollodroide.model.SyncOperationType
 import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
@@ -91,9 +101,27 @@ fun HomeScreen(
     val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
     val selectedTags by feedViewModel.selectedTags.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false, confirmValueChange = { true })
+    val showBottomSheet = remember { mutableStateOf(false) }
 
     BackHandler {
         onFinish()
+    }
+
+
+    if (showBottomSheet.value) {
+        ModalBottomSheet(
+            sheetState = bottomSheetState,
+            onDismissRequest = { showBottomSheet.value = false }
+        ) {
+            SyncJobsBottomSheetContent(
+                pendingJobs = feedViewModel.getPendingWorks().collectAsState(initial = emptyList()).value,
+                onDismiss = { showBottomSheet.value = false },
+                onRetryJob = {  },
+                onRetryAll = {  }
+            )
+        }
     }
 
     NavHost(
@@ -119,7 +147,10 @@ fun HomeScreen(
                             showOnlyHiddenTag = showOnlyHiddenTag,
                             pendingJobsCount = pendingJobsCount.size,
                             onSyncButtonClick = {
-
+                                coroutineScope.launch {
+                                    showBottomSheet.value = true
+                                    bottomSheetState.show()
+                                }
                             },
                             pendingJobs = pendingJobs
                         )
@@ -283,7 +314,7 @@ fun TopBar(
                     }
                 }
             }
-            Box {
+            Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = {
                         showTooltip = !showTooltip
@@ -309,17 +340,17 @@ fun TopBar(
                     }
                 }
 
-                if (showTooltip) {
-                    Popup(
-                        onDismissRequest = { showTooltip = false },
-                        alignment = Alignment.TopEnd
-                    ) {
-                        SyncJobsTooltip(
-                            pendingJobs = pendingJobs,
-                            modifier = Modifier.padding(top = 8.dp, end = 8.dp)
-                        )
-                    }
-                }
+//                if (showTooltip) {
+//                    Popup(
+//                        onDismissRequest = { showTooltip = false },
+//                        alignment = Alignment.TopEnd
+//                    ) {
+//                        SyncJobsTooltip(
+//                            pendingJobs = pendingJobs,
+//                            modifier = Modifier.padding(top = 8.dp, end = 8.dp)
+//                        )
+//                    }
+//                }
             }
 
             IconButton(onClick = onSettingsClick) {
@@ -385,6 +416,124 @@ fun SyncJobsTooltip(pendingJobs: List<PendingJob>, modifier: Modifier = Modifier
             }
         }
     }
+}
+
+@Composable
+fun SyncJobsBottomSheetContent(
+    pendingJobs: List<PendingJob>,
+    onDismiss: () -> Unit,
+    onRetryJob: (Int) -> Unit,
+    onRetryAll: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 26.dp)
+    ) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            text = "Pending Sync Jobs",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        if (pendingJobs.isEmpty()) {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.CenterHorizontally),
+                text = "No pending jobs",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+//            // Create a header row for the table
+//            Row(modifier = Modifier.padding(vertical = 4.dp)) {
+//                Text(
+//                    text = "ID",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier.weight(1f)
+//                )
+//                Text(
+//                    text = "Type",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier.weight(1f)
+//                )
+//                Text(
+//                    text = "State",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier.weight(1f)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text(
+//                    text = "Actions",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    modifier = Modifier.weight(1f)
+//                )
+//            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+            pendingJobs.forEach { job ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+//                    Text(
+//                        text = job.bookmarkId?.toString() ?: "-",
+//                        style = MaterialTheme.typography.bodySmall,
+//                        modifier = Modifier.weight(1f)
+//                    )
+                    Text(
+                        text = "${job.operationType.name} - ${job.bookmarkTitle}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+//                    Text(
+//                        text = job.state,
+//                        style = MaterialTheme.typography.bodySmall,
+//                        modifier = Modifier.weight(1f)
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    IconButton(
+//                        onClick = { job.bookmarkId?.let { onRetryJob(it) } },
+//                        modifier = Modifier.weight(1f)
+//                    ) {
+//                        Icon(imageVector = Icons.Default.Sync, contentDescription = "Retry")
+//                    }
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onRetryAll,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Retry All")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                Text("Close")
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SyncJobsBottomSheetContentPreview() {
+    SyncJobsBottomSheetContent(
+        pendingJobs = listOf(
+            PendingJob(operationType = SyncOperationType.CREATE, state = "Pending", bookmarkId = 1, "Bookmark 1"),
+            PendingJob(operationType = SyncOperationType.UPDATE, state = "Failed", bookmarkId = 2, "Bookmark 2"),
+            PendingJob(operationType = SyncOperationType.DELETE, state = "In Progress", bookmarkId = 3, "Bookmark 3")
+        ),
+        onDismiss = {},
+        onRetryJob = {},
+        onRetryAll = {}
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

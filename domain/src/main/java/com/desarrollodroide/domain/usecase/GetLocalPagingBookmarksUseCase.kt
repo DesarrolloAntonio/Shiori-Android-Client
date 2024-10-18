@@ -1,6 +1,5 @@
 package com.desarrollodroide.domain.usecase
 
-import android.util.Log
 import androidx.paging.PagingData
 import androidx.paging.filter
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -35,9 +34,6 @@ class GetLocalPagingBookmarksUseCase(
                     }
                 }
             }
-
-        // Then, if a connection is available, attempt to synchronize with the remote server.
-        // TODO create sync logic
     }
 }
 

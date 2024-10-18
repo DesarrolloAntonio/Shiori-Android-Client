@@ -8,7 +8,6 @@ import androidx.paging.LoadState
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.idle
-import com.desarrollodroide.pagekeeper.ui.components.isLoading
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.toProtoEntity
 import com.desarrollodroide.network.model.SessionDTO
@@ -33,13 +32,12 @@ import androidx.paging.cachedIn
 import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
-import com.desarrollodroide.data.mapper.toEntityModel
-import com.desarrollodroide.data.repository.SyncManager
+import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
-import com.desarrollodroide.domain.usecase.SyncInitialBookmarksUseCase
+import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.model.SyncBookmarksRequestPayload
 import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.pagekeeper.ui.components.success
@@ -59,12 +57,12 @@ class FeedViewModel(
     private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
     private val updateBookmarkCacheUseCase: UpdateBookmarkCacheUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
-    private val syncInitialBookmarksUseCase: SyncInitialBookmarksUseCase,
+    private val getAllRemoteBookmarksUseCase: GetAllRemoteBookmarksUseCase,
     private val deleteLocalBookmarkUseCase: DeleteLocalBookmarkUseCase,
     private val syncBookmarksUseCase: SyncBookmarksUseCase,
-    private val syncManager: SyncManager,
+    private val syncManager: SyncWorks,
 
-) : ViewModel() {
+    ) : ViewModel() {
 
     private val TAG = "FeedViewModel"
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
@@ -147,10 +145,14 @@ class FeedViewModel(
             xSessionId = settingsPreferenceDataSource.getSession()
             isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
             getLocalTags()
-            if (bookmarkDatabase.isEmpty()) {
-                retrieveAllLocalBookmarks()
+            if (_tagsState.value.data.isNullOrEmpty()) {
+                getRemoteTags()
             }
-        refreshFeed()
+            if (bookmarkDatabase.isEmpty()) {
+                settingsPreferenceDataSource.setCurrentTimeStamp()
+                retrieveAllRemoteBookmarks()
+            }
+            refreshFeed()
         }
     }
 
@@ -203,10 +205,10 @@ class FeedViewModel(
         }
     }
 
-    private fun retrieveAllLocalBookmarks() {
+    private fun retrieveAllRemoteBookmarks() {
         Log.v(TAG, "Syncing bookmarks")
         viewModelScope.launch {
-            syncInitialBookmarksUseCase.invoke(
+            getAllRemoteBookmarksUseCase.invoke(
                 serverUrl = serverUrl,
                 xSession = settingsPreferenceDataSource.getSession()
             ).collect { result ->
@@ -256,7 +258,7 @@ class FeedViewModel(
         }
     }
 
-    fun getTags() {
+    fun getRemoteTags() {
         tagsJob?.cancel()
         tagsJob =  viewModelScope.launch {
             getTagsUseCase.invoke(
@@ -362,33 +364,7 @@ class FeedViewModel(
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
-            deleteBookmarkUseCase.invoke(bookmarkId = bookmark.id)
-//            deleteBookmarkUseCase.invoke(
-//                serverUrl = serverUrl,
-//                xSession = settingsPreferenceDataSource.getSession(),
-//                bookmark = bookmark
-//            )
-//                .collect { result ->
-//                    when (result) {
-//                        is Result.Error -> {
-//                            Log.v("FeedViewModel","Error deleting bookmark: ${result.error?.message}")
-//                            _bookmarksUiState.error(
-//                                errorMessage = result.error?.message ?: "Unknown error"
-//                            )
-//                        }
-//                        is Result.Loading -> {
-//                            Log.v("FeedViewModel", "Deleting bookmark...")
-//                            _bookmarksUiState.isLoading(true)
-//                        }
-//
-//                        is Result.Success -> {
-//                            Log.v("FeedViewModel", "Bookmark deleted successfully.")
-//                            _bookmarksUiState.isLoading(false)
-//                            refreshFeed()
-//                        }
-//                        else -> {}
-//                    }
-//                }
+            deleteBookmarkUseCase.invoke(bookmark = bookmark)
         }
     }
 

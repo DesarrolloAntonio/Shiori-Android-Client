@@ -1,5 +1,8 @@
 package com.desarrollodroide.model
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 data class Bookmark (
     val id: Int,
     val url: String,
@@ -22,16 +25,17 @@ data class Bookmark (
         tags: List<Tag>,
         public: Int,
         createArchive: Boolean,
-        createEbook: Boolean
+        createEbook: Boolean,
+        title: String ,
     ) : this(
-        id = -1,
+        id = (System.currentTimeMillis() / 1000).toInt(),
         url= url,
-        title = "",
+        title = title,
         excerpt = "",
         author = "",
         public = public,
-        createAt = "",
-        modified = "",
+        createAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+        modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         imageURL = "",
         hasContent = false,
         hasArchive = false,
