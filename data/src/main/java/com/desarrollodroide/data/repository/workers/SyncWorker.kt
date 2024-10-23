@@ -6,6 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
+import com.desarrollodroide.data.extensions.isTimestampId
 import com.desarrollodroide.data.extensions.toBean
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
@@ -129,8 +131,20 @@ class SyncWorker(
                 val updatedBookmark = syncCreateBookmark(xSession, serverUrl, bookmarkId)
                 bookmarksDao.deleteBookmarkById(bookmarkId)
                 bookmarksDao.insertBookmark(updatedBookmark.toEntityModel())
+                val outputData = workDataOf(
+                    "syncResult" to "SUCCESS",
+                    "originalBookmarkId" to bookmarkId,
+                    "newBookmarkId" to updatedBookmark.id
+                )
+                Result.success(outputData)
             }
-            SyncOperationType.UPDATE -> syncUpdateBookmark(xSession, serverUrl, bookmarkId)
+            SyncOperationType.UPDATE -> {
+                if (bookmarkId.isTimestampId()) {
+                    Result.success()
+                } else {
+                    syncUpdateBookmark(xSession, serverUrl, bookmarkId)
+                }
+            }
             SyncOperationType.DELETE -> syncDeleteBookmark(xSession, serverUrl, bookmarkId)
             SyncOperationType.CACHE -> syncCacheBookmark(token, serverUrl, bookmarkId, updateCachePayload)
 

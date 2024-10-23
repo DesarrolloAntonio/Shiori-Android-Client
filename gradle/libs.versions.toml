@@ -17,7 +17,7 @@ protobuf = "3.21.9"
 coil = "2.7.0"
 koin = "3.3.3"
 room = "2.6.1"
-work = "2.7.1"
+work = "2.9.1"
 
 androidxnavigation = "2.7.7"
 androidxLifecycle = "2.7.0"

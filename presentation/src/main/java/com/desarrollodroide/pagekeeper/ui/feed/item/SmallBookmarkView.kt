@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.desarrollodroide.data.extensions.isTimestampId
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
@@ -181,18 +182,20 @@ fun SmallBookmarkView(
                                 contentDescription = null
                             )
                         })
-                    DropdownMenuItem(
-                        text = { Text("Update") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickSync(getBookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.CloudUpload,
-                                contentDescription = null
-                            )
-                        })
+                    if (!bookmark.id.isTimestampId()){
+                        DropdownMenuItem(
+                            text = { Text("Update") },
+                            onClick = {
+                                expanded.value = false
+                                actions.onClickSync(getBookmark)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.CloudUpload,
+                                    contentDescription = null
+                                )
+                            })
+                    }
                 }
             }
         }

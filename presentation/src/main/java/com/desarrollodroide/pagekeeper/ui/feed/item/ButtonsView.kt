@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import com.desarrollodroide.data.extensions.isTimestampId
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
 
@@ -61,12 +62,14 @@ fun ButtonsView(
                 tint = MaterialTheme.colorScheme.secondary
             )
         }
-        IconButton(onClick = { actions.onClickSync(getBookmark) }) {
-            Icon(
-                imageVector = Icons.Filled.CloudUpload,
-                contentDescription = "Sync",
-                tint = MaterialTheme.colorScheme.secondary
-            )
+        if (!bookmark.id.isTimestampId()){
+            IconButton(onClick = { actions.onClickSync(getBookmark) }) {
+                Icon(
+                    imageVector = Icons.Filled.CloudUpload,
+                    contentDescription = "Sync",
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            }
         }
     }
 }
