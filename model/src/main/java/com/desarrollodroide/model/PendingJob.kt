@@ -8,7 +8,7 @@ data class PendingJob(
 )
 
 enum class SyncOperationType {
-    CREATE, UPDATE, DELETE;
+    CREATE, UPDATE, DELETE, CACHE;
 
     companion object {
         fun fromString(value: String): SyncOperationType? =

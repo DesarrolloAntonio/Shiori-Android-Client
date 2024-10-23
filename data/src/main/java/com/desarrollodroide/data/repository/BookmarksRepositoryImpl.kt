@@ -249,22 +249,6 @@ class BookmarksRepositoryImpl(
      * @return A Flow emitting a Result<Bookmark> representing the outcome of the add operation.
      *         It can emit Loading, Success with the added bookmark, or Error states.
      */
-//    override fun deleteBookmark(
-//        xSession: String,
-//        serverUrl: String,
-//        bookmarkId: Int
-//    ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
-//            override suspend fun fetchFromRemote()  =
-//                apiService.deleteBookmarks(
-//                    url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
-//                    xSessionId = xSession,
-//                    bookmarkIds = listOf(bookmarkId)
-//                )
-//
-//            override fun fetchResult(data: Unit): Flow<Unit> =
-//                flow { emit(Unit) }
-//        }.asFlow().flowOn(Dispatchers.IO)
-
     override suspend fun deleteBookmark(
         xSession: String,
         serverUrl: String,
@@ -296,25 +280,6 @@ class BookmarksRepositoryImpl(
      * @return A Flow emitting a Result<Bookmark> representing the outcome of the edit operation.
      *         It can emit Loading, Success with the updated bookmark, or Error states.
      */
-//    override fun editBookmark(
-//        xSession: String,
-//        serverUrl: String,
-//        bookmark: Bookmark
-//    ) = object :
-//        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
-//        override suspend fun fetchFromRemote() = apiService.editBookmark(
-//            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
-//            xSessionId = xSession,
-//            body = bookmark.toBodyJson()
-//        )
-//
-//        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
-//            return flow {
-//                bookmarksDao.updateBookmark(data.toEntityModel())
-//                emit(data.toDomainModel())
-//            }
-//        }
-//    }.asFlow().flowOn(Dispatchers.IO)
     override suspend fun  editBookmark(
         xSession: String,
         serverUrl: String,
@@ -357,27 +322,50 @@ class BookmarksRepositoryImpl(
         }
     }.asFlow().flowOn(Dispatchers.IO)
 
-
-    override fun updateBookmarkCacheV1(
+    override suspend fun updateBookmarkCacheV1(
         token: String,
         serverUrl: String,
         updateCachePayload: UpdateCachePayload
-    ) = object :
-        NetworkNoCacheResource<BookmarkResponseDTO, Bookmark>(errorHandler = errorHandler) {
-        override suspend fun fetchFromRemote(): Response<BookmarkResponseDTO> = apiService.updateBookmarksCacheV1(
+    ): List<Bookmark>  {
+        val response = apiService.updateBookmarksCacheV1(
             url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/cache",
             authorization = "Bearer $token",
             body = updateCachePayload.toV1DTO().toJson()
         )
-
-        override fun fetchResult(data: BookmarkResponseDTO): Flow<Bookmark> {
-            return flow {
-                data.message?.firstOrNull()?.let {
-                    emit(it.toDomainModel())
+        if (response.isSuccessful) {
+            response.body()?.let {
+                it.message?.forEach {
+                    bookmarksDao.updateBookmark(it.toEntityModel())
                 }
+               return  it.message?.map { it.toDomainModel() }?: emptyList()
             }
+            throw IllegalStateException("Response body is null")
+        } else {
+            throw IllegalStateException("${response.errorBody()?.string()}")
         }
-    }.asFlow().flowOn(Dispatchers.IO)
+    }
+
+
+//    override fun updateBookmarkCacheV1(
+//        token: String,
+//        serverUrl: String,
+//        updateCachePayload: UpdateCachePayload
+//    ) = object :
+//        NetworkNoCacheResource<BookmarkResponseDTO, Bookmark>(errorHandler = errorHandler) {
+//        override suspend fun fetchFromRemote(): Response<BookmarkResponseDTO> = apiService.updateBookmarksCacheV1(
+//            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/cache",
+//            authorization = "Bearer $token",
+//            body = updateCachePayload.toV1DTO().toJson()
+//        )
+//
+//        override fun fetchResult(data: BookmarkResponseDTO): Flow<Bookmark> {
+//            return flow {
+//                data.message?.firstOrNull()?.let {
+//                    emit(it.toDomainModel())
+//                }
+//            }
+//        }
+//    }.asFlow().flowOn(Dispatchers.IO)
 
     override suspend fun deleteAllLocalBookmarks()  { bookmarksDao.deleteAll() }
 

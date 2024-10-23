@@ -93,7 +93,10 @@ fun SettingsScreen(
                 settingsUiState = settingsUiState,
                 tagsUiState = tagsUiState,
                 onLogout = { settingsViewModel.logout() },
-                goToLogin = goToLogin,
+                goToLogin = {
+                    settingsViewModel.clearImageCache()
+                    goToLogin.invoke()
+                },
                 themeMode = settingsViewModel.themeMode,
                 makeArchivePublic = makeArchivePublic,
                 onMakeArchivePublicChanged = { isPublic ->

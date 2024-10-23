@@ -233,6 +233,7 @@ fun FeedScreen(
             updateEbook = updateEbook,
             updateArchive = updateArchive,
         )
+        feedViewModel.showSyncDialog.value = false
     }
     if (!downloadUiState.value.error.isNullOrEmpty()) {
         ConfirmDialog(

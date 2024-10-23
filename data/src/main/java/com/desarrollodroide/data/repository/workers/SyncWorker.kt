@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
+import com.desarrollodroide.data.extensions.toBean
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import org.koin.core.component.inject
 import org.koin.core.component.KoinComponent
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
+import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -34,6 +36,7 @@ class SyncWorker(
     override suspend fun doWork(): Result {
         val operationType = inputData.getString("operationType")?.let { SyncOperationType.valueOf(it) }
         val bookmarkId = inputData.getInt("bookmarkId", -1)
+        val updateCachePayload = inputData.getString("updateCachePayload")?.toBean<UpdateCachePayload>()
 
         if (operationType == null || bookmarkId == -1) {
             return Result.failure()
@@ -42,9 +45,17 @@ class SyncWorker(
         return try {
             val xSession = settingsPreferenceDataSource.getSession()
             val serverUrl = settingsPreferenceDataSource.getUrl()
+            val token = settingsPreferenceDataSource.getToken()
 
             try {
-                performSyncOperation(xSession, serverUrl, operationType, bookmarkId)
+                performSyncOperation(
+                    xSession = xSession,
+                    serverUrl = serverUrl,
+                    operationType = operationType,
+                    bookmarkId = bookmarkId,
+                    updateCachePayload = updateCachePayload,
+                    token = token
+                )
                 Log.v("SyncWorker", "Sync completed successfully")
                 Result.success()
             } catch (e: Exception) {
@@ -53,7 +64,14 @@ class SyncWorker(
                     if (sessionRefreshed) {
                         try {
                             val newSession = settingsPreferenceDataSource.getSession()
-                            performSyncOperation(newSession, serverUrl, operationType, bookmarkId)
+                            performSyncOperation(
+                                xSession = newSession,
+                                serverUrl = serverUrl,
+                                operationType = operationType,
+                                bookmarkId = bookmarkId,
+                                updateCachePayload = updateCachePayload,
+                                token = token
+                            )
                             Log.v("SyncWorker", "Sync completed successfully after session refresh")
                             Result.success()
                         } catch (retryException: Exception) {
@@ -102,7 +120,9 @@ class SyncWorker(
         xSession: String,
         serverUrl: String,
         operationType: SyncOperationType,
-        bookmarkId: Int
+        bookmarkId: Int,
+        updateCachePayload: UpdateCachePayload?,
+        token: String
     ) {
         when (operationType) {
             SyncOperationType.CREATE -> {
@@ -112,6 +132,8 @@ class SyncWorker(
             }
             SyncOperationType.UPDATE -> syncUpdateBookmark(xSession, serverUrl, bookmarkId)
             SyncOperationType.DELETE -> syncDeleteBookmark(xSession, serverUrl, bookmarkId)
+            SyncOperationType.CACHE -> syncCacheBookmark(token, serverUrl, bookmarkId, updateCachePayload)
+
         }
     }
 
@@ -133,6 +155,14 @@ class SyncWorker(
 
     private suspend fun syncDeleteBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {
         bookmarksRepository.deleteBookmark(xSession, serverUrl, bookmarkId)
+    }
+
+    private suspend fun syncCacheBookmark(token: String, serverUrl: String, bookmarkId: Int, updateCachePayload: UpdateCachePayload?) {
+        if (updateCachePayload == null) {
+            Log.e("SyncWorker", "UpdateCachePayload is null for CACHE operation")
+            throw IllegalStateException("UpdateCachePayload is required for CACHE operation")
+        }
+        bookmarksRepository.updateBookmarkCacheV1(token, serverUrl, updateCachePayload)
     }
 
     class Factory : WorkerFactory(), KoinComponent {

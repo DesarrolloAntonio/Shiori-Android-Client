@@ -307,38 +307,9 @@ class FeedViewModel(
 
         viewModelScope.launch {
             updateBookmarkCacheUseCase.invoke(
-                serverUrl = serverUrl,
-                xSession = settingsPreferenceDataSource.getSession(),
-                token = token,
-                isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi(),
+                bookmark = bookmarkToUpdateCache.value ?: return@launch,
                 updateCachePayload = updateCachePayload
             )
-                .collect { result ->
-                    when (result) {
-                        is Result.Error -> {
-                            Log.v(
-                                "FeedViewModel",
-                                "Error updating bookmark: ${result.error?.message}"
-                            )
-                            _bookmarksUiState.error(
-                                errorMessage = result.error?.message ?: "Unknown error"
-                            )
-                        }
-
-                        is Result.Loading -> {
-                            Log.v("FeedViewModel", "updating bookmark...")
-                            _bookmarksUiState.isUpdating(true)
-                        }
-
-                        is Result.Success -> {
-                            Log.v("FeedViewModel", "Bookmark updating successfully.")
-                            _bookmarksUiState.isUpdating(false)
-                            refreshFeed()
-                        }
-
-                        else -> {}
-                    }
-                }
         }
     }
 

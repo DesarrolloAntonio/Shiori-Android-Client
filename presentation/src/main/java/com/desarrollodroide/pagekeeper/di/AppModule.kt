@@ -92,7 +92,8 @@ fun appModule() = module {
 
     single {
         UpdateBookmarkCacheUseCase(
-            bookmarksRepository = get()
+            bookmarksDao = get(),
+            syncManager = get()
         )
     }
 

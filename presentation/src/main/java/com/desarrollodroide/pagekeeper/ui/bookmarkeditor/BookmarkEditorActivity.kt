@@ -30,6 +30,10 @@ class BookmarkEditorActivity : ComponentActivity() {
         var title = ""
         intent?.let { intent ->
             if (intent.action == Intent.ACTION_SEND) {
+                intent.extras?.keySet()?.forEach { key ->
+                    val value = intent.extras?.get(key)
+                    Log.v("Intent Extra", "$key: $value")
+                }
                 sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
                 Log.v("Shared link", sharedUrl)
                 title = intent.getStringExtra(Intent.EXTRA_TITLE) ?: sharedUrl

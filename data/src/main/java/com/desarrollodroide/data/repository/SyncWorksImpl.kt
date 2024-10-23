@@ -2,12 +2,14 @@ package com.desarrollodroide.data.repository
 
 import android.util.Log
 import androidx.work.*
+import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.repository.workers.SyncWorker
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.model.SyncOperationType
+import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -22,14 +24,16 @@ class SyncWorksImpl(
 ) : SyncWorks {
     override fun scheduleSyncWork(
         operationType: SyncOperationType,
-        bookmark: Bookmark
+        bookmark: Bookmark,
+        updateCachePayload: UpdateCachePayload?
     ) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val encodedTitle = URLEncoder.encode(bookmark.title, "UTF-8")
         val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setInputData(workDataOf(
                 "operationType" to operationType.name,
-                "bookmarkId" to bookmark.id
+                "bookmarkId" to bookmark.id,
+                "updateCachePayload" to updateCachePayload?.toJson()
             ))
             .addTag("worker_${SyncWorker::class.java.name}")
             .addTag("operationType_${operationType.name}")
@@ -54,12 +58,6 @@ class SyncWorksImpl(
         val allWorkInfos = withContext(Dispatchers.IO) {
             workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
         }
-
-        Log.d("SyncManager", "Total WorkInfos: ${allWorkInfos.size}")
-        allWorkInfos.forEach {
-            Log.d("SyncManagerInfo", "WorkInfo: id=${it.id}, state=${it.state}, tags=${it.tags}")
-        }
-
         val pendingJobs = allWorkInfos
             .filter { !it.state.isFinished }
             .mapNotNull { workInfo ->

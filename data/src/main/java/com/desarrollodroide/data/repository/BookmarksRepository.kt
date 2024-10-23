@@ -51,11 +51,11 @@ interface BookmarksRepository {
     updateCachePayload: UpdateCachePayload
   ): Flow<Result<Bookmark>>
 
-  fun updateBookmarkCacheV1(
+  suspend fun updateBookmarkCacheV1(
     token: String,
     serverUrl: String,
     updateCachePayload: UpdateCachePayload
-  ): Flow<Result<Bookmark>>
+  ): List<Bookmark>
 
   fun getBookmarkReadableContent(
     token: String,

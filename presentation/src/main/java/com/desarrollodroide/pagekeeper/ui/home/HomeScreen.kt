@@ -109,14 +109,14 @@ fun HomeScreen(
         onFinish()
     }
 
-
+    val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
     if (showBottomSheet.value) {
         ModalBottomSheet(
             sheetState = bottomSheetState,
             onDismissRequest = { showBottomSheet.value = false }
         ) {
             SyncJobsBottomSheetContent(
-                pendingJobs = feedViewModel.getPendingWorks().collectAsState(initial = emptyList()).value,
+                pendingJobs = pendingJobs,
                 onDismiss = { showBottomSheet.value = false },
                 onRetryAll = { feedViewModel.retryAllPendingJobs() }
             )
@@ -245,8 +245,6 @@ fun HomeScreen(
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
@@ -338,18 +336,6 @@ fun TopBar(
                         )
                     }
                 }
-
-//                if (showTooltip) {
-//                    Popup(
-//                        onDismissRequest = { showTooltip = false },
-//                        alignment = Alignment.TopEnd
-//                    ) {
-//                        SyncJobsTooltip(
-//                            pendingJobs = pendingJobs,
-//                            modifier = Modifier.padding(top = 8.dp, end = 8.dp)
-//                        )
-//                    }
-//                }
             }
 
             IconButton(onClick = onSettingsClick) {
@@ -368,53 +354,6 @@ fun TopBar(
             actionIconContentColor = MaterialTheme.colorScheme.primary // Optional: Set the action icons color if needed
         )
     )
-}
-
-@Composable
-fun SyncJobsTooltip(pendingJobs: List<PendingJob>, modifier: Modifier = Modifier) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 4.dp,
-        shadowElevation = 4.dp,
-        modifier = modifier.width(250.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Pending Sync Jobs",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            if (pendingJobs.isEmpty()) {
-                Text(
-                    "No pending jobs",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            } else {
-                pendingJobs.take(3).forEach { job ->
-                    Text(
-                        "${job.operationType}: ${job.state}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    if (job.bookmarkId != null) {
-                        Text(
-                            "Bookmark ID: ${job.bookmarkId}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-                if (pendingJobs.size > 3) {
-                    Text(
-                        "... and ${pendingJobs.size - 3} more",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -447,57 +386,16 @@ fun SyncJobsBottomSheetContent(
                 style = MaterialTheme.typography.bodyMedium
             )
         } else {
-//            // Create a header row for the table
-//            Row(modifier = Modifier.padding(vertical = 4.dp)) {
-//                Text(
-//                    text = "ID",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    modifier = Modifier.weight(1f)
-//                )
-//                Text(
-//                    text = "Type",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    modifier = Modifier.weight(1f)
-//                )
-//                Text(
-//                    text = "State",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    modifier = Modifier.weight(1f)
-//                )
-//                Spacer(modifier = Modifier.width(8.dp))
-//                Text(
-//                    text = "Actions",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    modifier = Modifier.weight(1f)
-//                )
-//            }
             HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
             pendingJobs.forEach { job ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-//                    Text(
-//                        text = job.bookmarkId?.toString() ?: "-",
-//                        style = MaterialTheme.typography.bodySmall,
-//                        modifier = Modifier.weight(1f)
-//                    )
                     Text(
                         text = "${job.operationType.name} - ${job.bookmarkTitle}",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
-//                    Text(
-//                        text = job.state,
-//                        style = MaterialTheme.typography.bodySmall,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                    Spacer(modifier = Modifier.width(8.dp))
-//                    IconButton(
-//                        onClick = { job.bookmarkId?.let { onRetryJob(it) } },
-//                        modifier = Modifier.weight(1f)
-//                    ) {
-//                        Icon(imageVector = Icons.Default.Sync, contentDescription = "Retry")
-//                    }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
 
