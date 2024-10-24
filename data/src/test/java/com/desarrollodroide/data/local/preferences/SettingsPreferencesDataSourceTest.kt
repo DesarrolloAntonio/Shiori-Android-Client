@@ -24,6 +24,8 @@ import app.cash.turbine.test
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.Flow
 import org.mockito.Mockito.`when`
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @ExperimentalCoroutinesApi
 class SettingsPreferencesDataSourceImplTest {
@@ -48,6 +50,45 @@ class SettingsPreferencesDataSourceImplTest {
             rememberUserProtoDataStore = rememberUserProtoDataStoreMock,
             hideTagDataStore = hideTagDataStoreMock
         )
+    }
+
+    // --- Dynamic Colors Tests ---
+
+    @Test
+    fun `getUseDynamicColors returns expected value when set`() = runTest {
+        val expectedValue = true
+        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf(USE_DYNAMIC_COLORS to expectedValue)))
+
+        val actualValue = settingsPreferencesDataSourceImpl.getUseDynamicColors()
+
+        assertEquals(expectedValue, actualValue)
+    }
+
+    @Test
+    fun `getUseDynamicColors returns false by default when not set`() = runTest {
+        whenever(preferencesDataStore.data).thenReturn(flowOf(preferencesOf()))
+
+        val actualValue = settingsPreferencesDataSourceImpl.getUseDynamicColors()
+
+        assertFalse(actualValue)
+    }
+
+    @Test
+    fun `setUseDynamicColors updates preference correctly`() = runTest {
+        val newValue = true
+
+        settingsPreferencesDataSourceImpl.setUseDynamicColors(newValue)
+
+        verifyPreferenceEdit(preferencesDataStore, USE_DYNAMIC_COLORS, newValue)
+    }
+
+    @Test
+    fun `setUseDynamicColors can disable dynamic colors`() = runTest {
+        val newValue = false
+
+        settingsPreferencesDataSourceImpl.setUseDynamicColors(newValue)
+
+        verifyPreferenceEdit(preferencesDataStore, USE_DYNAMIC_COLORS, newValue)
     }
 
     // --- Theme Mode Tests ---
@@ -239,6 +280,8 @@ class SettingsPreferencesDataSourceImplTest {
 
     // --- Flow Tests ---
 
+    // --- CompactView Tests ---
+
     @Test
     fun `compactViewFlow emits correct value`() = runTest {
         val mockSystemPreferences = SystemPreferences.newBuilder()
@@ -250,6 +293,61 @@ class SettingsPreferencesDataSourceImplTest {
         settingsPreferencesDataSourceImpl.compactViewFlow.test {
             val emittedItem = awaitItem()
             assertEquals(true, emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `setCompactView updates compact view preference correctly`() = runTest {
+        // Given
+        val newCompactViewValue = true
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setCompactView(newCompactViewValue)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newCompactViewValue, updatedPreferences.compactView)
+    }
+
+    @Test
+    fun `setCompactView toggles from true to false correctly`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setCompactView(true)
+            .build()
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setCompactView(false)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val updatedPreferences = captor.firstValue.invoke(initialPreferences)
+        assertFalse(updatedPreferences.compactView)
+    }
+
+    @Test
+    fun `compact view state is correctly propagated through flow`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setCompactView(true)
+            .build()
+        val updatedPreferences = SystemPreferences.newBuilder()
+            .setCompactView(false)
+            .build()
+
+        // Create a flow that will emit both values
+        val preferencesFlow = flowOf(initialPreferences, updatedPreferences)
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(preferencesFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.compactViewFlow.test {
+            assertEquals(true, awaitItem()) // First emission
+            assertEquals(false, awaitItem()) // Second emission
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -283,6 +381,395 @@ class SettingsPreferencesDataSourceImplTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    // --- AutoAddBookmark Tests ---
+
+    @Test
+    fun `setAutoAddBookmark updates preference correctly`() = runTest {
+        // Given
+        val newValue = true
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setAutoAddBookmark(newValue)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newValue, updatedPreferences.autoAddBookmark)
+    }
+
+    @Test
+    fun `setAutoAddBookmark can disable auto-add bookmark`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setAutoAddBookmark(true)
+            .build()
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setAutoAddBookmark(false)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val updatedPreferences = captor.firstValue.invoke(initialPreferences)
+        assertFalse(updatedPreferences.autoAddBookmark)
+    }
+
+    @Test
+    fun `autoAddBookmarkFlow emits correct values`() = runTest {
+        // Given
+        val mockSystemPreferences = SystemPreferences.newBuilder()
+            .setAutoAddBookmark(true)
+            .build()
+        val mockSystemPreferencesFlow: Flow<SystemPreferences> = flowOf(mockSystemPreferences)
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(mockSystemPreferencesFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.autoAddBookmarkFlow.test {
+            val emittedItem = awaitItem()
+            assertTrue(emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `autoAddBookmarkFlow emits updates when preference changes`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setAutoAddBookmark(false)
+            .build()
+        val updatedPreferences = SystemPreferences.newBuilder()
+            .setAutoAddBookmark(true)
+            .build()
+        val preferencesFlow = flowOf(initialPreferences, updatedPreferences)
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(preferencesFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.autoAddBookmarkFlow.test {
+            assertFalse(awaitItem()) // Initial value
+            assertTrue(awaitItem())  // Updated value
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // --- CreateArchive Tests ---
+
+    @Test
+    fun `setCreateArchive updates preference correctly`() = runTest {
+        // Given
+        val newValue = true
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setCreateArchive(newValue)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newValue, updatedPreferences.createArchive)
+    }
+
+    @Test
+    fun `setCreateArchive can disable archive creation`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setCreateArchive(true)
+            .build()
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setCreateArchive(false)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val updatedPreferences = captor.firstValue.invoke(initialPreferences)
+        assertFalse(updatedPreferences.createArchive)
+    }
+
+    @Test
+    fun `createArchiveFlow emits initial value correctly`() = runTest {
+        // Given
+        val mockSystemPreferences = SystemPreferences.newBuilder()
+            .setCreateArchive(true)
+            .build()
+        val mockSystemPreferencesFlow: Flow<SystemPreferences> = flowOf(mockSystemPreferences)
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(mockSystemPreferencesFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.createArchiveFlow.test {
+            val emittedItem = awaitItem()
+            assertTrue(emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `createArchiveFlow reflects preference changes`() = runTest {
+        // Given
+        val initialPreferences = SystemPreferences.newBuilder()
+            .setCreateArchive(false)
+            .build()
+        val updatedPreferences = SystemPreferences.newBuilder()
+            .setCreateArchive(true)
+            .build()
+        val preferencesFlow = flowOf(initialPreferences, updatedPreferences)
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(preferencesFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.createArchiveFlow.test {
+            assertFalse(awaitItem()) // Initial value
+            assertTrue(awaitItem())  // Updated value
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // --- User Preferences Getters Tests ---
+
+    // Tests for getUrl()
+    @Test
+    fun `getUrl returns correct server url from user preferences`() = runTest {
+        // Given
+        val expectedUrl = "https://example.com"
+        val userPreferences = UserPreferences.newBuilder()
+            .setUrl(expectedUrl)
+            .build()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualUrl = settingsPreferencesDataSourceImpl.getUrl()
+
+        // Then
+        assertEquals(expectedUrl, actualUrl)
+    }
+
+    @Test
+    fun `getUrl returns empty string when no url is set`() = runTest {
+        // Given
+        val userPreferences = UserPreferences.getDefaultInstance()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualUrl = settingsPreferencesDataSourceImpl.getUrl()
+
+        // Then
+        assertEquals("", actualUrl)
+    }
+
+    // Tests for getSession()
+    @Test
+    fun `getSession returns correct session from user preferences`() = runTest {
+        // Given
+        val expectedSession = "session123"
+        val userPreferences = UserPreferences.newBuilder()
+            .setSession(expectedSession)
+            .build()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualSession = settingsPreferencesDataSourceImpl.getSession()
+
+        // Then
+        assertEquals(expectedSession, actualSession)
+    }
+
+    @Test
+    fun `getSession returns empty string when no session is set`() = runTest {
+        // Given
+        val userPreferences = UserPreferences.getDefaultInstance()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualSession = settingsPreferencesDataSourceImpl.getSession()
+
+        // Then
+        assertEquals("", actualSession)
+    }
+
+    // Tests for getToken()
+    @Test
+    fun `getToken returns correct token from user preferences`() = runTest {
+        // Given
+        val expectedToken = "token123"
+        val userPreferences = UserPreferences.newBuilder()
+            .setToken(expectedToken)
+            .build()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualToken = settingsPreferencesDataSourceImpl.getToken()
+
+        // Then
+        assertEquals(expectedToken, actualToken)
+    }
+
+    @Test
+    fun `getToken returns empty string when no token is set`() = runTest {
+        // Given
+        val userPreferences = UserPreferences.getDefaultInstance()
+        whenever(protoDataStoreMock.data).thenReturn(flowOf(userPreferences))
+
+        // When
+        val actualToken = settingsPreferencesDataSourceImpl.getToken()
+
+        // Then
+        assertEquals("", actualToken)
+    }
+
+    // --- Hide Tag Tests ---
+
+    // Tests for setHideTag()
+    @Test
+    fun `setHideTag updates tag correctly`() = runTest {
+        // Given
+        val tag = Tag(id = 1, name = "TestTag", selected = false, nBookmarks = 0)
+        val captor = argumentCaptor<suspend (HideTag) -> HideTag>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setHideTag(tag)
+
+        // Then
+        verify(hideTagDataStoreMock).updateData(captor.capture())
+        val testHideTag = HideTag.getDefaultInstance()
+        val updatedHideTag = captor.firstValue.invoke(testHideTag)
+        assertEquals(tag.id, updatedHideTag.id)
+        assertEquals(tag.name, updatedHideTag.name)
+    }
+
+    @Test
+    fun `setHideTag handles null tag by returning default instance`() = runTest {
+        // Given
+        val captor = argumentCaptor<suspend (HideTag) -> HideTag>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setHideTag(null)
+
+        // Then
+        verify(hideTagDataStoreMock).updateData(captor.capture())
+        val testHideTag = HideTag.getDefaultInstance()
+        val updatedHideTag = captor.firstValue.invoke(testHideTag)
+        assertEquals(HideTag.getDefaultInstance(), updatedHideTag)
+    }
+
+    // Tests for hideTagFlow
+    @Test
+    fun `hideTagFlow emits null when no tag is set`() = runTest {
+        // Given
+        val defaultHideTag = HideTag.getDefaultInstance()
+        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(defaultHideTag))
+
+        // Then
+        settingsPreferencesDataSourceImpl.hideTagFlow.test {
+            val emittedItem = awaitItem()
+            assertNull(emittedItem)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `hideTagFlow emits correct tag when set`() = runTest {
+        // Given
+        val expectedTag = HideTag.newBuilder()
+            .setId(1)
+            .setName("TestTag")
+            .build()
+        whenever(hideTagDataStoreMock.data).thenReturn(flowOf(expectedTag))
+
+        // Then
+        settingsPreferencesDataSourceImpl.hideTagFlow.test {
+            val emittedItem = awaitItem()
+            assertNotNull(emittedItem)
+            assertEquals(expectedTag.id, emittedItem?.id)
+            assertEquals(expectedTag.name, emittedItem?.name)
+            assertEquals(false, emittedItem?.selected)
+            assertEquals(0, emittedItem?.nBookmarks)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `hideTagFlow reflects changes in hide tag`() = runTest {
+        // Given
+        val initialTag = HideTag.getDefaultInstance()
+        val updatedTag = HideTag.newBuilder()
+            .setId(1)
+            .setName("UpdatedTag")
+            .build()
+        val tagsFlow = flowOf(initialTag, updatedTag)
+        whenever(hideTagDataStoreMock.data).thenReturn(tagsFlow)
+
+        // Then
+        settingsPreferencesDataSourceImpl.hideTagFlow.test {
+            assertNull(awaitItem()) // Initial null value
+            val updatedItem = awaitItem()
+            assertNotNull(updatedItem)
+            assertEquals(updatedTag.id, updatedItem?.id)
+            assertEquals(updatedTag.name, updatedItem?.name)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // --- Sync Timestamp Tests ---
+
+    // Tests for getLastSyncTimestamp()
+    @Test
+    fun `getLastSyncTimestamp returns correct timestamp`() = runTest {
+        // Given
+        val expectedTimestamp = 1234567890L
+        val systemPreferences = SystemPreferences.newBuilder()
+            .setLastSyncTimestamp(expectedTimestamp)
+            .build()
+        whenever(systemPreferencesDataStoreMock.data).thenReturn(flowOf(systemPreferences))
+
+        // When
+        val actualTimestamp = settingsPreferencesDataSourceImpl.getLastSyncTimestamp()
+
+        // Then
+        assertEquals(expectedTimestamp, actualTimestamp)
+    }
+
+    // Tests for setLastSyncTimestamp()
+    @Test
+    fun `setLastSyncTimestamp updates timestamp correctly`() = runTest {
+        // Given
+        val newTimestamp = 1234567890L
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setLastSyncTimestamp(newTimestamp)
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+        assertEquals(newTimestamp, updatedPreferences.lastSyncTimestamp)
+    }
+
+    // Tests for setCurrentTimeStamp()
+    @Test
+    fun `setCurrentTimeStamp updates timestamp with current time`() = runTest {
+        // Given
+        val captor = argumentCaptor<suspend (SystemPreferences) -> SystemPreferences>()
+
+        // When
+        settingsPreferencesDataSourceImpl.setCurrentTimeStamp()
+
+        // Then
+        verify(systemPreferencesDataStoreMock).updateData(captor.capture())
+        val testPreferences = SystemPreferences.getDefaultInstance()
+        val updatedPreferences = captor.firstValue.invoke(testPreferences)
+
+        // Verify timestamp is recent (within last minute)
+        val currentTime = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond()
+        val timestampDiff = currentTime - updatedPreferences.lastSyncTimestamp
+        assertTrue(timestampDiff < 60) // Difference should be less than 60 seconds
+    }
+
+    // --- Selected Categories Flow Tests ---
+    // TODO
+
 }
 
 private suspend fun <T> verifyPreferenceEdit(

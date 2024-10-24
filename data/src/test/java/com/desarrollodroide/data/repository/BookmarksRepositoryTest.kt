@@ -1,5 +1,7 @@
 package com.desarrollodroide.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,9 +23,12 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
+import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.Tag
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
+import kotlinx.coroutines.flow.first
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.mockito.kotlin.anyOrNull
@@ -160,40 +165,40 @@ class BookmarksRepositoryTest {
         verify(apiService).getBookmarks(eq(xSessionId), check { it.endsWith("/api/bookmarks") })
     }
 
-//    @Test
-//    fun `getPagingBookmarks should return paginated data when API call is successful`() = runTest {
-//        // Arrange
-//        val xSessionId = "testSessionId"
-//        val serverUrl = "http://test.com"
-//        val searchText = "test"
-//        val tags = listOf<Tag>()
-//        val saveToLocal = true
-//        val bookmarksDTO = BookmarksDTO(
-//            maxPage = 1,
-//            page = 1,
-//            bookmarks = listOf(
-//                BookmarkDTO(1, "http://bookmark1.com", "Bookmark 1", "Excerpt 1", "Author 1", 1, "2023-01-01", "http://image1.com", true, true, true, listOf(), true, true),
-//                BookmarkDTO(2, "http://bookmark2.com", "Bookmark 2", "Excerpt 2", "Author 2", 1, "2023-01-02", "http://image2.com", true, true, true, listOf(), true, true)
-//            )
-//        )
-//        val bookmarkEntities = listOf(
-//            BookmarkEntity(1, "http://bookmark1.com", "Bookmark 1", "Excerpt 1", "Author 1", 1, "2023-01-01", "http://image1.com", true, true, true, listOf(), true, true),
-//            BookmarkEntity(2, "http://bookmark2.com", "Bookmark 2", "Excerpt 2", "Author 2", 1, "2023-01-02", "http://image2.com", true, true, true, listOf(), true, true)
-//        )
-//        val expectedBookmarks = bookmarkEntities.map { it.toDomainModel() }
-//
-//        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString())).thenReturn(Response.success(bookmarksDTO))
-//        `when`(bookmarksDao.getAll()).thenReturn(flowOf(bookmarkEntities))
-//
-//        // Act
-//        val pager = Pager(
-//            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
-//            pagingSourceFactory = { BookmarkPagingSource(apiService, bookmarksDao, serverUrl, xSessionId, searchText, tags, saveToLocal) }
-//        ).flow
-//
-//        val snapshot = pager.first()
-//
-//        // Assert
-//        assertEquals(expectedBookmarks, snapshot)
-//    }
+    @Test
+    fun `getPagingBookmarks should return paginated data when API call is successful`() = runTest {
+        // Arrange
+        val xSessionId = "testSessionId"
+        val serverUrl = "http://test.com"
+        val searchText = "test"
+        val tags = listOf<Tag>()
+        val saveToLocal = true
+        val bookmarksDTO = BookmarksDTO(
+            maxPage = 1,
+            page = 1,
+            bookmarks = listOf(
+                BookmarkDTO(1, "http://bookmark1.com", "Bookmark 1", "Excerpt 1", "Author 1", 1, "2023-01-01", "","http://image1.com", true, true, true, listOf(), true, true),
+                BookmarkDTO(2, "http://bookmark2.com", "Bookmark 2", "Excerpt 2", "Author 2", 1, "2023-01-02", "","http://image2.com", true, true, true, listOf(), true, true)
+            )
+        )
+        val bookmarkEntities = listOf(
+            BookmarkEntity(1, "http://bookmark1.com", "Bookmark 1", "Excerpt 1", "Author 1", 1, "2023-01-01", "", "http://image1.com", true, true, true, listOf(), true, true),
+            BookmarkEntity(2, "http://bookmark2.com", "Bookmark 2", "Excerpt 2", "Author 2", 1, "2023-01-02", "", "http://image2.com", true, true, true, listOf(), true, true)
+        )
+        val expectedBookmarks = bookmarkEntities.map { it.toDomainModel() }
+
+        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString())).thenReturn(Response.success(bookmarksDTO))
+        `when`(bookmarksDao.getAll()).thenReturn(flowOf(bookmarkEntities))
+
+        // Act
+        val pager = Pager(
+            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
+            pagingSourceFactory = { BookmarkPagingSource(apiService, bookmarksDao, serverUrl, xSessionId, searchText, tags, saveToLocal) }
+        ).flow
+
+        val snapshot = pager.first()
+
+        // Assert
+        assertEquals(expectedBookmarks, snapshot)
+    }
 }
