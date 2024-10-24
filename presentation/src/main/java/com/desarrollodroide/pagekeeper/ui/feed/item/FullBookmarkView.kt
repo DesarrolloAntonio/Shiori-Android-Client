@@ -33,7 +33,6 @@ fun FullBookmarkView(
     getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
@@ -47,7 +46,6 @@ fun FullBookmarkView(
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
-                isLegacyApi = isLegacyApi,
                 token = token,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -116,7 +114,6 @@ private fun FullBookmarkViewPreview() {
                 getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.FULL
@@ -125,7 +122,6 @@ private fun FullBookmarkViewPreview() {
                 getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.SMALL

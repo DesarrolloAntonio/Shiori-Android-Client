@@ -50,7 +50,6 @@ class SettingsPreferencesDataSourceImpl(
                     owner = it.owner,
                     password = it.password,
                     serverUrl = it.url,
-                    isLegacyApi = it.isLegacyApi
                 )
             )
         }
@@ -70,7 +69,6 @@ class SettingsPreferencesDataSourceImpl(
                         owner = preference.owner,
                         password = preference.password,
                         serverUrl = preference.url,
-                        isLegacyApi = preference.isLegacyApi
                     )
                 )
             }
@@ -89,7 +87,6 @@ class SettingsPreferencesDataSourceImpl(
                 this.session = session.session
                 this.url = serverUrl
                 this.token = session.token
-                this.isLegacyApi = session.isLegacyApi
             }
         }
     }
@@ -102,7 +99,6 @@ class SettingsPreferencesDataSourceImpl(
                 owner = false,
                 password = it.password,
                 serverUrl = it.url,
-                isLegacyApi = false // Set a default value
             )
         }
 
@@ -118,7 +114,6 @@ class SettingsPreferencesDataSourceImpl(
                     owner = false,
                     password = preference.password,
                     serverUrl = preference.url,
-                    isLegacyApi = false // Set a default value
                 )
             }
     }
@@ -143,8 +138,6 @@ class SettingsPreferencesDataSourceImpl(
     override suspend fun getSession(): String = getUser().first().session
 
     override suspend fun getToken(): String = getUser().first().token
-
-    override suspend fun getIsLegacyApi(): Boolean = getUser().first().account.isLegacyApi
 
     override suspend fun resetUser() {
         saveUser(

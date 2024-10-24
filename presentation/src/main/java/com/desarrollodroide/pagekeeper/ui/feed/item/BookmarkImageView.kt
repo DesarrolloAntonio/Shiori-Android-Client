@@ -25,7 +25,6 @@ import org.koin.androidx.compose.get
 fun BookmarkImageView(
     imageUrl: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale,
@@ -53,11 +52,7 @@ fun BookmarkImageView(
                     }
                 }
                 .headers(
-                    if (isLegacyApi) {
-                        Headers.Builder().add("X-Session-Id", xSessionId).build()
-                    } else {
-                        Headers.Builder().add("Authorization", "Bearer $token").build()
-                    }
+                    Headers.Builder().add("Authorization", "Bearer $token").build()
                 )
                 .build(),
             contentDescription = "Bookmark image",

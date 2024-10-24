@@ -20,7 +20,6 @@ class UserPreferencesSerializerTest {
         .setSession("testSession")
         .setUrl("https://test.url")
         .setRememberPassword(true)
-        .setIsLegacyApi(false)
         .setToken("testToken")
         .build()
 

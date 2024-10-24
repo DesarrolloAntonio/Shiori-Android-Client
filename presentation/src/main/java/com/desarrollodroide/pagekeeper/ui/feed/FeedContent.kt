@@ -55,7 +55,6 @@ fun FeedContent(
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
@@ -104,7 +103,6 @@ fun FeedContent(
                         serverURL = serverURL,
                         xSessionId = xSessionId,
                         token = token,
-                        isLegacyApi = isLegacyApi,
                         viewType = viewType,
                         actions = BookmarkActions(
                             onClickEdit = { getBookmark -> actions.onEditBookmark(getBookmark()) },

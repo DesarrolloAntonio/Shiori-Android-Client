@@ -37,7 +37,6 @@ fun BookmarkItem(
     getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions,
     viewType: BookmarkViewType
@@ -57,7 +56,6 @@ fun BookmarkItem(
                     getBookmark = getBookmark,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
                     token = token,
                     actions = actions
                 )
@@ -66,7 +64,6 @@ fun BookmarkItem(
                     getBookmark = getBookmark,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
                     token = token,
                     actions = actions
                 )
@@ -94,7 +91,6 @@ fun PreviewPost() {
                 getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.FULL
@@ -103,7 +99,6 @@ fun PreviewPost() {
                 getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.SMALL

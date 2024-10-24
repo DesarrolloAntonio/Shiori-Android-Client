@@ -18,7 +18,6 @@ fun AccountDTO.toDomainModel() = Account(
     password = password?:"",
     owner = isOwner?:false,
     serverUrl = "",
-    isLegacyApi = isLegacyApi?:false
 )
 
 fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
@@ -26,7 +25,6 @@ fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
     .setUsername(account?.userName?:"")
     .setId(account?.id?:-1)
     .setOwner(account?.isOwner?:false)
-    .setIsLegacyApi(true)
     .build()
 
 fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
@@ -167,7 +165,6 @@ fun LoginResponseDTO.toProtoEntity(
     .setSession(message?.session?:"")
     .setUsername(userName)
     .setToken(message?.token?:"")
-    .setIsLegacyApi(false)
     .build()
 
 fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(

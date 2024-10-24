@@ -50,7 +50,6 @@ fun SmallBookmarkView(
     getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
@@ -75,7 +74,6 @@ fun SmallBookmarkView(
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
-                isLegacyApi = isLegacyApi,
                 token = token,
                 modifier = Modifier
                     .aspectRatio(1f)

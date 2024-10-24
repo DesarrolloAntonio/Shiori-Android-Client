@@ -4,6 +4,7 @@ option java_package = "com.desarrollodroide.data";
 option java_multiple_files = true;
 
 message UserPreferences {
+  reserved 8; // number previously used for isLegacyApi
 
   uint32 id = 1;
   string username = 2;
@@ -12,7 +13,6 @@ message UserPreferences {
   string session = 5;
   string url = 6;
   bool rememberPassword = 7;
-  bool isLegacyApi = 8;
   string token = 9;
 
 }

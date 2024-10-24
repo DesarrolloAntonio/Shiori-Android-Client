@@ -14,11 +14,7 @@ class SendLoginUseCase(
         username: String,
         password: String,
         serverUrl: String,
-        isLegacyApi: Boolean,
     ): Flow<Result<User?>> {
-        return if (isLegacyApi)
-            authRepository.sendLogin(username, password, serverUrl).flowOn(Dispatchers.IO)
-        else
-            authRepository.sendLoginV1(username, password, serverUrl).flowOn(Dispatchers.IO)
+        return authRepository.sendLoginV1(username, password, serverUrl).flowOn(Dispatchers.IO)
     }
 }

@@ -42,7 +42,6 @@ interface SettingsPreferenceDataSource {
     suspend fun setMakeArchivePublic(newValue: Boolean)
     suspend fun setCreateEbook(newValue: Boolean)
     suspend fun setCreateArchive(newValue: Boolean)
-    suspend fun getIsLegacyApi(): Boolean
     suspend fun setCompactView(isCompactView: Boolean)
     suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean)
     suspend fun getCategoriesVisible(): Boolean

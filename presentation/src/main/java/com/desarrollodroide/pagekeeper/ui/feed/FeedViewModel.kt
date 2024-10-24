@@ -79,7 +79,6 @@ class FeedViewModel(
     private var serverUrl = ""
     private var xSessionId = ""
     private var token = ""
-    private var isLegacyApi = false
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
     val showEpubOptionsDialog = mutableStateOf(false)
@@ -143,7 +142,6 @@ class FeedViewModel(
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
-            isLegacyApi = settingsPreferenceDataSource.getIsLegacyApi()
             getLocalTags()
             if (_tagsState.value.data.isNullOrEmpty()) {
                 getRemoteTags()
@@ -378,10 +376,6 @@ class FeedViewModel(
 
     fun getToken(): String = runBlocking {
         settingsPreferenceDataSource.getToken()
-    }
-
-    fun isLegacyApi(): Boolean = runBlocking {
-        settingsPreferenceDataSource.getIsLegacyApi()
     }
 
     fun addSelectedTag(tag: Tag) {

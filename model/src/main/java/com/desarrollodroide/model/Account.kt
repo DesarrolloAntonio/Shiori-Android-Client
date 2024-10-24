@@ -6,7 +6,6 @@ class Account(
     val password: String,
     val owner: Boolean ,
     val serverUrl: String,
-    val isLegacyApi: Boolean,
 ) {
     constructor() : this(
         id = -1,
@@ -14,7 +13,6 @@ class Account(
         password = "",
         owner = false,
         serverUrl = "",
-        isLegacyApi = false
     )
 
     companion object {
@@ -24,7 +22,6 @@ class Account(
             password = "securePassword123",
             owner = true,
             serverUrl = "https://api.example.com",
-            isLegacyApi = false
         )
     }
 }

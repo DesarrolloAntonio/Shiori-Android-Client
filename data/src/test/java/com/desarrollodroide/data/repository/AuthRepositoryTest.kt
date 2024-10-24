@@ -60,10 +60,10 @@ class AuthRepositoryImplTest {
         val sessionDTO = SessionDTO(
             "testSession",
             "testToken",
-            AccountDTO(1, username, isOwner = false, isLegacyApi = true)
+            AccountDTO(1, username, isOwner = false)
         )
         val expectedUser =
-            User("testToken", "testSession", Account(1, username, password, false, serverUrl, true))
+            User("testToken", "testSession", Account(1, username, password, false, serverUrl))
 
         `when`(apiService.sendLogin(anyString(), any())).thenReturn(Response.success(sessionDTO))
         `when`(settingsPreferenceDataSource.getUser()).thenReturn(flowOf(expectedUser))
@@ -265,7 +265,7 @@ class AuthRepositoryImplTest {
             error = null
         )
         val expectedUser =
-            User("testToken", "testSession", Account(1, username, password, false, serverUrl, true))
+            User("testToken", "testSession", Account(1, username, password, false, serverUrl))
 
         `when`(apiService.sendLoginV1(anyString(), any())).thenReturn(Response.success(loginResponseDTO))
         `when`(settingsPreferenceDataSource.getUser()).thenReturn(flowOf(expectedUser))

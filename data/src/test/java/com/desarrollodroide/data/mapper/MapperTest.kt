@@ -30,7 +30,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
         val sessionDTO = SessionDTO(
             token = "token123",
@@ -45,7 +44,6 @@ class MapperTest {
         assertEquals("testUser", user.account.userName)
         assertEquals("password", user.account.password)
         assertEquals(true, user.account.owner)
-        assertEquals(true, user.account.isLegacyApi)  // Corrected to match the DTO's isLegacyApi value
     }
 
     @Test
@@ -57,7 +55,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
         val sessionDTO = SessionDTO(
             token = "token123",
@@ -74,7 +71,6 @@ class MapperTest {
         assertEquals("session123", userPreferences.session)
         assertEquals("", userPreferences.url)  // Assuming this is not set from DTO
         assertEquals(false, userPreferences.rememberPassword)  // Assuming default value
-        assertEquals(true, userPreferences.isLegacyApi)
         assertEquals("", userPreferences.token)
     }
 
@@ -87,7 +83,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
 
         val account = accountDTO.toDomainModel()
@@ -95,7 +90,6 @@ class MapperTest {
         assertEquals("testUser", account.userName)
         assertEquals("password", account.password)
         assertEquals(true, account.owner)
-        assertEquals(true, account.isLegacyApi)  // Corrected to match the DTO's isLegacyApi value
     }
 
     @Test
@@ -294,7 +288,6 @@ class MapperTest {
             password = "password",
             owner = true,
             serverUrl = "https://example.com",
-            isLegacyApi = false
         )
 
         val loginRequestPayload = account.toRequestBody()
@@ -600,7 +593,6 @@ class MapperTest {
         assertEquals("session123", userPreferences.session)
         assertEquals("testUser", userPreferences.username)
         assertEquals("token123", userPreferences.token)
-        assertEquals(false, userPreferences.isLegacyApi)
     }
 
     @Test
@@ -616,7 +608,6 @@ class MapperTest {
         assertEquals("", userPreferences.session) // Default value for session
         assertEquals("testUser", userPreferences.username)
         assertEquals("", userPreferences.token) // Default value for token
-        assertEquals(false, userPreferences.isLegacyApi)
     }
 
     @Test
