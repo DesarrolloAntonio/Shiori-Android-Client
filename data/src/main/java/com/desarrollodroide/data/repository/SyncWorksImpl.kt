@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.repository
 
 import android.util.Log
+import androidx.lifecycle.asFlow
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -21,6 +22,8 @@ import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -62,31 +65,33 @@ class SyncWorksImpl(
         ).enqueue()
     }
 
-    override fun getPendingJobs(): Flow<List<PendingJob>> = flow {
-        val allWorkInfos = withContext(Dispatchers.IO) {
-            workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
-        }
-        val pendingJobs = allWorkInfos
-            .filter { !it.state.isFinished }
-            .mapNotNull { workInfo ->
-                Log.d("SyncManager", "WorkInfo: id=${workInfo.id}, state=${workInfo.state}, tags=${workInfo.tags}")
+    override fun getPendingJobs(): Flow<List<PendingJob>> =
+        workManager.getWorkInfosByTagLiveData("worker_${SyncWorker::class.java.name}")
+            .asFlow()
+            .map { workInfos ->
+                workInfos
+                    .filter { !it.state.isFinished }
+                    .mapNotNull { workInfo ->
+                        Log.d("SyncManager", "WorkInfo: id=${workInfo.id}, state=${workInfo.state}, tags=${workInfo.tags}")
 
-                val operationType = workInfo.getSyncOperationType()
-                Log.d("SyncManager", "OperationType: $operationType")
+                        val operationType = workInfo.getSyncOperationType()
+                        Log.d("SyncManager", "OperationType: $operationType")
 
-                operationType?.let {
-                    PendingJob(
-                        operationType = it,
-                        state = workInfo.state.name,
-                        bookmarkId = workInfo.getBookmarkId()?:-1,
-                        bookmarkTitle = workInfo.getBookmarkTitle()?:"Unknown",
-                    )
-                }
+                        operationType?.let {
+                            PendingJob(
+                                operationType = it,
+                                state = workInfo.state.name,
+                                bookmarkId = workInfo.getBookmarkId() ?: -1,
+                                bookmarkTitle = workInfo.getBookmarkTitle() ?: "Unknown",
+                            )
+                        }
+                    }
+                    .also { jobs ->
+                        Log.d("SyncManager", "Pending Jobs: ${jobs.size}")
+                    }
             }
+            .flowOn(Dispatchers.IO)
 
-        Log.d("SyncManager", "Pending Jobs: ${pendingJobs.size}")
-        emit(pendingJobs)
-    }
 
     override fun cancelAllSyncWorkers() {
         workManager.cancelAllWorkByTag(SyncWorker::class.java.name)

@@ -40,6 +40,10 @@ class SyncWorker(
         val bookmarkId = inputData.getInt("bookmarkId", -1)
         val updateCachePayload = inputData.getString("updateCachePayload")?.toBean<UpdateCachePayload>()
 
+        Log.v("SyncWorker", "Performing sync operation: $operationType")
+        Log.v("SyncWorker", "BookmarkId: $bookmarkId")
+        Log.v("SyncWorker", "UpdateCachePayload: $updateCachePayload")
+
         if (operationType == null || bookmarkId == -1) {
             return Result.failure()
         }

@@ -68,6 +68,7 @@ dependencies {
     implementation (libs.androidx.datastore.preferences) // DataStore for storing key-value pairs asynchronously and transactionally.
     implementation (libs.androidx.datastore.core) // Core DataStore functionality.
     implementation (libs.androidx.paging.compose) // Paging library for Jetpack Compose.
+    implementation (libs.androidx.lifecycle.runtime) // Lifecycle components for Jetpack Compose.
 
     // Protocol Buffers for efficient serialization of structured data
     implementation(libs.protobuf.kotlin.lite) // Protocol Buffers Lite for Kotlin, for efficient data serialization.

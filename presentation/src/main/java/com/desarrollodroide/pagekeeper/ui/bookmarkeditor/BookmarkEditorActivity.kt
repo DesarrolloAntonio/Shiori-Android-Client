@@ -54,9 +54,11 @@ class BookmarkEditorActivity : ComponentActivity() {
         lifecycleScope.launch {
             if (sharedUrl.isNotEmpty()) {
                 if (bookmarkViewModel.userHasSession()) {
-                    if (bookmarkViewModel.autoAddBookmark.value) {
+                    if (bookmarkViewModel.autoAddBookmark) {
                         // Auto-add bookmark without showing the editor screen
                         bookmarkViewModel.autoAddBookmark(sharedUrl, title)
+                        Toast.makeText(this@BookmarkEditorActivity, "Bookmark saved", Toast.LENGTH_LONG).show()
+                        finish()
                     } else {
                         // Show the bookmark editor screen
                         setContent {

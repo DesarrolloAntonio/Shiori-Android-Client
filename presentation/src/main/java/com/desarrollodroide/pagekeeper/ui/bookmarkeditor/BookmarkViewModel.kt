@@ -31,6 +31,8 @@ class BookmarkViewModel(
 
     var backendUrl = ""
     var sessionExpired = false
+    var autoAddBookmark: Boolean = false
+        private set
 
     private val _bookmarkUiState = MutableStateFlow(UiState<Bookmark>(idle = true))
     val bookmarkUiState = _bookmarkUiState.asStateFlow()
@@ -43,16 +45,15 @@ class BookmarkViewModel(
             backendUrl = userPreferences.getUrl()
             initializePreferences()
         }
+
     }
 
     private suspend fun initializePreferences() {
         makeArchivePublic = settingsPreferenceDataSource.makeArchivePublicFlow.first()
         createEbook = settingsPreferenceDataSource.createEbookFlow.first()
         createArchive = settingsPreferenceDataSource.createArchiveFlow.first()
+        autoAddBookmark = settingsPreferenceDataSource.autoAddBookmarkFlow.first()
     }
-
-    val autoAddBookmark: StateFlow<Boolean> = settingsPreferenceDataSource.autoAddBookmarkFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     var makeArchivePublic: Boolean = false
     var createEbook: Boolean = false
@@ -148,7 +149,7 @@ class BookmarkViewModel(
 
     private fun emitToastIfAutoAdd(message: String) {
         viewModelScope.launch {
-            if (autoAddBookmark.value) {
+            if (autoAddBookmark) {
                 _toastMessage.value = message
             }
         }
