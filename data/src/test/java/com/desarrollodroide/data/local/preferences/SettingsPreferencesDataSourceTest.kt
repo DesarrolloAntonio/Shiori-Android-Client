@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.flowOf
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.preferencesOf
 import com.desarrollodroide.data.UserPreferences
@@ -218,7 +217,7 @@ class SettingsPreferencesDataSourceImplTest {
 
     @Test
     fun `resetUser resets user data correctly`() = runTest {
-        settingsPreferencesDataSourceImpl.resetUser()
+        settingsPreferencesDataSourceImpl.resetData()
         verify(protoDataStoreMock).updateData(any())
     }
 

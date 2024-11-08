@@ -57,7 +57,7 @@ class AuthRepositoryImpl(
         NetworkBoundResource<String, String>(errorHandler = errorHandler) {
 
         override suspend fun saveRemoteData(response: String) {
-            settingsPreferenceDataSource.resetUser()
+            settingsPreferenceDataSource.resetData()
         }
 
         override fun fetchFromLocal() = flowOf("")

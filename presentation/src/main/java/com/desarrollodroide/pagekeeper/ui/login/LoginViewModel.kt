@@ -106,7 +106,7 @@ class LoginViewModel(
                                 }
                                 _userUiState.success(result.data)
                             } else {
-                                settingsPreferenceDataSource.resetUser()
+                                settingsPreferenceDataSource.resetData()
                             }
                         }
                     }
@@ -138,6 +138,7 @@ class LoginViewModel(
 
                         is Result.Success -> {
                             Log.v("LoginViewModel", "Liveness: ${result.data}")
+                            settingsPreferenceDataSource.setServerVersion(result.data?.message?.version?:"")
                             _livenessUiState.success(result.data)
                             sendLogin()
                         }

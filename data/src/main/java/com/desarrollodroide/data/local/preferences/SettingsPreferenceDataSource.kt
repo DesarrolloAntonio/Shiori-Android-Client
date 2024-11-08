@@ -35,7 +35,7 @@ interface SettingsPreferenceDataSource {
     suspend fun getUrl(): String
     suspend fun getSession(): String
     suspend fun getToken(): String
-    suspend fun resetUser()
+    suspend fun resetData()
     suspend fun resetRememberUser()
     fun setTheme(mode: ThemeMode)
     fun getThemeMode(): ThemeMode
@@ -55,4 +55,7 @@ interface SettingsPreferenceDataSource {
     suspend fun getLastSyncTimestamp(): Long
     suspend fun setLastSyncTimestamp(timestamp: Long)
     suspend fun setCurrentTimeStamp()
+    suspend fun getServerVersion(): String
+    suspend fun setServerVersion(version: String)
+
 }

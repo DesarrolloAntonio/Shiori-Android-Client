@@ -42,7 +42,7 @@ class SendLogoutUseCase(
 
     private suspend fun performCleanup() {
         syncManager.cancelAllSyncWorkers()
-        settingsPreferenceDataSource.resetUser()
+        settingsPreferenceDataSource.resetData()
         bookmarksRepository.deleteAllLocalBookmarks()
     }
 }

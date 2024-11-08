@@ -29,7 +29,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.State
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -62,6 +62,16 @@ fun FeedContent(
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(bookmarksPagingItems.loadState.refresh) {
+        if (bookmarksPagingItems.loadState.refresh is LoadState.NotLoading && isRefreshing) {
+            listState.animateScrollToItem(0)
+            delay(100)
+            isRefreshing = false
+        }
+    }
+
     fun refreshBookmarks() = refreshCoroutineScope.launch {
         actions.onRefreshFeed.invoke()
         isRefreshing = true
@@ -76,7 +86,7 @@ fun FeedContent(
         Modifier.fillMaxHeight()
             .padding(bottom = 10.dp)
     ) {
-        val listState = rememberLazyListState()
+        //val listState = rememberLazyListState()
         LazyColumn(
             state = listState,
             modifier = Modifier

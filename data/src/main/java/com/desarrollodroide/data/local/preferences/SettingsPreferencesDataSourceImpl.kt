@@ -139,7 +139,7 @@ class SettingsPreferencesDataSourceImpl(
 
     override suspend fun getToken(): String = getUser().first().token
 
-    override suspend fun resetUser() {
+    override suspend fun resetData() {
         saveUser(
             password = "",
             session = SessionDTO(null, null, null).toProtoEntity(),
@@ -148,6 +148,7 @@ class SettingsPreferencesDataSourceImpl(
         setHideTag(null)
         setSelectedCategories(emptyList())
         setLastSyncTimestamp(0)
+        setServerVersion("")
     }
 
     override suspend fun resetRememberUser() {
@@ -321,6 +322,20 @@ class SettingsPreferencesDataSourceImpl(
         systemPreferences.updateData { preferences ->
             preferences.toBuilder()
                 .setLastSyncTimestamp(ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond())
+                .build()
+        }
+    }
+
+    override suspend fun getServerVersion(): String {
+        return systemPreferences.data.map { preferences ->
+            preferences.serverVersion
+        }.first()
+    }
+
+    override suspend fun setServerVersion(version: String) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setServerVersion(version)
                 .build()
         }
     }

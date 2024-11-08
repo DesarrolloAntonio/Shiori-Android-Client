@@ -193,7 +193,7 @@ class AuthRepositoryImplTest {
             "Expected third result to be Success with empty data after resetUser, but was '${(results[2] as Result.Success).data}'"
         }
 
-        verify(settingsPreferenceDataSource).resetUser()
+        verify(settingsPreferenceDataSource).resetData()
         verify(apiService).sendLogout(check { it.endsWith("/api/logout") }, eq(xSession))
     }
 

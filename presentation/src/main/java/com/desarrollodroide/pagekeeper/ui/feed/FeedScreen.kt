@@ -81,7 +81,6 @@ fun FeedScreen(
     LaunchedEffect(Unit) {
         snapshotFlow { bookmarksPagingItems.itemSnapshotList.items }
             .collect { updatedItems ->
-                // Acción cuando hay una actualización
                 Log.d("FeedScreen", "Los bookmarks se han modificado: ${updatedItems.size} items")
             }
     }

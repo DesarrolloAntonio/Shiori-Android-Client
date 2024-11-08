@@ -47,6 +47,7 @@ class SettingsViewModel(
     val useDynamicColors = MutableStateFlow(false)
     val themeMode = MutableStateFlow(ThemeMode.AUTO)
     private var token = ""
+    var serverVersion = ""
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -134,6 +135,7 @@ class SettingsViewModel(
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             token = settingsPreferenceDataSource.getToken()
+            serverVersion = settingsPreferenceDataSource.getServerVersion()
         }
     }
 
