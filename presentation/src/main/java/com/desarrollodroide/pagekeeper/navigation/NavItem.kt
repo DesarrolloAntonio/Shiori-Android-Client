@@ -22,6 +22,8 @@ sealed class NavItem(
             return "readable_content/$bookmarkId/$encodedUrl/$encodedDate/$encodedTitle/$encodedIsRtl"
         }
     }
+    data object NetworkLoggerNavItem : NavItem("networkLogger")
+    data object LastCrashNavItem: NavItem("lastCrash")
 
     val route = run {
         val argValues = navArgs.map { "{${it.key}}" }

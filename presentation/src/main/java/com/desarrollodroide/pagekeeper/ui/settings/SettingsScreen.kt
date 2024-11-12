@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
@@ -57,6 +56,8 @@ fun SettingsScreen(
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onViewLastCrash: () -> Unit,
     goToLogin: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -128,6 +129,8 @@ fun SettingsScreen(
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSourceCode = onNavigateToSourceCode,
+                onNavigateToLogs = onNavigateToLogs,
+                onViewLastCrash = onViewLastCrash,
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
                 onHideTagChanged = settingsViewModel::setHideTag,
@@ -157,6 +160,8 @@ fun SettingsContent(
     onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onViewLastCrash: () -> Unit,
     themeMode: MutableStateFlow<ThemeMode>,
     goToLogin: () -> Unit,
     useDynamicColors: MutableStateFlow<Boolean>,
@@ -228,6 +233,14 @@ fun SettingsContent(
                 cacheSize = cacheSize,
                 onClearCache = onClearCache
             )
+            if (BuildConfig.FLAVOR == "staging") {
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(18.dp))
+                DebugSection (
+                    onNavigateToLogs = onNavigateToLogs,
+                    onViewLastCrash = onViewLastCrash
+                )
+            }
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             AccountSection(
@@ -327,6 +340,8 @@ fun SettingsScreenPreview() {
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
+        onNavigateToLogs = {},
+        onViewLastCrash = {},
         themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         goToLogin = {},
         useDynamicColors = remember { MutableStateFlow(false) },

@@ -6,6 +6,8 @@ import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
 import com.desarrollodroide.pagekeeper.ui.feed.SearchViewModel
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsViewModel
+import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogViewModel
+import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogViewModel
 import org.koin.dsl.module
 import org.koin.androidx.viewmodel.dsl.viewModel
 
@@ -70,6 +72,18 @@ fun presenterModule() = module {
             settingsPreferenceDataSource = get(),
             bookmarksDao = get(),
             bookmarkHtmlDao = get(),
+        )
+    }
+
+    viewModel {
+        NetworkLogViewModel(
+            logger = get(),
+        )
+    }
+
+    viewModel {
+        CrashLogViewModel(
+            settingsPreferenceDataSource = get(),
         )
     }
 

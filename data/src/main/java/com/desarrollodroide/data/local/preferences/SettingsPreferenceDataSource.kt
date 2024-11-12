@@ -57,5 +57,7 @@ interface SettingsPreferenceDataSource {
     suspend fun setCurrentTimeStamp()
     suspend fun getServerVersion(): String
     suspend fun setServerVersion(version: String)
-
+    suspend fun getLastCrashLog(): String
+    suspend fun setLastCrashLog(crash: String)
+    suspend fun clearLastCrashLog()
 }

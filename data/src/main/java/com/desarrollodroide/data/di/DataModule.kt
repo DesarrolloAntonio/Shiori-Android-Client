@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.data.helpers.CrashHandler
+import com.desarrollodroide.data.helpers.CrashHandlerImpl
 import com.desarrollodroide.data.local.datastore.HideTagSerializer
 import com.desarrollodroide.data.local.datastore.RememberUserPreferencesSerializer
 import com.desarrollodroide.data.local.datastore.SystemPreferencesSerializer
@@ -141,6 +143,12 @@ fun dataModule() = module {
         workManager = get(),
         bookmarksDao = get(),
         ) as SyncWorks
+    }
+
+    single {
+        CrashHandlerImpl(
+            settingsPreferenceDataSource = get()
+        ) as CrashHandler
     }
 
 }

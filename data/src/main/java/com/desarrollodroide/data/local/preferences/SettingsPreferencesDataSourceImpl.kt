@@ -339,4 +339,20 @@ class SettingsPreferencesDataSourceImpl(
                 .build()
         }
     }
+
+    override suspend fun getLastCrashLog(): String {
+        return systemPreferences.data.map { it.lastCrashLog }.first()
+    }
+
+    override suspend fun setLastCrashLog(crash: String) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastCrashLog(crash)
+                .build()
+        }
+    }
+
+    override suspend fun clearLastCrashLog() {
+        setLastCrashLog("")
+    }
 }

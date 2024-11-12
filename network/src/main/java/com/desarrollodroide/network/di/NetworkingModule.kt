@@ -1,5 +1,6 @@
 package com.desarrollodroide.network.di
 
+import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -11,10 +12,13 @@ import java.util.concurrent.TimeUnit
 
 fun networkingModule() = module {
 
+    single { NetworkLoggerInterceptor() }
+
     single {
         OkHttpClient.Builder()
             .readTimeout(30, TimeUnit.SECONDS)
             .connectTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(get<NetworkLoggerInterceptor>())
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })

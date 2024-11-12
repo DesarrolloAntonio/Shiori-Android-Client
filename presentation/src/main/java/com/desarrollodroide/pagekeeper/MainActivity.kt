@@ -18,20 +18,17 @@ import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.navigation.Navigation
 import org.koin.android.ext.android.inject
 import com.desarrollodroide.pagekeeper.extensions.shareEpubFile
+import com.desarrollodroide.pagekeeper.extensions.shareText
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
     private val themeManager: ThemeManager by inject()
-    private val imageLoader: ImageLoader by inject()
 
     @RequiresApi(Build.VERSION_CODES.N)
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Show log disk cache statistics for debugging
-        imageLoader.logCacheDetails()
 
         //val context = this.updateLocale(Locale("iw"))
         setContent {
@@ -50,6 +47,9 @@ class MainActivity : ComponentActivity() {
                         shareEpubFile = {
                             shareEpubFile(it)
                         },
+                        shareText = {
+                            shareText(it)
+                        }
                     )
                 }
             }

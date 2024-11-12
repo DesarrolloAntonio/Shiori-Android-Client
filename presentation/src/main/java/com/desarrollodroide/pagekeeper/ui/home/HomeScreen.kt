@@ -78,6 +78,8 @@ import java.io.File
 import com.desarrollodroide.pagekeeper.R
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
+import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
+import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -89,6 +91,7 @@ fun HomeScreen(
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
+    shareText: (String) -> Unit
 ) {
     val navController = rememberNavController()
     val isCategoriesVisible = remember { mutableStateOf(false) }
@@ -192,6 +195,12 @@ fun HomeScreen(
                 },
                 onNavigateToSourceCode = {
                     openUrlInBrowser.invoke(SHIORI_ANDROID_CLIENT_GITHUB_URL)
+                },
+                onNavigateToLogs = {
+                    navController.navigate(NavItem.NetworkLoggerNavItem.route)
+                },
+                onViewLastCrash = {
+                    navController.navigate(NavItem.LastCrashNavItem.route)
                 }
             )
         }
@@ -207,6 +216,22 @@ fun HomeScreen(
                 onBack = {
                     navController.navigateUp()
                 }
+            )
+        }
+        composable(NavItem.NetworkLoggerNavItem.route) {
+            NetworkLogScreen(
+                onBack = {
+                    navController.navigateUp()
+                },
+                onShare = shareText
+            )
+        }
+        composable(NavItem.LastCrashNavItem.route) {
+            CrashLogScreen(
+                onBack = {
+                    navController.navigateUp()
+                },
+                onShare = shareText
             )
         }
         composable(

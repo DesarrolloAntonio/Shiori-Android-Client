@@ -36,6 +36,7 @@ message SystemPreferences {
   repeated string selectedCategories = 6;
   int64 lastSyncTimestamp = 7;
   string serverVersion = 8;
+  string lastCrashLog = 9;
 
 }
 

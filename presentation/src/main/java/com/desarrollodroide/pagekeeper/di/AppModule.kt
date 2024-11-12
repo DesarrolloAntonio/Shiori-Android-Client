@@ -23,6 +23,7 @@ import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
+import com.desarrollodroide.data.helpers.CrashHandler
 import okhttp3.OkHttpClient
 import org.koin.dsl.module
 
