@@ -24,15 +24,15 @@ import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedSection(
-    compactView: MutableStateFlow<Boolean>,
+    compactView: Boolean,
+    onCompactViewChanged: (Boolean) -> Unit,
     onClickHideDialogOption: () -> Unit,
-    onSelectHideDialogOption: (Tag?) -> Unit,
+    onHideTagChanged: (Tag?) -> Unit,
     tagsUiState: UiState<List<Tag>>,
     hideTag: Tag?,
     ) {
@@ -49,18 +49,12 @@ fun FeedSection(
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(5.dp))
-
-        val compatViewItem = Item(
+        SwitchOption(
             title = "Compact view",
             icon = Icons.Filled.ViewCompactAlt,
-            switchState = compactView
+            checked = compactView,
+            onCheckedChange = onCompactViewChanged
         )
-
-        SwitchOption(
-            item = compatViewItem,
-            switchState = compactView
-        )
-
         ClickableOption(
             title = "Hide tag",
             icon = Icons.Filled.Sell,
@@ -92,15 +86,14 @@ fun FeedSection(
                 sheetState = sheetStateCategories,
             ) {
                 val categories: List<Tag> = tagsUiState.data ?: emptyList()
-                val categoriesState = remember { mutableStateOf(categories) }
                 HideCategoryOptionView(
                     hideTag = hideTag,
-                    uniqueCategories = categoriesState,
+                    uniqueCategories = categories,
                     onApply = { selectedTag ->
                         scope.launch {
                             sheetStateCategories.hide()
                             isCategoriesVisible.value = false
-                            onSelectHideDialogOption(selectedTag)
+                            onHideTagChanged(selectedTag)
                         }
                     },
                 )

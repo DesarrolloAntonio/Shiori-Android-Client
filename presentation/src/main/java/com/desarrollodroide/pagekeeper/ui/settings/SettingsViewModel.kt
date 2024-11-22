@@ -3,6 +3,8 @@ package com.desarrollodroide.pagekeeper.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import coil.annotation.ExperimentalCoilApi
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
@@ -15,9 +17,13 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
@@ -25,8 +31,9 @@ class SettingsViewModel(
     private val bookmarksRepository: BookmarksRepository,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val themeManager: ThemeManager,
-    private val getTagsUseCase: GetTagsUseCase
-) : ViewModel() {
+    private val getTagsUseCase: GetTagsUseCase,
+    private val imageLoader: ImageLoader,
+    ) : ViewModel() {
 
     private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
     val settingsUiState = _settingsUiState.asStateFlow()
@@ -34,21 +41,73 @@ class SettingsViewModel(
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
 
-    private val _tagToHide = MutableStateFlow<Tag?>(null)
-    val tagToHide = _tagToHide.asStateFlow()
+    private val _cacheSize = MutableStateFlow("Calculating...")
+    val cacheSize: StateFlow<String> = _cacheSize.asStateFlow()
 
-    val makeArchivePublic = MutableStateFlow<Boolean>(false)
-    val createEbook = MutableStateFlow<Boolean>(false)
-    val createArchive = MutableStateFlow<Boolean>(false)
-    val compactView = MutableStateFlow<Boolean>(false)
-    val autoAddBookmark = MutableStateFlow<Boolean>(false)
-    val useDynamicColors = MutableStateFlow<Boolean>(false)
-    val themeMode = MutableStateFlow<ThemeMode>(ThemeMode.AUTO)
+    val useDynamicColors = MutableStateFlow(false)
+    val themeMode = MutableStateFlow(ThemeMode.AUTO)
     private var token = ""
+    var serverVersion = ""
+
+    val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val createEbook: StateFlow<Boolean> = settingsPreferenceDataSource.createEbookFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val autoAddBookmark: StateFlow<Boolean> = settingsPreferenceDataSource.autoAddBookmarkFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val createArchive: StateFlow<Boolean> = settingsPreferenceDataSource.createArchiveFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+
+    fun setAutoAddBookmark(value: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setAutoAddBookmark(value)
+        }
+    }
+
+    fun setCompactView(isCompact: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCompactView(isCompact)
+        }
+    }
+
+    fun setMakeArchivePublic(isPublic: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setMakeArchivePublic(isPublic)
+        }
+    }
+
+    fun setCreateEbook(ebook: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateEbook(ebook)
+        }
+    }
+
+    fun setCreateArchive(archive: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setCreateArchive(archive)
+        }
+    }
+
+    fun setHideTag(tag: Tag?) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setHideTag(tag)
+        }
+    }
 
     init {
         loadSettings()
         observeDefaultsSettings()
+        updateCacheSize()
     }
     fun logout() {
         viewModelScope.launch {
@@ -58,19 +117,12 @@ class SettingsViewModel(
             ).collect { result ->
                 when (result) {
                     is Result.Error -> {
-                        Log.v("SettingsViewModel", "Error: ${result.error?.throwable?.message}")
                         _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
-                        settingsPreferenceDataSource.resetUser()
-                        bookmarksRepository.deleteAllLocalBookmarks()
                     }
                     is Result.Loading -> {
-                        Log.v("SettingsViewModel", "Loading: ${result.data}")
                         _settingsUiState.isLoading(true)
                     }
                     is Result.Success -> {
-                        Log.v("SettingsViewModel", "Success: ${result.data}")
-                        settingsPreferenceDataSource.resetUser()
-                        bookmarksRepository.deleteAllLocalBookmarks()
                         _settingsUiState.success(result.data)
                     }
                 }
@@ -80,15 +132,10 @@ class SettingsViewModel(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            makeArchivePublic.value = settingsPreferenceDataSource.getMakeArchivePublic()
-            createEbook.value = settingsPreferenceDataSource.getCreateEbook()
-            createArchive.value = settingsPreferenceDataSource.getCreateArchive()
-            compactView.value = settingsPreferenceDataSource.getCompactView()
-            autoAddBookmark.value = settingsPreferenceDataSource.getAutoAddBookmark()
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             token = settingsPreferenceDataSource.getToken()
-            _tagToHide.value = settingsPreferenceDataSource.getHideTag()
+            serverVersion = settingsPreferenceDataSource.getServerVersion()
         }
     }
 
@@ -99,7 +146,7 @@ class SettingsViewModel(
                 token = token,
             )
                 .distinctUntilChanged()
-                .collect() { result ->
+                .collect { result ->
                     when (result) {
                         is Result.Error -> {
                             Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
@@ -117,34 +164,24 @@ class SettingsViewModel(
         }
     }
 
-    fun setHideTag(tag: Tag?) {
+    @OptIn(ExperimentalCoilApi::class)
+    private fun updateCacheSize() {
         viewModelScope.launch {
-            settingsPreferenceDataSource.setHideTag(tag)
-            _tagToHide.value = tag
+            val size = imageLoader.diskCache?.size ?: 0L
+            _cacheSize.value = size.bytesToDisplaySize()
+        }
+    }
+
+    @OptIn(ExperimentalCoilApi::class)
+    fun clearImageCache() {
+        viewModelScope.launch {
+            imageLoader.memoryCache?.clear()
+            imageLoader.diskCache?.clear()
+            updateCacheSize()
         }
     }
 
     private fun observeDefaultsSettings() {
-        viewModelScope.launch {
-            makeArchivePublic.collect { newValue ->
-                settingsPreferenceDataSource.setMakeArchivePublic(newValue)
-            }
-        }
-        viewModelScope.launch {
-            createEbook.collect { newValue ->
-                settingsPreferenceDataSource.setCreateEbook(newValue)
-            }
-        }
-        viewModelScope.launch {
-            createArchive.collect { newValue ->
-                settingsPreferenceDataSource.setCreateArchive(newValue)
-            }
-        }
-        viewModelScope.launch {
-            compactView.collect { newValue ->
-                settingsPreferenceDataSource.setCompactView(newValue)
-            }
-        }
         viewModelScope.launch {
             useDynamicColors.collect { newValue ->
                 settingsPreferenceDataSource.setUseDynamicColors(newValue)
@@ -155,11 +192,6 @@ class SettingsViewModel(
             themeMode.collect { newValue ->
                 settingsPreferenceDataSource.setTheme(newValue)
                 themeManager.themeMode.value = newValue
-            }
-        }
-        viewModelScope.launch {
-            autoAddBookmark.collect { newValue ->
-                settingsPreferenceDataSource.setAutoAddBookmark(newValue)
             }
         }
     }

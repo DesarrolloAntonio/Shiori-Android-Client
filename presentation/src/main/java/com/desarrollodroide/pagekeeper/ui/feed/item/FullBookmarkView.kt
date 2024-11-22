@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -20,34 +24,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
+import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
 
 @Composable
 fun FullBookmarkView(
-    bookmark: Bookmark,
+    getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
-    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
-    val imageUrl =
-        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+    val bookmark by remember { derivedStateOf(getBookmark) }
+    val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
+    //val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}" } }
+    val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" } }
+
     Column {
         if (bookmark.imageURL.isNotEmpty()) {
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
-                isLegacyApi = isLegacyApi,
                 token = token,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
-                    .clip(
-                        RoundedCornerShape(12.dp)
-                    ),
+                    .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.FillWidth,
                 loadAsThumbnail = false
             )
@@ -87,46 +90,42 @@ fun FullBookmarkView(
                 onClickCategory = actions.onClickCategory
             )
             Spacer(modifier = Modifier.height(8.dp))
-            ButtonsView(bookmark = bookmark, actions = actions)
+            ButtonsView(getBookmark = getBookmark, actions = actions)
         }
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true
-)
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "RTL Layout",
-    showBackground = true,
-    showSystemUi = true,
-    locale = "ar"
-)
+@Preview
 @Composable
-fun BookmarkPreview() {
-    val bookmark = Bookmark.mock()
-
+private fun FullBookmarkViewPreview() {
     MaterialTheme {
-        FullBookmarkView(
-            bookmark = bookmark,
-            serverURL = "https://example.com",
-            xSessionId = "session-id",
-            isLegacyApi = false,
-            token = "token",
-            actions = BookmarkActions(
-                onClickCategory = { tag -> /* Handle category click */ },
-                onClickBookmark = { /* Handle archive button click */ },
-                onClickDelete = { /* Handle ebook button click */ },
-                onClickEdit = { /* Handle delete button click */ },
-                onClickEpub = { /* Handle epub button click */ },
-                onClickShare = { /* Handle share button click */ },
-                onClickSync = { /* Handle sync button click */ }
-            )
+        val mockBookmark = Bookmark.mock()
+        val actions = BookmarkActions(
+            onClickEdit = {},
+            onClickDelete = {},
+            onClickShare = {},
+            onClickCategory = {},
+            onClickBookmark = {},
+            onClickEpub = {},
+            onClickSync = {}
         )
+        Column {
+            BookmarkItem(
+                getBookmark = { mockBookmark },
+                serverURL = "",
+                xSessionId = "",
+                token = "",
+                actions = actions,
+                viewType = BookmarkViewType.FULL
+            )
+            BookmarkItem(
+                getBookmark = { mockBookmark },
+                serverURL = "",
+                xSessionId = "",
+                token = "",
+                actions = actions,
+                viewType = BookmarkViewType.SMALL
+            )
+        }
     }
 }

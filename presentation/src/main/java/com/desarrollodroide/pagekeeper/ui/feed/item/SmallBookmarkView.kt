@@ -25,6 +25,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.desarrollodroide.data.extensions.isTimestampId
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
@@ -44,18 +47,24 @@ import com.desarrollodroide.pagekeeper.extensions.isRTLText
 
 @Composable
 fun SmallBookmarkView(
-    bookmark: Bookmark,
+    getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions
 ) {
-    val imageUrl =
-        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
-    val modifier =
-        if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
-    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
+    val bookmark by remember { derivedStateOf(getBookmark) }
+    val imageUrl by remember { derivedStateOf {
+        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
+    }}
+    val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
+    val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
+
+//    val imageUrl =
+//        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+//    val modifier =
+//        if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
+//    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
     Row(
         modifier = modifier
             .padding(vertical = 8.dp)
@@ -65,7 +74,6 @@ fun SmallBookmarkView(
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
-                isLegacyApi = isLegacyApi,
                 token = token,
                 modifier = Modifier
                     .aspectRatio(1f)
@@ -125,7 +133,7 @@ fun SmallBookmarkView(
                         text = { Text("Edit") },
                         onClick = {
                             expanded.value = false
-                            actions.onClickEdit(bookmark)
+                            actions.onClickEdit(getBookmark)
                         },
                         leadingIcon = {
                             Icon(
@@ -137,7 +145,7 @@ fun SmallBookmarkView(
                         text = { Text("Delete") },
                         onClick = {
                             expanded.value = false
-                            actions.onClickDelete(bookmark)
+                            actions.onClickDelete(getBookmark)
                         },
                         leadingIcon = {
                             Icon(
@@ -150,7 +158,7 @@ fun SmallBookmarkView(
                             text = { Text("Epub") },
                             onClick = {
                                 expanded.value = false
-                                actions.onClickEpub(bookmark)
+                                actions.onClickEpub(getBookmark)
                             },
                             leadingIcon = {
                                 Icon(
@@ -164,7 +172,7 @@ fun SmallBookmarkView(
                         text = { Text("Share") },
                         onClick = {
                             expanded.value = false
-                            actions.onClickShare(bookmark)
+                            actions.onClickShare(getBookmark)
                         },
                         leadingIcon = {
                             Icon(
@@ -172,18 +180,20 @@ fun SmallBookmarkView(
                                 contentDescription = null
                             )
                         })
-                    DropdownMenuItem(
-                        text = { Text("Update") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickSync(bookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.CloudUpload,
-                                contentDescription = null
-                            )
-                        })
+                    if (!bookmark.id.isTimestampId()){
+                        DropdownMenuItem(
+                            text = { Text("Update") },
+                            onClick = {
+                                expanded.value = false
+                                actions.onClickSync(getBookmark)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.CloudUpload,
+                                    contentDescription = null
+                                )
+                            })
+                    }
                 }
             }
         }

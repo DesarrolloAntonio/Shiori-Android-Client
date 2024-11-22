@@ -30,7 +30,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
         val sessionDTO = SessionDTO(
             token = "token123",
@@ -45,7 +44,6 @@ class MapperTest {
         assertEquals("testUser", user.account.userName)
         assertEquals("password", user.account.password)
         assertEquals(true, user.account.owner)
-        assertEquals(true, user.account.isLegacyApi)  // Corrected to match the DTO's isLegacyApi value
     }
 
     @Test
@@ -57,7 +55,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
         val sessionDTO = SessionDTO(
             token = "token123",
@@ -74,7 +71,6 @@ class MapperTest {
         assertEquals("session123", userPreferences.session)
         assertEquals("", userPreferences.url)  // Assuming this is not set from DTO
         assertEquals(false, userPreferences.rememberPassword)  // Assuming default value
-        assertEquals(true, userPreferences.isLegacyApi)
         assertEquals("", userPreferences.token)
     }
 
@@ -87,7 +83,6 @@ class MapperTest {
             isOwner = true,
             oldPassword = "oldPass",
             newPassword = "newPass",
-            isLegacyApi = true
         )
 
         val account = accountDTO.toDomainModel()
@@ -95,7 +90,6 @@ class MapperTest {
         assertEquals("testUser", account.userName)
         assertEquals("password", account.password)
         assertEquals(true, account.owner)
-        assertEquals(true, account.isLegacyApi)  // Corrected to match the DTO's isLegacyApi value
     }
 
     @Test
@@ -114,6 +108,7 @@ class MapperTest {
             author = "Author Name",
             public = 1,
             modified = "2023-06-18",
+            createdAt = "2023-06-19",
             imageURL = "/image.jpg",
             hasContent = true,
             hasArchive = true,
@@ -133,6 +128,7 @@ class MapperTest {
         assertEquals("Author Name", bookmark.author)
         assertEquals(1, bookmark.public)
         assertEquals("2023-06-18", bookmark.modified)
+        assertEquals("2023-06-19", bookmark.createAt)
         assertEquals("http://example.com/image.jpg", bookmark.imageURL)
         assertEquals(true, bookmark.hasContent)
         assertEquals(true, bookmark.hasArchive)
@@ -162,6 +158,7 @@ class MapperTest {
             author = "Author Name",
             public = 1,
             modified = "2023-06-18",
+            createdAt = "2023-06-19",
             imageURL = "/image.jpg",
             hasContent = true,
             hasArchive = true,
@@ -192,6 +189,7 @@ class MapperTest {
         assertEquals("Author Name", bookmark.author)
         assertEquals(1, bookmark.public)
         assertEquals("2023-06-18", bookmark.modified)
+        assertEquals("2023-06-19", bookmark.createAt)
         assertEquals("http://example.com/image.jpg", bookmark.imageURL)
         assertEquals(true, bookmark.hasContent)
         assertEquals(true, bookmark.hasArchive)
@@ -290,7 +288,6 @@ class MapperTest {
             password = "password",
             owner = true,
             serverUrl = "https://example.com",
-            isLegacyApi = false
         )
 
         val loginRequestPayload = account.toRequestBody()
@@ -315,6 +312,7 @@ class MapperTest {
             author = "Author Name",
             public = 1,
             modified = "2023-06-18",
+            createdAt = "2023-06-19",
             imageURL = "/image.jpg",
             hasContent = true,
             hasArchive = true,
@@ -333,6 +331,7 @@ class MapperTest {
         assertEquals("Author Name", bookmarkEntity.author)
         assertEquals(1, bookmarkEntity.isPublic)
         assertEquals("2023-06-18", bookmarkEntity.modified)
+        assertEquals("2023-06-19", bookmarkEntity.createdAt)
         assertEquals("/image.jpg", bookmarkEntity.imageURL)
         assertEquals(true, bookmarkEntity.hasContent)
         assertEquals(true, bookmarkEntity.hasArchive)
@@ -355,6 +354,7 @@ class MapperTest {
             author = null,
             public = null,
             modified = null,
+            createdAt = null,
             imageURL = null,
             hasContent = null,
             hasArchive = null,
@@ -373,6 +373,7 @@ class MapperTest {
         assertEquals("", bookmarkEntity.author) // Default value for author
         assertEquals(0, bookmarkEntity.isPublic) // Default value for isPublic
         assertEquals("", bookmarkEntity.modified) // Default value for modified
+        assertEquals("", bookmarkEntity.createdAt) // Default value for createdAt
         assertEquals("", bookmarkEntity.imageURL) // Default value for imageURL
         assertEquals(false, bookmarkEntity.hasContent) // Default value for hasContent
         assertEquals(false, bookmarkEntity.hasArchive) // Default value for hasArchive
@@ -399,6 +400,7 @@ class MapperTest {
             author = "Author Name",
             isPublic = 1,
             modified = "2023-06-18",
+            createdAt = "2023-06-19",
             imageURL = "/image.jpg",
             hasContent = true,
             hasArchive = true,
@@ -417,6 +419,7 @@ class MapperTest {
         assertEquals("Author Name", bookmark.author)
         assertEquals(1, bookmark.public)
         assertEquals("2023-06-18", bookmark.modified)
+        assertEquals("2023-06-19", bookmark.createAt)
         assertEquals("/image.jpg", bookmark.imageURL)
         assertEquals(true, bookmark.hasContent)
         assertEquals(true, bookmark.hasArchive)
@@ -439,6 +442,7 @@ class MapperTest {
             author = "Author Name",
             isPublic = 1,
             modified = "2023-06-18",
+            createdAt = "2023-06-19",
             imageURL = "/image.jpg",
             hasContent = true,
             hasArchive = true,
@@ -457,6 +461,7 @@ class MapperTest {
         assertEquals("Author Name", bookmark.author)
         assertEquals(1, bookmark.public)
         assertEquals("2023-06-18", bookmark.modified)
+        assertEquals("2023-06-19", bookmark.createAt)
         assertEquals("/image.jpg", bookmark.imageURL)
         assertEquals(true, bookmark.hasContent)
         assertEquals(true, bookmark.hasArchive)
@@ -588,7 +593,6 @@ class MapperTest {
         assertEquals("session123", userPreferences.session)
         assertEquals("testUser", userPreferences.username)
         assertEquals("token123", userPreferences.token)
-        assertEquals(false, userPreferences.isLegacyApi)
     }
 
     @Test
@@ -604,7 +608,6 @@ class MapperTest {
         assertEquals("", userPreferences.session) // Default value for session
         assertEquals("testUser", userPreferences.username)
         assertEquals("", userPreferences.token) // Default value for token
-        assertEquals(false, userPreferences.isLegacyApi)
     }
 
     @Test

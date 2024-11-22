@@ -6,17 +6,18 @@ junitPlatformSuiteApi = "1.8.1"
 koinAndroidxCompose = "3.4.2"
 mockitoCore = "3.9.0"
 mockitoKotlin = "3.2.0"
-compose = "1.7.0-beta01"
+compose = "1.7.0"
 composeMaterial3 = "1.2.1"
 # gradlePlugin and lint need to be updated together
 gradlePlugin = "7.3.1"
 kotlin = "2.0.0"
-coroutines = "1.7.3"
-pagingCompose = "3.2.1"
+coroutines = "1.8.1"
+pagingCompose = "3.3.2"
 protobuf = "3.21.9"
-coil = "2.5.0"
+coil = "2.7.0"
 koin = "3.3.3"
 room = "2.6.1"
+work = "2.9.1"
 
 androidxnavigation = "2.7.7"
 androidxLifecycle = "2.7.0"
@@ -45,10 +46,13 @@ androidx-preference = "androidx.preference:preference-ktx:1.2.0"
 androidx-room = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 androidx-datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "datastorePreferences" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidxnavigation" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "pagingCompose" }
+androidx-work = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }

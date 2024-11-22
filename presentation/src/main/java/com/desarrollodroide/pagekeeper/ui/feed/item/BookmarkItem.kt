@@ -10,6 +10,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,49 +21,49 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 
 data class BookmarkActions(
-    val onClickEdit: (Bookmark) -> Unit,
-    val onClickDelete: (Bookmark) -> Unit,
-    val onClickShare: (Bookmark) -> Unit,
+    val onClickEdit: (GetBookmark) -> Unit,
+    val onClickDelete: (GetBookmark) -> Unit,
+    val onClickShare: (GetBookmark) -> Unit,
     val onClickCategory: (Tag) -> Unit,
-    val onClickBookmark: (Bookmark) -> Unit,
-    val onClickEpub: (Bookmark) -> Unit,
-    val onClickSync: (Bookmark) -> Unit
+    val onClickBookmark: (GetBookmark) -> Unit,
+    val onClickEpub: (GetBookmark) -> Unit,
+    val onClickSync: (GetBookmark) -> Unit
 )
+
+typealias GetBookmark = () -> Bookmark
 
 @Composable
 fun BookmarkItem(
-    bookmark: Bookmark,
+    getBookmark: GetBookmark,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     actions: BookmarkActions,
     viewType: BookmarkViewType
 ) {
+    val bookmark by remember { derivedStateOf(getBookmark) }
     Box(modifier = Modifier
-        .padding(horizontal = 6.dp,)
+        .padding(horizontal = 6.dp)
         .padding(bottom = if (viewType == BookmarkViewType.FULL) 0.dp else 6.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { actions.onClickBookmark(bookmark) },
+                .clickable { actions.onClickBookmark(getBookmark) },
         ) {
             when (viewType) {
                 BookmarkViewType.FULL -> FullBookmarkView(
-                    bookmark = bookmark,
+                    getBookmark = getBookmark,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
                     token = token,
                     actions = actions
                 )
 
                 BookmarkViewType.SMALL -> SmallBookmarkView(
-                    bookmark = bookmark,
+                    getBookmark = getBookmark,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
                     token = token,
                     actions = actions
                 )
@@ -72,36 +75,34 @@ fun BookmarkItem(
 @Preview
 @Composable
 fun PreviewPost() {
-    MaterialTheme() {
+    MaterialTheme {
+        val mockBookmark = Bookmark.mock()
         val actions = BookmarkActions(
-            onClickEdit = {},
-            onClickDelete = {},
-            onClickShare = {},
-            onClickCategory = {},
-            onClickBookmark = {},
-            onClickEpub = {},
-            onClickSync = {}
+            onClickEdit = { },
+            onClickDelete = { },
+            onClickShare = { },
+            onClickCategory = { },
+            onClickBookmark = { },
+            onClickEpub = { },
+            onClickSync = { }
         )
         Column {
             BookmarkItem(
-                bookmark = Bookmark.mock(),
+                getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.FULL
             )
             BookmarkItem(
-                bookmark = Bookmark.mock(),
+                getBookmark = { mockBookmark },
                 serverURL = "",
                 xSessionId = "",
-                isLegacyApi = false,
                 token = "",
                 actions = actions,
                 viewType = BookmarkViewType.SMALL
             )
         }
-
     }
 }

@@ -17,9 +17,6 @@ class RememberUserPreferencesSerializerTest {
         .setUsername("userTest")
         .setPassword("passTest")
         .setUrl("https://example.com")
-        .setMakeArchivePublic(true)
-        .setCreateEbook(false)
-        .setCreateArchive(true)
         .build()
 
     @Test
@@ -41,9 +38,6 @@ class RememberUserPreferencesSerializerTest {
         assertEquals(testRememberUserPreferences.username, deserializedObject.username)
         assertEquals(testRememberUserPreferences.password, deserializedObject.password)
         assertEquals(testRememberUserPreferences.url, deserializedObject.url)
-        assertEquals(testRememberUserPreferences.makeArchivePublic, deserializedObject.makeArchivePublic)
-        assertEquals(testRememberUserPreferences.createEbook, deserializedObject.createEbook)
-        assertEquals(testRememberUserPreferences.createArchive, deserializedObject.createArchive)
     }
 
 

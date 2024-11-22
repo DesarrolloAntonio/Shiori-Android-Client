@@ -26,10 +26,10 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-    // V1.5
-//    var userName = mutableStateOf("testing")
-//    var password = mutableStateOf("shiori")
-//    var serverUrl = mutableStateOf("http://144.24.183.231:8086")
+    // Oracle
+//    var userName = mutableStateOf("Test")
+//    var password = mutableStateOf("Test")
+//    var serverUrl = mutableStateOf("https://shiori.desarrollodroide.es/")
 
     // v1.6
 //    var userName = mutableStateOf("Test")
@@ -40,6 +40,11 @@ class LoginViewModel(
 //    var userName = mutableStateOf("Test")
 //    var password = mutableStateOf("Test")
 //    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
+
+    // localhost
+//    var userName = mutableStateOf("shiori")
+//    var password = mutableStateOf("gopher")
+//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")
@@ -65,15 +70,12 @@ class LoginViewModel(
         }
     }
 
-    private fun isLegacyApi() = livenessUiState.value.data?.ok != true
-
     fun sendLogin() {
         viewModelScope.launch {
             loginUseCase.invoke(
                 username = userName.value,
                 password = password.value,
                 serverUrl = serverUrl.value,
-                isLegacyApi = isLegacyApi()
             )
                 .collect { result ->
                     when (result) {
@@ -104,7 +106,7 @@ class LoginViewModel(
                                 }
                                 _userUiState.success(result.data)
                             } else {
-                                settingsPreferenceDataSource.resetUser()
+                                settingsPreferenceDataSource.resetData()
                             }
                         }
                     }
@@ -136,6 +138,7 @@ class LoginViewModel(
 
                         is Result.Success -> {
                             Log.v("LoginViewModel", "Liveness: ${result.data}")
+                            settingsPreferenceDataSource.setServerVersion(result.data?.message?.version?:"")
                             _livenessUiState.success(result.data)
                             sendLogin()
                         }

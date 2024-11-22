@@ -1,13 +1,18 @@
 package com.desarrollodroide.data.di
 
+import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.work.WorkManager
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.data.helpers.CrashHandler
+import com.desarrollodroide.data.helpers.CrashHandlerImpl
 import com.desarrollodroide.data.local.datastore.HideTagSerializer
 import com.desarrollodroide.data.local.datastore.RememberUserPreferencesSerializer
+import com.desarrollodroide.data.local.datastore.SystemPreferencesSerializer
 import com.desarrollodroide.data.local.datastore.UserPreferencesSerializer
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.preferences.SettingsPreferencesDataSourceImpl
@@ -20,10 +25,13 @@ import com.desarrollodroide.data.repository.FileRepository
 import com.desarrollodroide.data.repository.FileRepositoryImpl
 import com.desarrollodroide.data.repository.SettingsRepository
 import com.desarrollodroide.data.repository.SettingsRepositoryImpl
+import com.desarrollodroide.data.repository.SyncWorks
+import com.desarrollodroide.data.repository.SyncWorksImpl
 import com.desarrollodroide.data.repository.SystemRepository
 import com.desarrollodroide.data.repository.SystemRepositoryImpl
 import com.desarrollodroide.data.repository.TagsRepository
 import com.desarrollodroide.data.repository.TagsRepositoryImpl
+import com.desarrollodroide.data.repository.workers.SyncWorker
 import com.desarrollodroide.network.retrofit.FileRemoteDataSource
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -35,6 +43,7 @@ fun dataModule() = module {
     val protoDataStoreQualifier = named("protoDataStore")
     val protoRememberUserDataStoreQualifier = named("protoRememberUserDataStore")
     val protoHideTagDataStoreQualifier = named("protoHideTagDataStore")
+    val protoSystemDataStoreQualifier = named("protoSystemDataStore")
 
     single(preferencesDataStoreQualifier) {
         PreferenceDataStoreFactory.create(
@@ -69,12 +78,23 @@ fun dataModule() = module {
         )
     }
 
+    single(protoSystemDataStoreQualifier) {
+        DataStoreFactory.create(
+            serializer = SystemPreferencesSerializer,
+            produceFile = { androidContext().preferencesDataStoreFile("system_data")},
+            corruptionHandler = null,
+        )
+    }
+
     single { SettingsPreferencesDataSourceImpl(
         dataStore = get(preferencesDataStoreQualifier),
         protoDataStore = get(protoDataStoreQualifier),
+        systemPreferences = get(protoSystemDataStoreQualifier),
         rememberUserProtoDataStore = get(protoRememberUserDataStoreQualifier),
         hideTagDataStore = get(protoHideTagDataStoreQualifier)
     ) as SettingsPreferenceDataSource }
+
+
 
     single { AuthRepositoryImpl(
         apiService = get(),
@@ -115,5 +135,20 @@ fun dataModule() = module {
 
     single { FileRemoteDataSource() }
     single { ErrorHandlerImpl() as ErrorHandler }
+
+    single { WorkManager.getInstance(get<Context>()) }
+    single { SyncWorker.Factory() }
+
+    single { SyncWorksImpl(
+        workManager = get(),
+        bookmarksDao = get(),
+        ) as SyncWorks
+    }
+
+    single {
+        CrashHandlerImpl(
+            settingsPreferenceDataSource = get()
+        ) as CrashHandler
+    }
 
 }

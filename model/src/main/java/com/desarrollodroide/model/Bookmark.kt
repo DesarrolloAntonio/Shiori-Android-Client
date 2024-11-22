@@ -1,5 +1,8 @@
 package com.desarrollodroide.model
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 data class Bookmark (
     val id: Int,
     val url: String,
@@ -7,6 +10,7 @@ data class Bookmark (
     val excerpt: String,
     val author: String,
     val public: Int,
+    val createAt: String,
     val modified: String,
     val imageURL: String,
     val hasContent: Boolean,
@@ -21,15 +25,17 @@ data class Bookmark (
         tags: List<Tag>,
         public: Int,
         createArchive: Boolean,
-        createEbook: Boolean
+        createEbook: Boolean,
+        title: String ,
     ) : this(
-        id = -1,
+        id = (System.currentTimeMillis() / 1000).toInt(),
         url= url,
-        title = "",
+        title = title,
         excerpt = "",
         author = "",
         public = public,
-        modified = "",
+        createAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+        modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
         imageURL = "",
         hasContent = false,
         hasArchive = false,
@@ -47,6 +53,7 @@ data class Bookmark (
             excerpt = "A detailed description of the bookmark, explaining its significance, context, and why it was saved.",
             author = "John Doe",
             public = 1,
+            createAt = "2024-09-25 05:53:11",
             modified = "2024-03-19 15:44:40",
             imageURL = "https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w",
             hasContent = true,
@@ -54,7 +61,7 @@ data class Bookmark (
             hasEbook = false,
             createArchive = true,
             createEbook = true,
-            tags = listOf(Tag("tag1"), Tag("tag2")),
+            tags = listOf(Tag(id = 1 ,name = "tag1"), Tag(id = 2, name = "tag2")),
         )
     }
 }

@@ -16,11 +16,13 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -61,20 +63,34 @@ fun FeedScreen(
     val context = LocalContext.current
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
+    val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
 
-    LaunchedEffect(Unit) {
-        feedViewModel.loadInitialData()
-        feedViewModel.getPagingBookmarks()
+    LaunchedEffect(feedViewModel) {
+        feedViewModel.initializeIfNeeded()
     }
     LaunchedEffect(isCategoriesVisible.value) {
         if (isCategoriesVisible.value) {
-            feedViewModel.getTags()
+            // TODO remove when sync functionality is implemented
+            //feedViewModel.getTags()
         }
     }
+
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { bookmarksPagingItems.itemSnapshotList.items }
+            .collect { updatedItems ->
+                Log.d("FeedScreen", "Los bookmarks se han modificado: ${updatedItems.size} items")
+            }
+    }
+
+
+
     val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
     val downloadUiState = feedViewModel.downloadUiState.collectAsState()
+    val isCompactView by feedViewModel.compactView.collectAsState()
+
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -131,13 +147,11 @@ fun FeedScreen(
         actions = actions,
         serverURL = feedViewModel.getServerUrl(),
         xSessionId = feedViewModel.getSession(),
-        isLegacyApi = feedViewModel.isLegacyApi(),
         token = feedViewModel.getToken(),
-        viewType = feedViewModel.isCompactView.collectAsState().value.let { isCompactView ->
-            if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL
-        },
+        viewType = if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL,
         bookmarksPagingItems = bookmarksPagingItems,
-        tagToHide = tagToHide
+        tagToHide = tagToHide,
+        showOnlyHiddenTag = showOnlyHiddenTag
     )
     if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
         Box(
@@ -174,7 +188,7 @@ fun FeedScreen(
             dismissButton = "Cancel",
             onConfirm = {
                 feedViewModel.bookmarkToDelete.value?.let {
-                    feedViewModel.deleteBookmark(it)
+                    feedViewModel.deleteLocalBookmark(it)
                     feedViewModel.showDeleteConfirmationDialog.value = false
                 }
             },
@@ -212,11 +226,12 @@ fun FeedScreen(
         isLoading = isUpdating,
         showDialog = feedViewModel.showSyncDialog
     ) { keepOldTitle, updateArchive, updateEbook ->
-        feedViewModel.updateBookmark(
+        feedViewModel.updateBookmarkCache(
             keepOldTitle = keepOldTitle,
             updateEbook = updateEbook,
             updateArchive = updateArchive,
         )
+        feedViewModel.showSyncDialog.value = false
     }
     if (!downloadUiState.value.error.isNullOrEmpty()) {
         ConfirmDialog(
@@ -289,17 +304,33 @@ fun FeedScreen(
             },
             sheetState = sheetStateCategories,
         ) {
-            val categories = tagsState.data?.let { mutableStateOf(it) } ?: remember { mutableStateOf(emptyList<Tag>()) }
+            val selectedTags by feedViewModel.selectedTags.collectAsState()
             CategoriesView(
-                uniqueCategories = categories,
-                onApply = { selectedTags ->
+                onDismiss = {
                     scope.launch {
                         sheetStateCategories.hide()
                         isCategoriesVisible.value = false
-                        feedViewModel.getPagingBookmarks(selectedTags)
                     }
                 },
-                onDismiss = {}
+                uniqueCategories = tagsState.data ?: emptyList(),
+                tagToHide = tagToHide,
+                onFilterHiddenTag = { value ->
+                    feedViewModel.showOnlyHiddenTag.value = value
+                },
+                selectedOptionIndex = feedViewModel.selectedOptionIndex.value,
+                onSelectedOptionIndexChanged = { newIndex ->
+                    feedViewModel.selectedOptionIndex.value = newIndex
+                },
+                selectedTags = selectedTags,
+                onCategoryDeselected = { tag ->
+                    feedViewModel.removeSelectedTag(tag)
+                },
+                onCategorySelected = { tag ->
+                    feedViewModel.addSelectedTag(tag)
+                },
+                onResetAll = {
+                    feedViewModel.resetTags()
+                },
             )
         }
     }
@@ -311,11 +342,11 @@ private fun FeedView(
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
-    ) {
+    showOnlyHiddenTag: Boolean
+) {
     if (bookmarksPagingItems.itemCount > 0) {
         Column {
             Box(
@@ -327,11 +358,11 @@ private fun FeedView(
                     actions = actions,
                     serverURL = serverURL,
                     xSessionId = xSessionId,
-                    isLegacyApi = isLegacyApi,
                     token = token,
                     viewType = viewType,
                     bookmarksPagingItems = bookmarksPagingItems,
-                    tagToHide = tagToHide
+                    tagToHide = tagToHide,
+                    showOnlyHiddenTag = showOnlyHiddenTag
                 )
             }
         }

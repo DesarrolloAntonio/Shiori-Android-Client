@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.model.ReadableContent
+import com.desarrollodroide.model.SyncBookmarksRequestPayload
+import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 
@@ -23,24 +25,24 @@ interface BookmarksRepository {
       saveToLocal: Boolean
   ): Flow<PagingData<Bookmark>>
 
-  fun addBookmark(
+  suspend fun addBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark
-  ): Flow<Result<Bookmark>>
+  ): Bookmark
 
 
-  fun deleteBookmark(
+  suspend fun deleteBookmark(
     xSession: String,
     serverUrl: String,
     bookmarkId: Int
-  ): Flow<Result<Unit>>
+  )
 
-  fun editBookmark(
+  suspend fun editBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark
-  ): Flow<Result<Bookmark>>
+  ): Bookmark
 
   suspend fun deleteAllLocalBookmarks()
   fun updateBookmarkCache(
@@ -49,15 +51,31 @@ interface BookmarksRepository {
     updateCachePayload: UpdateCachePayload
   ): Flow<Result<Bookmark>>
 
-  fun updateBookmarkCacheV1(
+  suspend fun updateBookmarkCacheV1(
     token: String,
     serverUrl: String,
     updateCachePayload: UpdateCachePayload
-  ): Flow<Result<Bookmark>>
+  ): List<Bookmark>
 
   fun getBookmarkReadableContent(
     token: String,
     serverUrl: String,
     bookmarkId: Int
   ): Flow<Result<ReadableContent>>
+
+  suspend fun syncAllBookmarks(
+    xSession: String,
+    serverUrl: String
+  ): Flow<SyncStatus>
+
+  fun getLocalPagingBookmarks(
+    tags: List<Tag>,
+    searchText: String
+  ): Flow<PagingData<Bookmark>>
+
+  fun syncBookmarks(
+    token: String,
+    serverUrl: String,
+    syncBookmarksRequestPayload: SyncBookmarksRequestPayload
+  ): Flow<Result<SyncBookmarksResponse>>
 }

@@ -8,6 +8,7 @@ import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.model.SessionDTO
+import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.model.TagDTO
 import com.desarrollodroide.network.model.TagsDTO
 import retrofit2.Response
@@ -133,5 +134,12 @@ interface RetrofitNetwork {
         @Url url: String,
         @Header("Authorization") authorization: String,
     ): Response<ReadableContentResponseDTO>
+
+    @POST()
+    suspend fun syncBookmarks(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body body: String
+    ): Response<SyncBookmarksResponseDTO>
 
 }

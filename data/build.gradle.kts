@@ -68,6 +68,7 @@ dependencies {
     implementation (libs.androidx.datastore.preferences) // DataStore for storing key-value pairs asynchronously and transactionally.
     implementation (libs.androidx.datastore.core) // Core DataStore functionality.
     implementation (libs.androidx.paging.compose) // Paging library for Jetpack Compose.
+    implementation (libs.androidx.lifecycle.runtime) // Lifecycle components for Jetpack Compose.
 
     // Protocol Buffers for efficient serialization of structured data
     implementation(libs.protobuf.kotlin.lite) // Protocol Buffers Lite for Kotlin, for efficient data serialization.
@@ -75,6 +76,10 @@ dependencies {
     // Room for abstracting SQLite database access and providing compile-time checks of SQL queries
     implementation(libs.androidx.room) // Room for database access, abstracting SQLite and providing LiveData support.
     ksp(libs.androidx.room.compiler) // Kotlin Symbol Processing (KSP) for Room to generate database access code at compile time.
+    implementation(libs.androidx.room.paging) // Replace with the appropriate version if different.
+
+    // WorkManager
+    implementation(libs.androidx.work) // WorkManager for managing background tasks.
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
@@ -84,6 +89,9 @@ dependencies {
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
     testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
+    testImplementation(libs.androidx.paging.common) // Common Paging library for testing.
+    testImplementation("app.cash.turbine:turbine:1.1.0") // Turbine for testing flows.
+
 
     // Android Testing libraries
     androidTestImplementation ("androidx.test:core:1.5.0") // Core testing library for Android, providing API for test infrastructure.

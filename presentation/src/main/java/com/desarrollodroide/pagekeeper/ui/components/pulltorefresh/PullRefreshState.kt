@@ -195,7 +195,7 @@ object PullRefreshDefaults {
      * If the indicator is below this threshold offset when it is released, a refresh
      * will be triggered.
      */
-    val RefreshThreshold = 80.dp
+    val RefreshThreshold = 100.dp
 
     /**
      * The offset at which the indicator should be rendered whilst a refresh is occurring.

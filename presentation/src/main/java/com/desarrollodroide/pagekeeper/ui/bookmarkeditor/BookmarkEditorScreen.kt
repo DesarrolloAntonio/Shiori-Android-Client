@@ -7,8 +7,10 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.model.Bookmark
@@ -30,6 +32,11 @@ fun BookmarkEditorScreen(
     val availableTags = bookmarkViewModel.availableTags.collectAsState()
     val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
 
+    // No need to update values in settings
+    var localMakeArchivePublic by remember { mutableStateOf(bookmarkViewModel.makeArchivePublic) }
+    var localCreateEbook by remember { mutableStateOf(bookmarkViewModel.createEbook) }
+    var localCreateArchive by remember { mutableStateOf(bookmarkViewModel.createArchive) }
+
     BackHandler {
         onBack()
     }
@@ -44,10 +51,10 @@ fun BookmarkEditorScreen(
             title = "Error",
             content = bookmarkUiState.error,
             dismissButton = if (bookmarkViewModel.sessionExpired) "Go to login" else "",
-            confirmButton = "Accept" ,
+            confirmButton = "Accept",
             openDialog = remember { mutableStateOf(true) },
             onDismiss = {
-                if (bookmarkViewModel.sessionExpired){
+                if (bookmarkViewModel.sessionExpired) {
                     startMainActivity()
                 }
             },
@@ -56,47 +63,47 @@ fun BookmarkEditorScreen(
     }
 
     val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
-    val createArchive = remember { mutableStateOf(bookmark.createArchive) }
-    val makeArchivePublic = remember { mutableStateOf(bookmark.public == 1) }
-    val createEbook = remember { mutableStateOf(bookmark.createEbook) }
 
     BookmarkEditorView(
-            title = title,
-            bookmarkEditorType = bookmarkEditorType,
-            newTag = newTag,
-            assignedTags = assignedTags,
-            availableTags = availableTags,
-            saveBookmark = {
-                when (bookmarkEditorType) {
-                    BookmarkEditorType.ADD -> {
-                        bookmarkViewModel.saveBookmark(
-                            url = bookmark.url,
-                            tags = assignedTags.value,
-                            createArchive = createArchive.value,
-                            makeArchivePublic = makeArchivePublic.value,
-                            createEbook = createEbook.value
-                        )
-                    }
-                    BookmarkEditorType.EDIT -> {
-                        bookmarkViewModel.editBookmark(bookmark = bookmark.copy(
-                            tags = assignedTags.value,
-                            createArchive = createArchive.value,
-                            public = if (makeArchivePublic.value) 1 else 0
-                        ))
-                    }
+        title = title,
+        bookmarkEditorType = bookmarkEditorType,
+        newTag = newTag,
+        assignedTags = assignedTags,
+        availableTags = availableTags,
+        saveBookmark = {
+            when (bookmarkEditorType) {
+                BookmarkEditorType.ADD -> {
+                    bookmarkViewModel.saveBookmark(
+                        url = bookmark.url,
+                        title = bookmark.title,
+                        tags = assignedTags.value,
+                        createArchive = localCreateArchive,
+                        makeArchivePublic = localMakeArchivePublic,
+                        createEbook = localCreateEbook
+                    )
                 }
-            },
-            onBackClick = onBack,
-            createArchive = createArchive,
-            makeArchivePublic = makeArchivePublic,
-            createEbook = createEbook,
-            url = bookmark.url
-        )
-
-    if (bookmarkUiState.data != null) {
-        updateBookmark(bookmarkUiState.data)
-        showToast("Bookmark saved")
-    }
+                BookmarkEditorType.EDIT -> {
+                    bookmarkViewModel.editBookmark(
+                        bookmark = bookmark.copy(
+                            tags = assignedTags.value,
+                            createArchive = localCreateArchive,
+                            public = if (localMakeArchivePublic) 1 else 0,
+                            createEbook = localCreateEbook
+                        )
+                    )
+                }
+            }
+            onBack()
+        },
+        onBackClick = onBack,
+        createArchive = localCreateArchive,
+        makeArchivePublic = localMakeArchivePublic,
+        onMakeArchivePublicChanged = { localMakeArchivePublic = it },
+        createEbook = localCreateEbook,
+        url = bookmark.url,
+        onCreateEbookChanged = { localCreateEbook = it },
+        onCreateArchiveChanged = { localCreateArchive = it }
+    )
 }
 
 

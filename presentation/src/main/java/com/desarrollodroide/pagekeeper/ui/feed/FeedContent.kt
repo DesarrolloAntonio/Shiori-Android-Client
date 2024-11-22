@@ -1,12 +1,19 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -18,9 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -45,13 +55,23 @@ fun FeedContent(
     viewType: BookmarkViewType,
     serverURL: String,
     xSessionId: String,
-    isLegacyApi: Boolean,
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
+    showOnlyHiddenTag: Boolean
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(bookmarksPagingItems.loadState.refresh) {
+        if (bookmarksPagingItems.loadState.refresh is LoadState.NotLoading && isRefreshing) {
+            listState.animateScrollToItem(0)
+            delay(100)
+            isRefreshing = false
+        }
+    }
+
     fun refreshBookmarks() = refreshCoroutineScope.launch {
         actions.onRefreshFeed.invoke()
         isRefreshing = true
@@ -60,9 +80,15 @@ fun FeedContent(
     }
 
     val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
+    val coroutineScope = rememberCoroutineScope()
 
-    Box(Modifier.fillMaxHeight()) {
+    Box(
+        Modifier.fillMaxHeight()
+            .padding(bottom = 10.dp)
+    ) {
+        //val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(horizontal = 10.dp)
@@ -70,31 +96,39 @@ fun FeedContent(
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(bookmarksPagingItems.itemCount) { index ->
+            items(
+                count = bookmarksPagingItems.itemCount,
+                key = { index ->
+                    // Including 'modified' in the key ensures that when a bookmark's 'modified' field changes,
+                    // Compose recognizes it as a new item and recomposes it. This updates the UI immediately
+                    // after data changes
+                    val bookmark = bookmarksPagingItems[index]
+                    "${bookmark?.id}_${bookmark?.modified}" ?: index
+                }
+            ) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                Log.v("TagToHide", "$tagToHide")
-                if (bookmark != null && bookmark.tags.none { it.id == tagToHide?.id }) {
+                if (bookmark != null ) {
                     BookmarkItem(
-                        bookmark = bookmark,
+                        getBookmark = { bookmark },
                         serverURL = serverURL,
                         xSessionId = xSessionId,
                         token = token,
-                        isLegacyApi = isLegacyApi,
                         viewType = viewType,
                         actions = BookmarkActions(
-                            onClickEdit = { actions.onEditBookmark(bookmark) },
-                            onClickDelete = { actions.onDeleteBookmark(bookmark) },
-                            onClickShare = { actions.onShareBookmark(bookmark) },
-                            onClickBookmark = { actions.onBookmarkSelect(bookmark) },
-                            onClickEpub = { actions.onBookmarkEpub(bookmark) },
-                            onClickSync = { actions.onClickSync(bookmark) },
-                            onClickCategory = { category -> }),
+                            onClickEdit = { getBookmark -> actions.onEditBookmark(getBookmark()) },
+                            onClickDelete = { getBookmark -> actions.onDeleteBookmark(getBookmark()) },
+                            onClickShare = { getBookmark -> actions.onShareBookmark(getBookmark()) },
+                            onClickBookmark = { getBookmark -> actions.onBookmarkSelect(getBookmark()) },
+                            onClickEpub = { getBookmark -> actions.onBookmarkEpub(getBookmark()) },
+                            onClickSync = { getBookmark -> actions.onClickSync(getBookmark()) },
+                            onClickCategory = { category -> }
+                        ),
                     )
-                    if (index < bookmarksPagingItems.itemCount) {
+                    if (index < bookmarksPagingItems.itemCount - 1) {
                         HorizontalDivider(
                             modifier = Modifier
                                 .height(1.dp)
-                                .padding(horizontal = 6.dp,),
+                                .padding(horizontal = 6.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                         )
                     }
@@ -132,14 +166,37 @@ fun FeedContent(
                     }
                 }
             }
-            item { Spacer(modifier = Modifier.padding(4.dp)) }
+            item {  Spacer(modifier = Modifier.height(30.dp))  }
         }
 
         PullRefreshIndicator(
             modifier = Modifier.align(alignment = Alignment.TopCenter),
             refreshing = isRefreshing,
             state = refreshState,
+            scale = true
         )
+        val showScrollToTopButton by remember {
+            derivedStateOf { listState.firstVisibleItemIndex > 0 }
+        }
+
+        AnimatedVisibility(
+            visible = showScrollToTopButton,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                }
+            ) {
+                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
+            }
+        }
     }
 }
 

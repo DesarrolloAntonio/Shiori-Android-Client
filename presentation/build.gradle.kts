@@ -9,7 +9,6 @@ android {
     namespace = "com.desarrollodroide.pagekeeper"
     compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
-
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
         minSdk = (findProperty("minSdkVersion") as String).toInt()
@@ -22,21 +21,46 @@ android {
             useSupportLibrary = true
         }
     }
+
     signingConfigs {
-        create("release") {
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
-            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/key_store.jks")
-            storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+        create("production") {
+            keyAlias = System.getenv("PRODUCTION_KEY_ALIAS")
+            keyPassword = System.getenv("PRODUCTION_KEY_PASSWORD")
+            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/production_key_store.jks")
+            storePassword = System.getenv("PRODUCTION_STORE_PASSWORD")
+        }
+        create("staging") {
+            keyAlias = System.getenv("STAGING_KEY_ALIAS")
+            keyPassword = System.getenv("STAGING_KEY_PASSWORD")
+            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/staging_key_store.jks")
+            storePassword = System.getenv("STAGING_STORE_PASSWORD")
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isDebuggable = true
         }
     }
+
+    flavorDimensions += "version"
+    productFlavors {
+        create("production") {
+            dimension = "version"
+            signingConfig = signingConfigs.getByName("production")
+        }
+        create("staging") {
+            dimension = "version"
+            applicationId = "com.desarrollodroide.pagekeeper.staging"
+            signingConfig = signingConfigs.getByName("staging")
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Shiori-dev")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -56,13 +80,13 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val outputFileName = "Shiori v$versionName.apk"
-        outputs.all {
+    applicationVariants.configureEach {
+        outputs.configureEach {
             val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output?.outputFileName = outputFileName
+            output?.outputFileName = "Shiori v$versionName.apk"
         }
     }
+
 
     dependenciesInfo {
         includeInApk = false
@@ -86,7 +110,7 @@ dependencies {
     implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
     implementation (libs.androidx.paging.compose)
-    implementation ("androidx.paging:paging-common-ktx:3.2.1")
+    implementation ("androidx.paging:paging-common-ktx:3.3.2")
 
     implementation (libs.compose.ui.ui)
     implementation (libs.compose.ui.tooling.preview)

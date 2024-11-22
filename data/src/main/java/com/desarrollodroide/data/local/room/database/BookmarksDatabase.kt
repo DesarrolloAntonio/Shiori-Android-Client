@@ -1,6 +1,7 @@
 package com.desarrollodroide.data.local.room.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -13,9 +14,14 @@ import com.desarrollodroide.data.local.room.converters.TagsConverter
 import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkHtmlEntity
+import com.desarrollodroide.data.local.room.entity.BookmarkTagCrossRef
 import com.desarrollodroide.data.local.room.entity.TagEntity
+import java.util.concurrent.Executors
 
-@Database(entities = [BookmarkEntity::class, TagEntity::class, BookmarkHtmlEntity::class], version = 5)
+@Database(
+    entities = [BookmarkEntity::class, TagEntity::class, BookmarkHtmlEntity::class, BookmarkTagCrossRef::class],
+    version = 7
+)
 @TypeConverters(TagsConverter::class)
 abstract class BookmarksDatabase : RoomDatabase() {
 
@@ -24,12 +30,13 @@ abstract class BookmarksDatabase : RoomDatabase() {
     abstract fun bookmarkHtmlDao(): BookmarkHtmlDao
 
     companion object {
-
+        // Migraciones anteriores
         val MIGRATION_1_2: Migration = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE bookmarks ADD COLUMN has_ebook INTEGER NOT NULL DEFAULT 0")
             }
         }
+
         val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE bookmarks ADD COLUMN create_ebook INTEGER NOT NULL DEFAULT 0")
@@ -38,15 +45,14 @@ abstract class BookmarksDatabase : RoomDatabase() {
 
         val MIGRATION_3_4: Migration = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Create table statement updated to include n_bookmarks
                 database.execSQL(
                     """
-            CREATE TABLE IF NOT EXISTS `tags` (
-                `id` INTEGER PRIMARY KEY NOT NULL,
-                `name` TEXT NOT NULL,
-                `n_bookmarks` INTEGER NOT NULL
-            )
-        """
+                    CREATE TABLE IF NOT EXISTS `tags` (
+                        `id` INTEGER PRIMARY KEY NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `n_bookmarks` INTEGER NOT NULL
+                    )
+                    """
                 )
             }
         }
@@ -65,13 +71,41 @@ abstract class BookmarksDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `bookmark_tag_cross_ref` (
+                        `bookmarkId` INTEGER NOT NULL,
+                        `tagId` INTEGER NOT NULL,
+                        PRIMARY KEY(`bookmarkId`, `tagId`)
+                    )
+                """)
+            }
+        }
+
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE bookmarks ADD COLUMN created_at TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun create(context: Context): BookmarksDatabase {
             return Room.databaseBuilder(
                 context,
                 BookmarksDatabase::class.java, "bookmarks_database"
             )
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
+                )
+                .setQueryCallback({ sqlQuery, bindArgs ->
+                    Log.d("SQL Query", "SQL Query: $sqlQuery SQL Args: $bindArgs")
+                }, Executors.newSingleThreadExecutor())
                 .build()
         }
     }

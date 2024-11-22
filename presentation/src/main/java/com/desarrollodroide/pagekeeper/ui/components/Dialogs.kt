@@ -205,7 +205,9 @@ fun UpdateCacheDialog(
         }
 
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = {
+                showDialog.value = false
+            },
             title = { Text("Update cache for selected bookmark? This action is irreversible.") },
             text = {
                 Column {

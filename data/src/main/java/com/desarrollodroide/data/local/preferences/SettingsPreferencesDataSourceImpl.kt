@@ -17,24 +17,25 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.desarrollodroide.data.HideTag
 import com.desarrollodroide.data.RememberUserPreferences
+import com.desarrollodroide.data.SystemPreferences
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class SettingsPreferencesDataSourceImpl(
     private val dataStore: DataStore<Preferences>,
     private val protoDataStore: DataStore<UserPreferences>,
     private val rememberUserProtoDataStore: DataStore<RememberUserPreferences>,
+    private val systemPreferences: DataStore<SystemPreferences>,
     private val hideTagDataStore: DataStore<HideTag>,
 
     ) : SettingsPreferenceDataSource {
 
     val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-    val COMPACT_VIEW = booleanPreferencesKey("compact_view")
-    val AUTO_ADD_BOOKMARK = booleanPreferencesKey("auto_add_bookmark")
     val CATEGORIES_VISIBLE = booleanPreferencesKey("categories_visible")
-    val SELECTED_CATEGORIES_KEY = stringPreferencesKey("selected_categories")
     val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
 
     // Use with stateIn
@@ -49,7 +50,6 @@ class SettingsPreferencesDataSourceImpl(
                     owner = it.owner,
                     password = it.password,
                     serverUrl = it.url,
-                    isLegacyApi = it.isLegacyApi
                 )
             )
         }
@@ -69,7 +69,6 @@ class SettingsPreferencesDataSourceImpl(
                         owner = preference.owner,
                         password = preference.password,
                         serverUrl = preference.url,
-                        isLegacyApi = preference.isLegacyApi
                     )
                 )
             }
@@ -88,7 +87,6 @@ class SettingsPreferencesDataSourceImpl(
                 this.session = session.session
                 this.url = serverUrl
                 this.token = session.token
-                this.isLegacyApi = session.isLegacyApi
             }
         }
     }
@@ -101,7 +99,6 @@ class SettingsPreferencesDataSourceImpl(
                 owner = false,
                 password = it.password,
                 serverUrl = it.url,
-                isLegacyApi = false // Set a default value
             )
         }
 
@@ -117,7 +114,6 @@ class SettingsPreferencesDataSourceImpl(
                     owner = false,
                     password = preference.password,
                     serverUrl = preference.url,
-                    isLegacyApi = false // Set a default value
                 )
             }
     }
@@ -143,14 +139,16 @@ class SettingsPreferencesDataSourceImpl(
 
     override suspend fun getToken(): String = getUser().first().token
 
-    override suspend fun getIsLegacyApi(): Boolean = getUser().first().account.isLegacyApi
-
-    override suspend fun resetUser() {
+    override suspend fun resetData() {
         saveUser(
             password = "",
             session = SessionDTO(null, null, null).toProtoEntity(),
             serverUrl = "",
         )
+        setHideTag(null)
+        setSelectedCategories(emptyList())
+        setLastSyncTimestamp(0)
+        setServerVersion("")
     }
 
     override suspend fun resetRememberUser() {
@@ -177,15 +175,15 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
-    override suspend fun setCompactView(isCompactView: Boolean) {
-        runBlocking {
-            dataStore.edit { preferences ->
-                preferences[COMPACT_VIEW] = isCompactView
-            }
-        }
+    override val compactViewFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.compactView }
     }
-    override suspend fun getCompactView(): Boolean = runBlocking {
-        dataStore.data.firstOrNull()?.get(COMPACT_VIEW) ?: false
+
+    override suspend fun setCompactView(isCompactView: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setCompactView(isCompactView).build()
+        }
     }
 
     override suspend fun setCategoriesVisible(isCategoriesVisible: Boolean) {
@@ -199,49 +197,29 @@ class SettingsPreferencesDataSourceImpl(
         dataStore.data.firstOrNull()?.get(CATEGORIES_VISIBLE) ?: false
     }
 
-    override suspend fun getMakeArchivePublic(): Boolean {
-        return rememberUserProtoDataStore.data.map { it.makeArchivePublic }.first()
+    override val makeArchivePublicFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.makeArchivePublic }
     }
 
     override suspend fun setMakeArchivePublic(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
+        systemPreferences.updateData { preferences ->
             preferences.toBuilder().setMakeArchivePublic(newValue).build()
         }
     }
 
-    override suspend fun getCreateEbook(): Boolean {
-        return rememberUserProtoDataStore.data.map { it.createEbook }.first()
+    override val createEbookFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.createEbook }
     }
 
     override suspend fun setCreateEbook(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
+        systemPreferences.updateData { preferences ->
             preferences.toBuilder().setCreateEbook(newValue).build()
         }
     }
 
-    override suspend fun getCreateArchive(): Boolean {
-        return rememberUserProtoDataStore.data.map { it.createArchive }.first()
-    }
-
-    override suspend fun setCreateArchive(newValue: Boolean) {
-        rememberUserProtoDataStore.updateData { preferences ->
-            preferences.toBuilder().setCreateArchive(newValue).build()
-        }
-    }
-
-    override suspend fun setSelectedCategories(categories: List<String>) {
-        dataStore.edit { preferences ->
-            val categoriesString = categories.joinToString(",")
-            preferences[SELECTED_CATEGORIES_KEY] = categoriesString
-        }
-    }
-
-    override suspend fun getSelectedCategories(): List<String> = runBlocking {
-        dataStore.data.firstOrNull()?.get(SELECTED_CATEGORIES_KEY)?.split(",") ?: emptyList()
-    }
-
-
-    override  fun getUseDynamicColors(): Boolean = runBlocking {
+    override fun getUseDynamicColors(): Boolean = runBlocking {
         dataStore.data.firstOrNull()?.get(USE_DYNAMIC_COLORS) ?: false
     }
 
@@ -251,6 +229,36 @@ class SettingsPreferencesDataSourceImpl(
                 preferences[USE_DYNAMIC_COLORS] = newValue
             }
         }
+    }
+
+    override val autoAddBookmarkFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.autoAddBookmark }
+    }
+
+    override suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setAutoAddBookmark(isAutoAddBookmark).build()
+        }
+    }
+
+    override val createArchiveFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.createArchive }
+    }
+
+    override suspend fun setCreateArchive(newValue: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setCreateArchive(newValue).build()
+        }
+    }
+
+    override val hideTagFlow: Flow<Tag?> by lazy {
+        hideTagDataStore.data
+            .map { hideTag ->
+                if (hideTag == HideTag.getDefaultInstance()) null
+                else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
+            }
     }
 
     override suspend fun setHideTag(tag: Tag?) {
@@ -265,20 +273,86 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
-    override suspend fun getHideTag(): Tag? {
-        return hideTagDataStore.data.first().let { hideTag ->
-            if (hideTag == HideTag.getDefaultInstance()) null
-            else Tag(id = hideTag.id, name = hideTag.name, selected = false, nBookmarks = 0)
+    override val selectedCategoriesFlow: Flow<List<String>> = systemPreferences.data
+        .map { preferences ->
+            preferences.selectedCategoriesList.distinct()
+        }
+
+    override suspend fun setSelectedCategories(categories: List<String>) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .clearSelectedCategories()
+                .addAllSelectedCategories(categories.distinct())
+                .build()
         }
     }
 
-    override suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[AUTO_ADD_BOOKMARK] = isAutoAddBookmark
+    override suspend fun addSelectedCategory(tag: Tag) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .addSelectedCategories(tag.id.toString())
+                .build()
         }
     }
-    override suspend fun getAutoAddBookmark(): Boolean = runBlocking {
-        dataStore.data.firstOrNull()?.get(AUTO_ADD_BOOKMARK) ?: false
+
+    override suspend fun removeSelectedCategory(tag: Tag) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .clearSelectedCategories()
+                .addAllSelectedCategories(preferences.selectedCategoriesList.filter { it != tag.id.toString() })
+                .build()
+        }
     }
 
+    override suspend fun getLastSyncTimestamp(): Long {
+        return systemPreferences.data.map { preferences ->
+            preferences.lastSyncTimestamp
+        }.first()
+    }
+
+    override suspend fun setLastSyncTimestamp(timestamp: Long) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastSyncTimestamp(timestamp)
+                .build()
+        }
+    }
+
+    override suspend fun setCurrentTimeStamp() {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastSyncTimestamp(ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond())
+                .build()
+        }
+    }
+
+    override suspend fun getServerVersion(): String {
+        return systemPreferences.data.map { preferences ->
+            preferences.serverVersion
+        }.first()
+    }
+
+    override suspend fun setServerVersion(version: String) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setServerVersion(version)
+                .build()
+        }
+    }
+
+    override suspend fun getLastCrashLog(): String {
+        return systemPreferences.data.map { it.lastCrashLog }.first()
+    }
+
+    override suspend fun setLastCrashLog(crash: String) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder()
+                .setLastCrashLog(crash)
+                .build()
+        }
+    }
+
+    override suspend fun clearLastCrashLog() {
+        setLastCrashLog("")
+    }
 }

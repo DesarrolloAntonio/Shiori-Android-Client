@@ -49,7 +49,7 @@ abstract class NetworkBoundResource<RequestType, ResultType>(
             }
         } catch (e: Exception) {
             if (e !is CancellationException) {
-                Log.v("NetworkBoundResource", "Error: ${e.message}")
+                println("NetworkBoundResource: Error: ${e.message}")
                 emit(Result.Error(errorHandler.getError(e)))
             }
         }

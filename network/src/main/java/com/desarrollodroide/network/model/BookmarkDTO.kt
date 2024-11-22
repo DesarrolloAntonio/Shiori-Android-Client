@@ -1,5 +1,7 @@
 package com.desarrollodroide.network.model
 
+import com.google.gson.annotations.SerializedName
+
 data class BookmarkDTO (
     val id: Int?,
     val url: String?,
@@ -7,6 +9,8 @@ data class BookmarkDTO (
     val excerpt: String?,
     val author: String?,
     val public: Int?,
+    val createdAt: String?,
+    @SerializedName(value = "modified", alternate = ["modifiedAt"])
     val modified: String?,
     val imageURL: String?,
     val hasContent: Boolean?,

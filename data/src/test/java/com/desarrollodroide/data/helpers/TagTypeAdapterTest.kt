@@ -13,10 +13,10 @@ class TagTypeAdapterTest {
         val tagName = "exampleTag"
 
         // When creating a Tag using the secondary constructor
-        val tag = Tag(tagName)
+        val tag = Tag(id = 1, tagName)
 
         // Then the properties should be set to default values except for the name
-        assertEquals(-1, tag.id)
+        assertEquals(1, tag.id)
         assertEquals(tagName, tag.name)
         assertEquals(false, tag.selected)
         assertEquals(0, tag.nBookmarks)
@@ -40,21 +40,4 @@ class TagTypeAdapterTest {
         assertEquals(expectedJson, json)
     }
 
-    @Test
-    fun `TagTypeAdapter serializes Tag correctly using secondary constructor`() {
-        // Given a Tag object created using the secondary constructor
-        val tag = Tag("exampleTag")
-
-        // And a Gson instance with TagTypeAdapter registered
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Tag::class.java, TagTypeAdapter())
-            .create()
-
-        // When serializing the Tag object
-        val json = gson.toJson(tag, Tag::class.java)
-
-        // Then the resulting JSON should only contain the 'name' field
-        val expectedJson = "{\"name\":\"exampleTag\"}" // As per TagTypeAdapter specification
-        assertEquals(expectedJson, json)
-    }
 }

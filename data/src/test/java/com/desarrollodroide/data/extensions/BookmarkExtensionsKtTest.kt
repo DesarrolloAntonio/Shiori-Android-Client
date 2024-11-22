@@ -10,7 +10,7 @@ class BookmarkExtensionTest {
     @Test
     fun `toBodyJson correctly serializes bookmark to JSON with custom tag serialization`() {
         // Given a Bookmark instance with predefined values
-        val tags = listOf(Tag("education"), Tag("reading"))
+        val tags = listOf(Tag(id = 1, "education"), Tag(id = 2,"reading"))
         val bookmark = Bookmark(
             id = 1,
             url = "https://example.com",
@@ -18,6 +18,7 @@ class BookmarkExtensionTest {
             excerpt = "An example excerpt",
             author = "Author Name",
             public = 1,
+            createAt = "2023-01-01T12:00:00",
             modified = "2023-01-01T12:00:00",
             imageURL = "https://example.com/image.jpg",
             hasContent = true,

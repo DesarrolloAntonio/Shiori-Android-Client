@@ -58,9 +58,12 @@ fun BookmarkEditorView(
     availableTags: State<List<Tag>>,
     saveBookmark: (BookmarkEditorType) -> Unit,
     onBackClick: () -> Unit,
-    createArchive: MutableState<Boolean>,
-    makeArchivePublic: MutableState<Boolean>,
-    createEbook: MutableState<Boolean>,
+    createArchive: Boolean,
+    onCreateArchiveChanged: (Boolean) -> Unit,
+    makeArchivePublic: Boolean,
+    onMakeArchivePublicChanged: (Boolean) -> Unit,
+    createEbook: Boolean,
+    onCreateEbookChanged: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -103,23 +106,23 @@ fun BookmarkEditorView(
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {
                 Checkbox(
-                    checked = createArchive.value,
-                    onCheckedChange = { createArchive.value = it }
+                    checked = createArchive,
+                    onCheckedChange = onCreateArchiveChanged
                 )
                 Text("Create archive")
             }
         }
         Row(verticalAlignment = CenterVertically) {
             Checkbox(
-                checked = createEbook.value,
-                onCheckedChange = { createEbook.value = it }
+                checked = createEbook,
+                onCheckedChange = onCreateEbookChanged
             )
             Text("Create Ebook")
         }
         Row(verticalAlignment = CenterVertically) {
             Checkbox(
-                checked = makeArchivePublic.value,
-                onCheckedChange = { makeArchivePublic.value = it }
+                checked = makeArchivePublic,
+                onCheckedChange = onMakeArchivePublicChanged
             )
             Text("Make bookmark publicly available")
         }
@@ -144,7 +147,7 @@ fun BookmarkEditorView(
                     .padding(top = 4.dp),
                 onClick = {
                     if (newTag.value.isNotBlank() && !assignedTags.value.map { it.name }.contains(newTag.value)) {
-                        assignedTags.value = assignedTags.value + Tag(newTag.value)
+                        assignedTags.value = assignedTags.value + Tag(id = -1, name = newTag.value)
                         newTag.value = ""
                     }
                 }
@@ -168,8 +171,12 @@ fun BookmarkEditorView(
             Categories(
                 categoriesType = CategoriesType.REMOVEABLES,
                 showCategories = true,
-                uniqueCategories = assignedTags,
-                onCategoriesSelectedChanged = {}
+                uniqueCategories = assignedTags.value,
+                selectedTags = assignedTags.value,
+                onCategorySelected = { /* No se usa en modo REMOVEABLES */ },
+                onCategoryDeselected = { deselectedTag ->
+                    assignedTags.value = assignedTags.value.filter { it != deselectedTag }
+                }
             )
         }
         Spacer(modifier = Modifier.heightIn(10.dp))
@@ -246,9 +253,12 @@ fun BookmarkEditorPreview() {
         availableTags = assignedTags,
         newTag = newTag,
         onBackClick = {},
-        makeArchivePublic = remember { mutableStateOf(true) },
-        createArchive = remember { mutableStateOf(false) },
-        createEbook = remember { mutableStateOf(false) }
+        makeArchivePublic = true,
+        createArchive = false,
+        createEbook = false,
+        onMakeArchivePublicChanged = {},
+        onCreateEbookChanged = {},
+        onCreateArchiveChanged = {}
     )
 
 }
@@ -262,6 +272,6 @@ private fun generateRandomTagName(length: Int): String {
 
 private fun generateRandomTags(count: Int): List<Tag> {
     return List(count) {
-        Tag(name = generateRandomTagName(10))
+        Tag(id = count,name = generateRandomTagName(10))
     }
 }

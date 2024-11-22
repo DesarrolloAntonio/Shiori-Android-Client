@@ -15,14 +15,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun DefaultsSection(
-    makeArchivePublic: MutableStateFlow<Boolean>,
-    createEbook: MutableStateFlow<Boolean>,
-    createArchive: MutableStateFlow<Boolean>,
-    autoAddBookmark: MutableStateFlow<Boolean>
+    makeArchivePublic: Boolean,
+    onMakeArchivePublicChanged: (Boolean) -> Unit,
+    createEbook: Boolean,
+    onCreateEbookChanged: (Boolean) -> Unit,
+    createArchive: Boolean,
+    onCreateArchiveChanged: (Boolean) -> Unit,
+    autoAddBookmark: Boolean,
+    onAutoAddBookmarkChanged: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -32,17 +35,29 @@ fun DefaultsSection(
     ) {
         Text(text = "Defaults", style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.height(5.dp))
-        val items = listOf(
-            Item("Make bookmark publicly available", icon = Icons.Filled.Public, switchState = makeArchivePublic),
-            Item("Create archive", icon = Icons.Filled.Archive, switchState = createArchive),
-            Item("Create Ebook", icon = Icons.Filled.Book, switchState = createEbook),
-            Item("Add bookmark automatically", icon = Icons.Filled.BookmarkAdd, switchState = autoAddBookmark)
+        SwitchOption(
+            title = "Make bookmark publicly available",
+            icon = Icons.Filled.Public,
+            checked = makeArchivePublic,
+            onCheckedChange = onMakeArchivePublicChanged
         )
-        items.forEach { item ->
-            SwitchOption(
-                item = item,
-                switchState = item.switchState
-            )
-        }
+        SwitchOption(
+            title = "Create archive",
+            icon = Icons.Filled.Archive,
+            checked = createArchive,
+            onCheckedChange = onCreateArchiveChanged
+        )
+        SwitchOption(
+            title = "Create Ebook",
+            icon = Icons.Filled.Book,
+            checked = createEbook,
+            onCheckedChange = onCreateEbookChanged
+        )
+        SwitchOption(
+            title = "Add bookmark automatically",
+            icon = Icons.Filled.BookmarkAdd,
+            checked = autoAddBookmark,
+            onCheckedChange = onAutoAddBookmarkChanged
+        )
     }
 }

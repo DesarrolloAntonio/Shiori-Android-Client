@@ -1,12 +1,11 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
-import com.desarrollodroide.domain.usecase.GetPagingBookmarksUseCase
+import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.model.Bookmark
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
-    private val getPagingBookmarksUseCase: GetPagingBookmarksUseCase,
+    private val getPagingBookmarksUseCase: GetLocalPagingBookmarksUseCase,
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     ) : ViewModel() {
 
@@ -55,7 +54,6 @@ class SearchViewModel(
             xSession = settingsPreferenceDataSource.getSession(),
             searchText = searchText,
             tags = emptyList(),
-            saveToLocal = false
         )
             .cachedIn(viewModelScope)
             .collect {

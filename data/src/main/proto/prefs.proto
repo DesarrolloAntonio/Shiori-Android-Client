@@ -4,6 +4,7 @@ option java_package = "com.desarrollodroide.data";
 option java_multiple_files = true;
 
 message UserPreferences {
+  reserved 8; // number previously used for isLegacyApi
 
   uint32 id = 1;
   string username = 2;
@@ -12,7 +13,6 @@ message UserPreferences {
   string session = 5;
   string url = 6;
   bool rememberPassword = 7;
-  bool isLegacyApi = 8;
   string token = 9;
 
 }
@@ -23,9 +23,20 @@ message RememberUserPreferences {
   string username = 2;
   string password = 3;
   string url = 4;
-  bool makeArchivePublic = 5;
-  bool createEbook = 6;
-  bool createArchive = 7;
+
+}
+
+message SystemPreferences {
+
+  bool makeArchivePublic = 1;
+  bool createEbook = 2;
+  bool createArchive = 3;
+  bool autoAddBookmark = 4;
+  bool compactView = 5;
+  repeated string selectedCategories = 6;
+  int64 lastSyncTimestamp = 7;
+  string serverVersion = 8;
+  string lastCrashLog = 9;
 
 }
 

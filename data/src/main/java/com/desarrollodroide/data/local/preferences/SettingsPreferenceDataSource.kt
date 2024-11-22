@@ -10,6 +10,14 @@ import kotlinx.coroutines.flow.Flow
 interface SettingsPreferenceDataSource {
 
     val userDataStream: Flow<User>
+    val compactViewFlow: Flow<Boolean>
+    val makeArchivePublicFlow: Flow<Boolean>
+    val createEbookFlow: Flow<Boolean>
+    val autoAddBookmarkFlow: Flow<Boolean>
+    val createArchiveFlow: Flow<Boolean>
+    val hideTagFlow: Flow<Tag?>
+    val selectedCategoriesFlow: Flow<List<String>>
+
     fun getUser(): Flow<User>
     suspend fun saveUser(
         session: UserPreferences,
@@ -27,28 +35,29 @@ interface SettingsPreferenceDataSource {
     suspend fun getUrl(): String
     suspend fun getSession(): String
     suspend fun getToken(): String
-    suspend fun resetUser()
+    suspend fun resetData()
     suspend fun resetRememberUser()
     fun setTheme(mode: ThemeMode)
     fun getThemeMode(): ThemeMode
-    suspend fun getMakeArchivePublic(): Boolean
     suspend fun setMakeArchivePublic(newValue: Boolean)
-    suspend fun getCreateEbook(): Boolean
     suspend fun setCreateEbook(newValue: Boolean)
-    suspend fun getCreateArchive(): Boolean
     suspend fun setCreateArchive(newValue: Boolean)
-    suspend fun getIsLegacyApi(): Boolean
-    suspend fun getCompactView(): Boolean
     suspend fun setCompactView(isCompactView: Boolean)
-    suspend fun getAutoAddBookmark(): Boolean
     suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean)
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)
     suspend fun setSelectedCategories(categories: List<String>)
-    suspend fun getSelectedCategories(): List<String>
-
     fun getUseDynamicColors(): Boolean
     fun setUseDynamicColors(newValue: Boolean)
-    suspend fun getHideTag(): Tag?
     suspend fun setHideTag(tag: Tag?)
+    suspend fun addSelectedCategory(tag: Tag)
+    suspend fun removeSelectedCategory(tag: Tag)
+    suspend fun getLastSyncTimestamp(): Long
+    suspend fun setLastSyncTimestamp(timestamp: Long)
+    suspend fun setCurrentTimeStamp()
+    suspend fun getServerVersion(): String
+    suspend fun setServerVersion(version: String)
+    suspend fun getLastCrashLog(): String
+    suspend fun setLastCrashLog(crash: String)
+    suspend fun clearLastCrashLog()
 }

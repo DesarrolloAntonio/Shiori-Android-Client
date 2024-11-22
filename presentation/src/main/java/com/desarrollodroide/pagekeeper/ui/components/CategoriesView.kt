@@ -17,31 +17,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 
 enum class CategoriesType {
     SELECTABLES, REMOVEABLES
 }
+
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 fun Categories(
     categoriesType: CategoriesType = CategoriesType.SELECTABLES,
     showCategories: Boolean,
-    uniqueCategories: MutableState<List<Tag>>,
-    selectedTags: MutableState<List<Tag>> = mutableStateOf(emptyList<Tag>()),
-    onCategoriesSelectedChanged: (List<Tag>) -> Unit,
+    uniqueCategories: List<Tag>,
+    selectedTags: List<Tag>,
+    onCategorySelected: (Tag) -> Unit,
+    onCategoryDeselected: (Tag) -> Unit,
     singleSelection: Boolean = false
 ) {
-    Log.v("selectedTags", "selectedTags: $selectedTags")
     AnimatedVisibility(showCategories) {
         Column {
             FlowRow {
-                uniqueCategories.value.forEach { category ->
-                    val selected = selectedTags.value.any { it.id == category.id }
+                uniqueCategories.forEach { category ->
+                    val selected = selectedTags.any { it.name == category.name }
                     FilterChip(
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
@@ -55,27 +55,31 @@ fun Categories(
                             selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         selected = selected,
-                        label = { Text(category.name) },
+                        label = { Text(category.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         modifier = Modifier.padding(horizontal = 4.dp),
                         shape = RoundedCornerShape(12.dp),
                         onClick = {
                             when (categoriesType) {
                                 CategoriesType.SELECTABLES -> {
                                     if (singleSelection) {
-                                        selectedTags.value = if (selected) emptyList() else listOf(category)
+                                        selectedTags.forEach {
+                                            onCategoryDeselected(it)
+                                        }
+                                        if (!selected) {
+                                            onCategorySelected(category)
+                                        }
                                     } else {
                                         if (selected) {
-                                            selectedTags.value = selectedTags.value - category
+                                            onCategoryDeselected(category)
                                         } else {
-                                            selectedTags.value = selectedTags.value + category
+                                            onCategorySelected(category)
                                         }
                                     }
                                 }
                                 CategoriesType.REMOVEABLES -> {
-                                    uniqueCategories.value = uniqueCategories.value.filter { it != category }
+                                    onCategoryDeselected(category)
                                 }
                             }
-                            onCategoriesSelectedChanged(selectedTags.value)
                         },
                         leadingIcon = {
                             when(categoriesType){

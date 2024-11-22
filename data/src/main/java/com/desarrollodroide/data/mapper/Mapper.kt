@@ -18,7 +18,6 @@ fun AccountDTO.toDomainModel() = Account(
     password = password?:"",
     owner = isOwner?:false,
     serverUrl = "",
-    isLegacyApi = isLegacyApi?:false
 )
 
 fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
@@ -26,7 +25,6 @@ fun SessionDTO.toProtoEntity(): UserPreferences = UserPreferences.newBuilder()
     .setUsername(account?.userName?:"")
     .setId(account?.id?:-1)
     .setOwner(account?.isOwner?:false)
-    .setIsLegacyApi(true)
     .build()
 
 fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
@@ -36,6 +34,7 @@ fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
     excerpt = excerpt?:"",
     author = author?:"",
     public = public?:0,
+    createAt = createdAt?:"",
     modified = modified?:"",
     imageURL = "$serverUrl$imageURL",
     hasContent = hasContent?:false,
@@ -79,6 +78,12 @@ fun Account.toRequestBody() =
         password = password
     )
 
+fun Tag.toEntityModel() = TagEntity(
+    id = id,
+    name = name,
+    nBookmarks = nBookmarks
+)
+
 fun BookmarkDTO.toEntityModel() = BookmarkEntity(
     id = id?:0,
     url = url?:"",
@@ -86,6 +91,7 @@ fun BookmarkDTO.toEntityModel() = BookmarkEntity(
     excerpt = excerpt?:"",
     author = author?:"",
     isPublic = public?:0,
+    createdAt = createdAt?:"",
     modified = modified?:"",
     imageURL = imageURL?:"",
     hasContent = hasContent?:false,
@@ -103,6 +109,25 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     excerpt = excerpt,
     author = author,
     public = isPublic,
+    createAt = createdAt,
+    modified = modified,
+    imageURL = imageURL,
+    hasContent = hasContent,
+    hasArchive = hasArchive,
+    hasEbook = hasEbook,
+    tags = tags,
+    createArchive = createArchive,
+    createEbook = createEbook,
+)
+
+fun Bookmark.toEntityModel() = BookmarkEntity(
+    id = id,
+    url = url,
+    title = title,
+    excerpt = excerpt,
+    author = author,
+    isPublic = public,
+    createdAt = createAt,
     modified = modified,
     imageURL = imageURL,
     hasContent = hasContent,
@@ -146,7 +171,6 @@ fun LoginResponseDTO.toProtoEntity(
     .setSession(message?.session?:"")
     .setUsername(userName)
     .setToken(message?.token?:"")
-    .setIsLegacyApi(false)
     .build()
 
 fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(
@@ -164,5 +188,21 @@ fun ReadableMessageDto.toDomainModel() = ReadableMessage(
     content = content?:"",
     html = html?:""
 )
+
+
+fun SyncBookmarksResponseDTO.toDomainModel(): SyncBookmarksResponse {
+    return SyncBookmarksResponse(
+        deleted = message.deleted ?: emptyList(),
+        modified = message.modified?.toDomainModel() ?: ModifiedBookmarks(emptyList(), 0, 0)
+    )
+}
+
+fun ModifiedBookmarksDTO.toDomainModel(): ModifiedBookmarks {
+    return ModifiedBookmarks(
+        bookmarks = bookmarks?.map { it.toDomainModel() } ?: emptyList(),
+        maxPage = maxPage ?: 0,
+        page = page ?: 0
+    )
+}
 
 

@@ -15,6 +15,8 @@ data class BookmarkEntity(
     val author: String,
     @ColumnInfo(name = "is_public")
     val isPublic: Int,
+    @ColumnInfo(name = "created_at")
+    val createdAt: String,
     @ColumnInfo(name = "modified_date")
     val modified: String,
     @ColumnInfo(name = "image_url")

@@ -2,14 +2,20 @@ package com.desarrollodroide.pagekeeper.ui.settings
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,13 +29,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.model.Tag
@@ -40,6 +47,7 @@ import com.desarrollodroide.pagekeeper.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.desarrollodroide.pagekeeper.BuildConfig
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,15 +56,22 @@ fun SettingsScreen(
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onViewLastCrash: () -> Unit,
     goToLogin: () -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler {
         onBack()
     }
-    val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
-    val tagsUiState = settingsViewModel.tagsState.collectAsState().value
-    val tagToHide = settingsViewModel.tagToHide.collectAsState().value
+    val settingsUiState by settingsViewModel.settingsUiState.collectAsStateWithLifecycle()
+    val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
+    val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
+    val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
+    val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
+    val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
+    val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
+    val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -86,20 +101,43 @@ fun SettingsScreen(
                 settingsUiState = settingsUiState,
                 tagsUiState = tagsUiState,
                 onLogout = { settingsViewModel.logout() },
-                goToLogin = goToLogin,
+                goToLogin = {
+                    settingsViewModel.clearImageCache()
+                    goToLogin.invoke()
+                },
                 themeMode = settingsViewModel.themeMode,
-                makeArchivePublic = settingsViewModel.makeArchivePublic,
-                createEbook = settingsViewModel.createEbook,
-                createArchive = settingsViewModel.createArchive,
-                compatView = settingsViewModel.compactView,
-                autoAddBookmark = settingsViewModel.autoAddBookmark,
+                makeArchivePublic = makeArchivePublic,
+                onMakeArchivePublicChanged = { isPublic ->
+                    settingsViewModel.setMakeArchivePublic(isPublic)
+                },
+                createEbook = createEbook,
+                onCreateEbookChanged = { isEbook ->
+                    settingsViewModel.setCreateEbook(isEbook)
+                },
+                createArchive = createArchive,
+                onCreateArchiveChanged = { isArchive ->
+                    settingsViewModel.setCreateArchive(isArchive)
+                },
+                compactView = compactView,
+                onCompactViewChanged = { isCompact ->
+                    settingsViewModel.setCompactView(isCompact)
+                },
+                autoAddBookmark = autoAddBookmark,
+                onAutoAddBookmarkChanged = { isAuto ->
+                    settingsViewModel.setAutoAddBookmark(isAuto)
+                },
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSourceCode = onNavigateToSourceCode,
+                onNavigateToLogs = onNavigateToLogs,
+                onViewLastCrash = onViewLastCrash,
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
-                onSelectHideDialogOption = settingsViewModel::setHideTag,
-                hideTag = tagToHide
+                onHideTagChanged = settingsViewModel::setHideTag,
+                hideTag = tagToHide,
+                cacheSize = settingsViewModel.cacheSize,
+                onClearCache = settingsViewModel::clearImageCache,
+                serverVersion = settingsViewModel.serverVersion
             )
         }
     }
@@ -108,22 +146,32 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     settingsUiState: UiState<String>,
-    makeArchivePublic: MutableStateFlow<Boolean>,
-    createEbook: MutableStateFlow<Boolean>,
-    createArchive: MutableStateFlow<Boolean>,
-    autoAddBookmark: MutableStateFlow<Boolean>,
-    compatView: MutableStateFlow<Boolean>,
+    makeArchivePublic: Boolean,
+    onMakeArchivePublicChanged: (Boolean) -> Unit,
+    createEbook: Boolean,
+    onCreateEbookChanged: (Boolean) -> Unit,
+    createArchive: Boolean,
+    onCreateArchiveChanged: (Boolean) -> Unit,
+    autoAddBookmark: Boolean,
+    onAutoAddBookmarkChanged: (Boolean) -> Unit,
+    compactView: Boolean,
+    onCompactViewChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToLogs: () -> Unit,
+    onViewLastCrash: () -> Unit,
     themeMode: MutableStateFlow<ThemeMode>,
     goToLogin: () -> Unit,
     useDynamicColors: MutableStateFlow<Boolean>,
     tagsUiState: UiState<List<Tag>>,
     onClickHideDialogOption: () -> Unit,
-    onSelectHideDialogOption: (Tag?) -> Unit,
+    onHideTagChanged: (Tag?) -> Unit,
     hideTag: Tag?,
+    cacheSize: StateFlow<String>,
+    onClearCache: () -> Unit,
+    serverVersion: String,
     ) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
@@ -160,9 +208,10 @@ fun SettingsContent(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             FeedSection(
-                compactView = compatView,
+                compactView = compactView,
+                onCompactViewChanged = onCompactViewChanged,
                 tagsUiState = tagsUiState,
-                onSelectHideDialogOption = onSelectHideDialogOption,
+                onHideTagChanged = onHideTagChanged,
                 onClickHideDialogOption = onClickHideDialogOption,
                 hideTag = hideTag
             )
@@ -170,10 +219,28 @@ fun SettingsContent(
             Spacer(modifier = Modifier.height(18.dp))
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
+                onMakeArchivePublicChanged = onMakeArchivePublicChanged,
                 createEbook = createEbook,
+                onCreateEbookChanged = onCreateEbookChanged,
                 createArchive = createArchive,
-                autoAddBookmark = autoAddBookmark
+                onCreateArchiveChanged = onCreateArchiveChanged,
+                autoAddBookmark = autoAddBookmark,
+                onAutoAddBookmarkChanged = onAutoAddBookmarkChanged
             )
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(18.dp))
+            DataSection(
+                cacheSize = cacheSize,
+                onClearCache = onClearCache
+            )
+            if (BuildConfig.FLAVOR == "staging") {
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(18.dp))
+                DebugSection (
+                    onNavigateToLogs = onNavigateToLogs,
+                    onViewLastCrash = onViewLastCrash
+                )
+            }
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             AccountSection(
@@ -189,12 +256,49 @@ fun SettingsContent(
                 onNavigateToSourceCode = onNavigateToSourceCode
             )
             Spacer(modifier = Modifier.height(18.dp))
-            Text(
-                textAlign = TextAlign.End,
-                modifier = Modifier.fillMaxWidth(),
-                text = "Version ${BuildConfig.VERSION_NAME}",
-                style = MaterialTheme.typography.labelMedium
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (serverVersion.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storage,
+                            contentDescription = "Server version",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Server v${serverVersion}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Smartphone,
+                        contentDescription = "App version",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "App v${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(18.dp))
         }
     }
@@ -218,26 +322,37 @@ data class Item(
     val switchState: MutableStateFlow<Boolean> = MutableStateFlow(false)
 )
 
+
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
     SettingsContent(
         settingsUiState = UiState(isLoading = false),
-        makeArchivePublic = remember { MutableStateFlow(false) },
-        createEbook = remember { MutableStateFlow(false) },
-        createArchive = remember { MutableStateFlow(false) },
-        compatView = remember { MutableStateFlow(false) },
-        autoAddBookmark = remember { MutableStateFlow(false) },
+        makeArchivePublic = false,
+        onMakeArchivePublicChanged = {},
+        createEbook = false,
+        onCreateEbookChanged = {},
+        createArchive = false,
+        autoAddBookmark = false,
+        compactView = false,
+        onCompactViewChanged = {},
         onLogout = {},
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
+        onNavigateToLogs = {},
+        onViewLastCrash = {},
         themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         goToLogin = {},
         useDynamicColors = remember { MutableStateFlow(false) },
         tagsUiState = UiState(isLoading = false),
         onClickHideDialogOption = {},
-        onSelectHideDialogOption = {},
+        onHideTagChanged = {},
         hideTag = null,
+        cacheSize = MutableStateFlow("Calculating..."),
+        onClearCache = {},
+        onAutoAddBookmarkChanged = { },
+        onCreateArchiveChanged = {},
+        serverVersion = "1.0.0"
     )
 }

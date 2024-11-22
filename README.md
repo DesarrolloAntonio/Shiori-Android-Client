@@ -61,6 +61,13 @@ Shiori is built using a variety of modern and robust technologies to ensure scal
 - **Use Cases**: Defining clear business logic.
 - **Repository Pattern**: For efficient data handling and abstraction.
 - **Protobuf (Proto)**: For efficient data serialization.
+- 
+## Development Status ⚠️
+Please note that Shiori is currently under active development. While we strive to provide a stable experience, you may encounter bugs or incomplete features. We encourage users to:
+- Report any issues you find on our [GitHub Issues page](https://github.com/DesarrolloAntonio/Shiori-Android-Client/issues)
+- Be aware that some features might be unstable or work in progress
+- Expect regular updates as we continue to improve the application
+- Back up your data regularly during this development phase
 
 ## Download
 
