@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.mapper.toEntityModel
 import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.model.SyncOperationType
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter
 
 class EditBookmarkUseCase(
     private val bookmarksDao: BookmarksDao,
+    private val tagsDao: TagDao,
     private val syncManager: SyncWorks
 ) {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -21,7 +23,10 @@ class EditBookmarkUseCase(
         val updatedBookmark = bookmark.copy(
             modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         )
-        bookmarksDao.updateBookmark(updatedBookmark.toEntityModel())
+        updatedBookmark.tags.forEach { tag ->
+            tagsDao.insertTag(tag.toEntityModel())
+        }
+        bookmarksDao.updateBookmarkWithTags(updatedBookmark.toEntityModel())
         syncManager.scheduleSyncWork(SyncOperationType.UPDATE, updatedBookmark)
     }
 }

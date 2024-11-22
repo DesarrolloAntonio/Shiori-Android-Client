@@ -1,9 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.home
 
-import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -82,7 +79,6 @@ import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -170,10 +166,6 @@ fun HomeScreen(
                         goToReadableContent = { bookmark->
                              navController.navigate(NavItem.ReadableContentNavItem.createRoute(
                                  bookmarkId = bookmark.id,
-                                 bookmarkUrl = bookmark.url,
-                                 bookmarkDate = bookmark.modified,
-                                 bookmarkTitle = bookmark.title,
-                                 bookmarkIsRtl = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
                              ))
                         },
                     )
@@ -237,31 +229,30 @@ fun HomeScreen(
         composable(
             route = NavItem.ReadableContentNavItem.route,
             arguments = listOf(
-                navArgument("bookmarkId") { type = NavType.IntType },
-                navArgument("bookmarkUrl") { type = NavType.StringType },
-                navArgument("bookmarkDate") { type = NavType.StringType },
-                navArgument("bookmarkTitle") { type = NavType.StringType },
-                navArgument("bookmarkIsRtl") { type = NavType.BoolType }
+                navArgument("bookmarkId") { type = NavType.IntType }
             )
         ) { backStackEntry ->
             val bookmarkId = backStackEntry.arguments?.getInt("bookmarkId") ?: 0
-            val bookmarkUrl = backStackEntry.arguments?.getString("bookmarkUrl")?.let { Uri.decode(it) } ?: ""
-            val bookmarkDate = backStackEntry.arguments?.getString("bookmarkDate")?.let { Uri.decode(it) } ?: ""
-            val bookmarkTitle = backStackEntry.arguments?.getString("bookmarkTitle")?.let { Uri.decode(it) } ?: ""
-            val bookmarkIsRtl = backStackEntry.arguments?.getBoolean("bookmarkIsRtl")?: false
+            val bookmark by feedViewModel.currentBookmark.collectAsState()
 
-            ReadableContentScreen(
-                readableContentViewModel = get(),
-                bookmarkUrl = bookmarkUrl,
-                bookmarkId = bookmarkId,
-                bookmarkDate = bookmarkDate,
-                onBack = {
-                    navController.navigateUp()
-                },
-                openUrlInBrowser = openUrlInBrowser,
-                bookmarkTitle = bookmarkTitle,
-                isRtl = bookmarkIsRtl
-            )
+            LaunchedEffect(bookmarkId) {
+                feedViewModel.loadBookmarkById(bookmarkId)
+            }
+
+            bookmark?.let {
+                ReadableContentScreen(
+                    readableContentViewModel = get(),
+                    bookmarkId = bookmarkId,
+                    bookmarkUrl = it.url,
+                    onBack = {
+                        navController.navigateUp()
+                    },
+                    openUrlInBrowser = openUrlInBrowser,
+                    bookmarkDate = it.modified,
+                    bookmarkTitle = it.title,
+                    isRtl = it.title.isRTLText() || it.excerpt.isRTLText()
+                )
+            }
         }
     }
 }

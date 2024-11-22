@@ -1,5 +1,6 @@
 package com.desarrollodroide.data.repository
 
+import android.util.Log
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.local.room.dao.TagDao
@@ -12,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 class TagsRepositoryImpl(
     private val apiService: RetrofitNetwork,
@@ -46,9 +48,13 @@ class TagsRepositoryImpl(
     }.asFlow().flowOn(Dispatchers.IO)
 
     override fun getLocalTags(): Flow<List<Tag>> {
-        return tagsDao.getAllTags().map { entities ->
-            entities.map { it.toDomainModel() }
-        }
+        return tagsDao.observeAllTags()
+            .onEach { entities ->
+                Log.d("TagsRepository", "Tags updated in repository: ${entities.size}")
+            }
+            .map { entities ->
+                entities.map { it.toDomainModel() }
+            }
     }
 
 }

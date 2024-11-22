@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.desarrollodroide.data.local.room.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -24,4 +25,13 @@ interface TagDao {
 
     @Query("DELETE FROM tags")
     suspend fun deleteAllTags()
+
+    @Transaction
+    @Query("""
+        SELECT DISTINCT t.* 
+        FROM tags t
+        LEFT JOIN bookmark_tag_cross_ref bt ON t.id = bt.tagId 
+        ORDER BY t.name
+    """)
+    fun observeAllTags(): Flow<List<TagEntity>>
 }

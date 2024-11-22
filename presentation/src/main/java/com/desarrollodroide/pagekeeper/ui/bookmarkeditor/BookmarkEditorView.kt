@@ -168,13 +168,6 @@ fun BookmarkEditorView(
                 .padding(horizontal = 6.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-//            Categories(
-//                categoriesType = CategoriesType.REMOVEABLES,
-//                showCategories = true,
-//                uniqueCategories = assignedTags,
-//                onCategoriesSelectedChanged = {}
-//            )
-
             Categories(
                 categoriesType = CategoriesType.REMOVEABLES,
                 showCategories = true,

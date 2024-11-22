@@ -55,7 +55,7 @@ fun SmallBookmarkView(
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
     val imageUrl by remember { derivedStateOf {
-        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
+        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
     }}
     val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
     val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }

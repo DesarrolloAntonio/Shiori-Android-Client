@@ -78,6 +78,12 @@ fun Account.toRequestBody() =
         password = password
     )
 
+fun Tag.toEntityModel() = TagEntity(
+    id = id,
+    name = name,
+    nBookmarks = nBookmarks
+)
+
 fun BookmarkDTO.toEntityModel() = BookmarkEntity(
     id = id?:0,
     url = url?:"",

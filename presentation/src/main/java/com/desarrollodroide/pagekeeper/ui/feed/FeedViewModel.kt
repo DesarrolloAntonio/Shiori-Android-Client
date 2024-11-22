@@ -32,6 +32,7 @@ import androidx.paging.cachedIn
 import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
@@ -74,6 +75,9 @@ class FeedViewModel(
 
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
+
+    private val _currentBookmark = MutableStateFlow<Bookmark?>(null)
+    val currentBookmark = _currentBookmark.asStateFlow()
 
     private var tagsJob: Job? = null
     private var serverUrl = ""
@@ -135,6 +139,19 @@ class FeedViewModel(
                     _bookmarksState.value = pagingData
                 }
         }
+
+        viewModelScope.launch {
+            getTagsUseCase.getLocalTags()
+                .distinctUntilChanged()
+                .collect { localTags ->
+                    Log.d("FeedViewModel", "Tags updated: ${localTags.size}")
+                    if (localTags.isNotEmpty()) {
+                        _tagsState.success(localTags)
+                    } else {
+                        _tagsState.success(emptyList())
+                    }
+                }
+        }
     }
 
     fun loadInitialData() {
@@ -142,7 +159,7 @@ class FeedViewModel(
             serverUrl = settingsPreferenceDataSource.getUrl()
             token = settingsPreferenceDataSource.getToken()
             xSessionId = settingsPreferenceDataSource.getSession()
-            getLocalTags()
+            //getLocalTags()
             if (_tagsState.value.data.isNullOrEmpty()) {
                 getRemoteTags()
             }
@@ -160,6 +177,7 @@ class FeedViewModel(
             getTagsUseCase.getLocalTags()
                 .distinctUntilChanged()
                 .collect { localTags ->
+                    Log.d("FeedViewModel", "Tags updated: ${localTags.size}")
                     if (localTags.isNotEmpty()) {
                         _tagsState.success(localTags)
                     } else {
@@ -194,7 +212,7 @@ class FeedViewModel(
                         }
                     }
                     is Result.Error -> {
-                        _syncState.value = UiState(error = result.error?.message)
+                        //_syncState.value = UiState(error = result.error?.message)
                         Log.e(TAG, "Error syncing bookmarks: ${result.error?.message}")
                     }
                     is Result.Loading -> {}
@@ -245,7 +263,7 @@ class FeedViewModel(
             _bookmarksUiState.error(errorMessage = SESSION_HAS_BEEN_EXPIRED)
         } else {
             Log.e(TAG, "Unhandled exception: ${error.message}")
-            _bookmarksUiState.error(errorMessage = "Unhandled exception: ${error.message}")
+            //_bookmarksUiState.error(errorMessage = "Unhandled exception: ${error.message}")
         }
     }
 
@@ -253,6 +271,8 @@ class FeedViewModel(
         viewModelScope.launch {
             val localBookmarkIds = bookmarkDatabase.getAllBookmarkIds()
             syncBookmarks(localBookmarkIds, settingsPreferenceDataSource.getLastSyncTimestamp())
+            // TODO remove with sync is completed in backend
+            retrieveAllRemoteBookmarks()
         }
     }
 
@@ -290,7 +310,7 @@ class FeedViewModel(
         }
     }
 
-    fun updateBookmark(
+    fun updateBookmarkCache(
         keepOldTitle: Boolean,
         updateArchive: Boolean,
         updateEbook: Boolean,
@@ -408,4 +428,9 @@ class FeedViewModel(
         }
     }
 
+    fun loadBookmarkById(id: Int) {
+        viewModelScope.launch {
+            _currentBookmark.value = bookmarkDatabase.getBookmarkById(id)?.toDomainModel()
+        }
+    }
 }

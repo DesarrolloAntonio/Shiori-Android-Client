@@ -13,13 +13,9 @@ sealed class NavItem(
     data object SettingsNavItem : NavItem("settings")
     data object TermsOfUseNavItem : NavItem("termsOfUse")
     data object PrivacyPolicyNavItem : NavItem("privacyPolicy")
-    data object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}/{bookmarkUrl}/{bookmarkDate}/{bookmarkTitle}/{bookmarkIsRtl}") {
-        fun createRoute(bookmarkId: Int, bookmarkUrl: String, bookmarkDate: String, bookmarkTitle: String, bookmarkIsRtl: Boolean): String {
-            val encodedUrl = Uri.encode(bookmarkUrl)
-            val encodedDate = Uri.encode(bookmarkDate)
-            val encodedTitle = Uri.encode(bookmarkTitle)
-            val encodedIsRtl = bookmarkIsRtl.toString()
-            return "readable_content/$bookmarkId/$encodedUrl/$encodedDate/$encodedTitle/$encodedIsRtl"
+    data object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}") {
+        fun createRoute(bookmarkId: Int): String {
+            return "readable_content/$bookmarkId"
         }
     }
     data object NetworkLoggerNavItem : NavItem("networkLogger")

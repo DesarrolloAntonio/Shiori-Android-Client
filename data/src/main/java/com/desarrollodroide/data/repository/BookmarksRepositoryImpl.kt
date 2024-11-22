@@ -141,7 +141,6 @@ class BookmarksRepositoryImpl(
             }
         ).flow.map { pagingData ->
             pagingData.map {
-                Log.v("Bookmark", it.title)
                 it.toDomainModel()
             }
         }

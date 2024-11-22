@@ -173,6 +173,7 @@ fun FeedContent(
             modifier = Modifier.align(alignment = Alignment.TopCenter),
             refreshing = isRefreshing,
             state = refreshState,
+            scale = true
         )
         val showScrollToTopButton by remember {
             derivedStateOf { listState.firstVisibleItemIndex > 0 }

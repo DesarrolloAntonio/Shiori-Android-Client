@@ -87,6 +87,7 @@ fun appModule() = module {
     single {
         EditBookmarkUseCase(
             bookmarksDao = get(),
+            tagsDao = get(),
             syncManager = get()
         )
     }

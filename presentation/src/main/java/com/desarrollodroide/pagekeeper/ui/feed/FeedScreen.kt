@@ -226,7 +226,7 @@ fun FeedScreen(
         isLoading = isUpdating,
         showDialog = feedViewModel.showSyncDialog
     ) { keepOldTitle, updateArchive, updateEbook ->
-        feedViewModel.updateBookmark(
+        feedViewModel.updateBookmarkCache(
             keepOldTitle = keepOldTitle,
             updateEbook = updateEbook,
             updateArchive = updateArchive,
