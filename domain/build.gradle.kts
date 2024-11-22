@@ -1,7 +1,6 @@
 plugins {
     id("com.android.library")
     id ("org.jetbrains.kotlin.android")
-    id ("kotlin-kapt")
 }
 
 android {
@@ -9,7 +8,7 @@ android {
     compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
     defaultConfig {
-        minSdk = 21
+        minSdk = (findProperty("minSdkVersion") as String).toInt()
         targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
