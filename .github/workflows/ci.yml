@@ -36,6 +36,7 @@ jobs:
           script: ./gradlew connectedDebugAndroidTest
 
   build_and_release:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     needs: [unit_tests, android_tests]
     steps:
