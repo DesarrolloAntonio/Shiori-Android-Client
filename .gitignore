@@ -21,3 +21,5 @@ presentation/release
 local.properties
 keystore.properties
 resources
+cambios.patch
+presentation/staging

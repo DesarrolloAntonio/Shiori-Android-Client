@@ -24,16 +24,16 @@ android {
 
     signingConfigs {
         create("production") {
-            keyAlias = System.getenv("PRODUCTION_KEY_ALIAS")
-            keyPassword = System.getenv("PRODUCTION_KEY_PASSWORD")
-            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/production_key_store.jks")
-            storePassword = System.getenv("PRODUCTION_STORE_PASSWORD")
+            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/key_store.jks")
+            storePassword = System.getenv("RELEASE_STORE_PASSWORD")
         }
         create("staging") {
-            keyAlias = System.getenv("STAGING_KEY_ALIAS")
-            keyPassword = System.getenv("STAGING_KEY_PASSWORD")
-            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/staging_key_store.jks")
-            storePassword = System.getenv("STAGING_STORE_PASSWORD")
+            keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            storeFile = file("${System.getenv("GITHUB_WORKSPACE")}/key_store.jks")
+            storePassword = System.getenv("RELEASE_STORE_PASSWORD")
         }
     }
 
