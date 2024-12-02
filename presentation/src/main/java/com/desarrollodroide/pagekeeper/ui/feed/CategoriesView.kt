@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
@@ -35,164 +37,173 @@ fun CategoriesView(
     onCategoryDeselected: (Tag) -> Unit,
     onResetAll: () -> Unit
 ) {
-//    val filteredCategories = remember(uniqueCategories, tagToHide) {
-//        uniqueCategories.filter { it.name != tagToHide?.name }
-//    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AnimatedVisibility(
-            visible = tagToHide != null,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 80.dp)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            AnimatedVisibility(
+                visible = tagToHide != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.VisibilityOff,
+                            contentDescription = "Hidden tag",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Hidden: ${tagToHide?.name}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Bookmarks with this tag are currently hidden.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        SegmentedButton(
+                            selected = selectedOptionIndex == 0,
+                            onClick = {
+                                onSelectedOptionIndexChanged(0)
+                                onFilterHiddenTag(false)
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        ) {
+                            Text("All", style = MaterialTheme.typography.titleMedium)
+                        }
+                        SegmentedButton(
+                            selected = selectedOptionIndex == 1,
+                            onClick = {
+                                onSelectedOptionIndexChanged(1)
+                                onFilterHiddenTag(true)
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        ) {
+                            Text("Hidden tag", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = if (selectedOptionIndex == 0)
+                            "Filter by all bookmarks\n"
+                        else
+                            "Showing only bookmarks with the '${tagToHide?.name}' tag",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = selectedOptionIndex == 0,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Categories", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(Modifier.height(8.dp))
+
+                    if (uniqueCategories.isEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(vertical = 16.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Sell,
+                                contentDescription = "No categories available",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "No categories available",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    } else {
+                        Categories(
+                            categoriesType = CategoriesType.SELECTABLES,
+                            showCategories = true,
+                            uniqueCategories = uniqueCategories,
+                            selectedTags = selectedTags,
+                            onCategorySelected = { tag ->
+                                onCategorySelected(tag)
+                                onFilterHiddenTag(false)
+                            },
+                            onCategoryDeselected = { tag ->
+                                onCategoryDeselected(tag)
+                                onFilterHiddenTag(false)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        // Fixed bottom buttons
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    enabled = selectedOptionIndex == 0,
+                    onClick = {
+                        onResetAll()
+                        onFilterHiddenTag(false)
+                    },
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.VisibilityOff,
-                        contentDescription = "Hidden tag",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Hidden: ${tagToHide?.name}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "Bookmarks with this tag are currently hidden.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
+                    Text("Reset All")
                 }
-                Spacer(Modifier.height(8.dp))
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = selectedOptionIndex == 0,
-                        onClick = {
-                            onSelectedOptionIndexChanged(0)
-                            onFilterHiddenTag(false)
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                    ) {
-                        Text("All", style = MaterialTheme.typography.titleMedium)
-                    }
-                    SegmentedButton(
-                        selected = selectedOptionIndex == 1,
-                        onClick = {
-                            onSelectedOptionIndexChanged(1)
-                            onFilterHiddenTag(true)
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                    ) {
-                        Text("Hidden tag", style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = if (selectedOptionIndex == 0)
-                        "Filter by all bookmarks\n"
-                    else
-                        "Showing only bookmarks with the '${tagToHide?.name}' tag",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
 
-        AnimatedVisibility(
-            visible = selectedOptionIndex == 0,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Categories", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.width(8.dp))
 
-                if (uniqueCategories.isEmpty()) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(vertical = 16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Sell,
-                            contentDescription = "No categories available",
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "No categories available",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                } else {
-                    Categories(
-                        categoriesType = CategoriesType.SELECTABLES,
-                        showCategories = true,
-                        uniqueCategories = uniqueCategories,
-                        selectedTags = selectedTags,
-                        onCategorySelected = { tag ->
-                            onCategorySelected(tag)
-                            onFilterHiddenTag(false)
-                        },
-                        onCategoryDeselected = { tag ->
-                            onCategoryDeselected(tag)
-                            onFilterHiddenTag(false)
-                        }
-                    )
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Close")
                 }
             }
         }
-
-        Spacer(Modifier.height(24.dp))
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(
-                enabled = selectedOptionIndex == 0,
-                onClick = {
-                    //onUpdateSelectedTags(emptyList())
-                    onResetAll()
-                    onFilterHiddenTag(false)
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Reset All")
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Close")
-            }
-        }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -226,3 +237,30 @@ fun SortAndFilterScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun SortAndFilterScreenPreview2() {
+    val regionOptions = (1..200).map {
+        Tag(id = it, name = "Category $it")
+    }
+
+    val selectedOptionIndex = remember { mutableStateOf(0) }
+    val selectedTags = remember { mutableStateOf(emptyList<Tag>()) }
+
+    MaterialTheme {
+        CategoriesView(
+            onDismiss = {},
+            uniqueCategories = regionOptions,
+            tagToHide = null,
+            onFilterHiddenTag = {},
+            selectedOptionIndex = selectedOptionIndex.value,
+            onSelectedOptionIndexChanged = { selectedOptionIndex.value = it },
+            selectedTags = selectedTags.value,
+            onCategorySelected = { },
+            onCategoryDeselected = { },
+            onResetAll = { }
+        )
+    }
+}
+
