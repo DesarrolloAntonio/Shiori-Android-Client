@@ -137,7 +137,8 @@ fun SettingsScreen(
                 hideTag = tagToHide,
                 cacheSize = settingsViewModel.cacheSize,
                 onClearCache = settingsViewModel::clearImageCache,
-                serverVersion = settingsViewModel.serverVersion
+                serverVersion = settingsViewModel.getServerVersion(),
+                serverUrl = settingsViewModel.getServerUrl()
             )
         }
     }
@@ -172,6 +173,7 @@ fun SettingsContent(
     cacheSize: StateFlow<String>,
     onClearCache: () -> Unit,
     serverVersion: String,
+    serverUrl: String,
     ) {
     val context = LocalContext.current
     if (settingsUiState.isLoading) {
@@ -244,6 +246,7 @@ fun SettingsContent(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(18.dp))
             AccountSection(
+                serverUrl = serverUrl,
                 onLogout = onLogout,
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
@@ -333,7 +336,9 @@ fun SettingsScreenPreview() {
         createEbook = false,
         onCreateEbookChanged = {},
         createArchive = false,
+        onCreateArchiveChanged = {},
         autoAddBookmark = false,
+        onAutoAddBookmarkChanged = { },
         compactView = false,
         onCompactViewChanged = {},
         onLogout = {},
@@ -351,8 +356,7 @@ fun SettingsScreenPreview() {
         hideTag = null,
         cacheSize = MutableStateFlow("Calculating..."),
         onClearCache = {},
-        onAutoAddBookmarkChanged = { },
-        onCreateArchiveChanged = {},
-        serverVersion = "1.0.0"
+        serverVersion = "1.0.0",
+        serverUrl = "192.168.1.66:8888"
     )
 }

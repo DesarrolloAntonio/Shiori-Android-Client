@@ -47,7 +47,7 @@ import com.desarrollodroide.pagekeeper.ui.components.Categories
 import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
 import com.desarrollodroide.model.Tag
 
-enum class BookmarkEditorType { ADD, EDIT }
+enum class BookmarkEditorType { ADD, ADD_MANUALLY, EDIT }
 @Composable
 fun BookmarkEditorView(
     title: String,
@@ -64,6 +64,7 @@ fun BookmarkEditorView(
     onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
+    onUrlChange: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -92,16 +93,28 @@ fun BookmarkEditorView(
                 Icon(Icons.Outlined.Save, contentDescription = "Save")
             }
         }
-        Text(
-            text = url,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(8.dp),
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis //
-        )
+        if (bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
+            OutlinedTextField(
+                value = url,
+                onValueChange = onUrlChange,
+                label = { Text("URL") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                singleLine = true
+            )
+        } else {
+            Text(
+                text = url,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(8.dp),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
         if (bookmarkEditorType == BookmarkEditorType.ADD) {
             Row(verticalAlignment = CenterVertically) {

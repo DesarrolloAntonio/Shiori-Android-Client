@@ -19,6 +19,7 @@ import com.desarrollodroide.pagekeeper.navigation.Navigation
 import org.koin.android.ext.android.inject
 import com.desarrollodroide.pagekeeper.extensions.shareEpubFile
 import com.desarrollodroide.pagekeeper.extensions.shareText
+import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorActivity
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -49,6 +50,9 @@ class MainActivity : ComponentActivity() {
                         },
                         shareText = {
                             shareText(it)
+                        },
+                        onAddManuallyClick = {
+                            startActivity(BookmarkEditorActivity.createManualIntent(this))
                         }
                     )
                 }
@@ -59,7 +63,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Log.v("MainActivity", "onResume")
-        // TODO: sync
+        // TODO: sync when endpoint is available
     }
 }
 

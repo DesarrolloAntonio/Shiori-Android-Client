@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AccountSection(
+    serverUrl: String,
     onLogout: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
@@ -40,7 +41,8 @@ fun AccountSection(
         Spacer(modifier = Modifier.height(5.dp))
         ClickableOption(
             Item(
-                "Logout",
+                title = "Logout",
+                subtitle = serverUrl,
                 icon = Icons.AutoMirrored.Filled.Logout,
                 onClick = onLogout
             ),

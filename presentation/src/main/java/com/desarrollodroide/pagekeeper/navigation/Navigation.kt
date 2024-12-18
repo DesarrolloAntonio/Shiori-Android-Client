@@ -22,6 +22,7 @@ import java.io.File
 fun Navigation(
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
+    onAddManuallyClick: () -> Unit,
     shareEpubFile: (File) -> Unit,
     shareText: (String) -> Unit
 ) {
@@ -56,7 +57,8 @@ fun Navigation(
                 onFinish = onFinish,
                 openUrlInBrowser = openUrlInBrowser,
                 shareEpubFile = shareEpubFile,
-                shareText = shareText
+                shareText = shareText,
+                onAddManuallyClick = onAddManuallyClick
             )
         }
     }

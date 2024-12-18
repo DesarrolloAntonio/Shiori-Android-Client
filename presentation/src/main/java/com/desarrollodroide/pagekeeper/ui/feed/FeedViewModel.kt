@@ -270,6 +270,7 @@ class FeedViewModel(
     fun refreshFeed() {
         viewModelScope.launch {
             val localBookmarkIds = bookmarkDatabase.getAllBookmarkIds()
+            // TODO sync disabled until endpoint finished
             syncBookmarks(localBookmarkIds, settingsPreferenceDataSource.getLastSyncTimestamp())
             // TODO remove with sync is completed in backend
             retrieveAllRemoteBookmarks()

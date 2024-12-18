@@ -46,8 +46,9 @@ class SettingsViewModel(
 
     val useDynamicColors = MutableStateFlow(false)
     val themeMode = MutableStateFlow(ThemeMode.AUTO)
-    private var token = ""
-    var serverVersion = ""
+    private var _token = ""
+    private var _serverVersion = ""
+    private var _serverUrl: String = ""
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -134,8 +135,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
-            token = settingsPreferenceDataSource.getToken()
-            serverVersion = settingsPreferenceDataSource.getServerVersion()
+            _token = settingsPreferenceDataSource.getToken()
+            _serverVersion = settingsPreferenceDataSource.getServerVersion()
+            _serverUrl = settingsPreferenceDataSource.getUrl()
         }
     }
 
@@ -143,7 +145,7 @@ class SettingsViewModel(
       viewModelScope.launch {
             getTagsUseCase.invoke(
                 serverUrl = settingsPreferenceDataSource.getUrl(),
-                token = token,
+                token = _token,
             )
                 .distinctUntilChanged()
                 .collect { result ->
@@ -195,5 +197,10 @@ class SettingsViewModel(
             }
         }
     }
+
+    fun getServerUrl(): String = _serverUrl
+
+    fun getServerVersion(): String = _serverVersion
+
 }
 

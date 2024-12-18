@@ -28,6 +28,7 @@ import org.koin.androidx.compose.get
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
@@ -86,6 +87,7 @@ fun HomeScreen(
     goToLogin: () -> Unit,
     onFinish: () -> Unit,
     openUrlInBrowser: (String) -> Unit,
+    onAddManuallyClick: () -> Unit,
     shareEpubFile: (File) -> Unit,
     shareText: (String) -> Unit
 ) {
@@ -146,7 +148,8 @@ fun HomeScreen(
                                     bottomSheetState.show()
                                 }
                             },
-                            pendingJobs = pendingJobs
+                            pendingJobs = pendingJobs,
+                            onAddManuallyClick = onAddManuallyClick,
                         )
                     }
                 }
@@ -262,6 +265,7 @@ fun HomeScreen(
 fun TopBar(
     toggleCategoryVisibility: () -> Unit,
     toggleSearchBarVisibility: () -> Unit,
+    onAddManuallyClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSyncButtonClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
@@ -309,6 +313,13 @@ fun TopBar(
             )
         },
         actions = {
+            IconButton(onClick = onAddManuallyClick) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Manually",
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
             IconButton(onClick = { toggleSearchBarVisibility() }) {
                 Icon(
                     imageVector = Icons.Filled.Search,
@@ -507,6 +518,7 @@ fun TopBarPreview() {
             toggleCategoryVisibility = { },
             toggleSearchBarVisibility = { },
             onSettingsClick = { },
+            onAddManuallyClick = { },
             scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
             hasBookmarks = true,
             selectedTagsCount = 2,
