@@ -21,7 +21,8 @@ jobs:
         run: ./gradlew testDebugUnitTest
 
   android_tests:
-    runs-on: macos-12
+    runs-on: macos-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -29,10 +30,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - name: Start Emulator and Run Instrumented Tests
+      - name: Start Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
+          arch: arm64-v8a
+          target: google_apis
+          force-avd-creation: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: ./gradlew connectedDebugAndroidTest
 
   build_and_release:
