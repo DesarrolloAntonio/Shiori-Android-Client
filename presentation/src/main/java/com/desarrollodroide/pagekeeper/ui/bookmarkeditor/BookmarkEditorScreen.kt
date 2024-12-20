@@ -19,7 +19,7 @@ import org.koin.androidx.compose.get
 
 @Composable
 fun BookmarkEditorScreen(
-    title: String,
+    pageTitle: String,
     bookmarkEditorType: BookmarkEditorType,
     bookmark: Bookmark,
     onBack: () -> Unit,
@@ -71,7 +71,7 @@ fun BookmarkEditorScreen(
     }
 
     BookmarkEditorView(
-        title = title,
+        title = pageTitle,
         url = currentUrl,
         bookmarkEditorType = bookmarkEditorType,
         newTag = newTag,

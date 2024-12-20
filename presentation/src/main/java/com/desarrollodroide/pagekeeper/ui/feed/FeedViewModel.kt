@@ -23,7 +23,6 @@ import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
-import com.desarrollodroide.pagekeeper.ui.components.isUpdating
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.runBlocking
@@ -271,7 +270,7 @@ class FeedViewModel(
         viewModelScope.launch {
             val localBookmarkIds = bookmarkDatabase.getAllBookmarkIds()
             // TODO sync disabled until endpoint finished
-            syncBookmarks(localBookmarkIds, settingsPreferenceDataSource.getLastSyncTimestamp())
+            //syncBookmarks(localBookmarkIds, settingsPreferenceDataSource.getLastSyncTimestamp())
             // TODO remove with sync is completed in backend
             retrieveAllRemoteBookmarks()
         }

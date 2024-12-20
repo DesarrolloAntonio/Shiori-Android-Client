@@ -97,7 +97,7 @@ fun SmallBookmarkView(
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                     Text(
-                        text = bookmark.title,
+                        text = if (bookmark.title.isNullOrEmpty()) bookmark.url else bookmark.title,
                         style = MaterialTheme.typography.titleMedium,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 2

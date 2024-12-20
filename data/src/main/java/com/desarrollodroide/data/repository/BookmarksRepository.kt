@@ -73,4 +73,10 @@ interface BookmarksRepository {
     serverUrl: String,
     syncBookmarksRequestPayload: SyncBookmarksRequestPayload
   ): Flow<Result<SyncBookmarksResponse>>
+
+  fun getBookmarkById(
+      token: String,
+      serverUrl: String,
+      bookmarkId: Int
+    ): Flow<Result<Bookmark?>>
 }

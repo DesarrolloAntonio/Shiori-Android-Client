@@ -16,7 +16,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -164,7 +163,7 @@ fun FeedScreen(
             feedViewModel.bookmarkSelected.value?.let {
                 setShowTopBar(false)
                 BookmarkEditorScreen(
-                    title = "Edit",
+                    pageTitle = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,
                     onBack = {

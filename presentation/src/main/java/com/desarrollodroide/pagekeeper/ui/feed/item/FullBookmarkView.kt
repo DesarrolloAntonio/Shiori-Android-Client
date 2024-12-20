@@ -61,7 +61,7 @@ fun FullBookmarkView(
             CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = bookmark.title,
+                    text = if (bookmark.title.isNullOrEmpty()) bookmark.url else bookmark.title,
                     style = MaterialTheme.typography.titleLarge,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2

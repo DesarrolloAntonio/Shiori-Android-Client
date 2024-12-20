@@ -142,4 +142,10 @@ interface RetrofitNetwork {
         @Body body: String
     ): Response<SyncBookmarksResponseDTO>
 
+    @GET
+    suspend fun getBookmark(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+    ): Response<BookmarkDTO>
+
 }

@@ -20,6 +20,7 @@ import com.desarrollodroide.model.SyncBookmarksRequestPayload
 import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
+import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
@@ -394,6 +395,26 @@ class BookmarksRepositoryImpl(
             }
         }.asFlow().flowOn(Dispatchers.IO)
     }
+
+    override fun getBookmarkById(
+        token: String,
+        serverUrl: String,
+        bookmarkId: Int
+    ) = object :
+        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
+
+        override suspend fun fetchFromRemote(): Response<BookmarkDTO> = apiService.getBookmark(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/$bookmarkId",
+            authorization = "Bearer $token",
+        )
+
+        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
+            return flow {
+                emit(data.toDomainModel())
+            }
+        }
+    }.asFlow().flowOn(Dispatchers.IO)
+
 }
 
 sealed class SyncStatus {
