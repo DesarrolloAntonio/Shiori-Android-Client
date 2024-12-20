@@ -17,6 +17,8 @@ data class BookmarkDTO (
     val hasArchive: Boolean?,
     val hasEbook: Boolean?,
     val tags: List<TagDTO>?,
+    @SerializedName("create_archive")
     val createArchive: Boolean?,
+    @SerializedName("create_ebook")
     val createEbook: Boolean?,
 )

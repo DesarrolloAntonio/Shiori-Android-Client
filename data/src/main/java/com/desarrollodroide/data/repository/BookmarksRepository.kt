@@ -31,7 +31,6 @@ interface BookmarksRepository {
     bookmark: Bookmark
   ): Bookmark
 
-
   suspend fun deleteBookmark(
     xSession: String,
     serverUrl: String,
@@ -45,16 +44,12 @@ interface BookmarksRepository {
   ): Bookmark
 
   suspend fun deleteAllLocalBookmarks()
-  fun updateBookmarkCache(
-    xSession: String,
-    serverUrl: String,
-    updateCachePayload: UpdateCachePayload
-  ): Flow<Result<Bookmark>>
 
   suspend fun updateBookmarkCacheV1(
     token: String,
     serverUrl: String,
-    updateCachePayload: UpdateCachePayload
+    updateCachePayload: UpdateCachePayload,
+    bookmark: Bookmark?,
   ): List<Bookmark>
 
   fun getBookmarkReadableContent(

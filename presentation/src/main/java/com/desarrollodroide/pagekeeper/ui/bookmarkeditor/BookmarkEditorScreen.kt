@@ -34,10 +34,17 @@ fun BookmarkEditorScreen(
     var currentUrl by remember { mutableStateOf(bookmark.url) }
 
     // No need to update values in settings
-    var localMakeArchivePublic by remember { mutableStateOf(bookmarkViewModel.makeArchivePublic) }
     var localCreateEbook by remember { mutableStateOf(bookmarkViewModel.createEbook) }
     var localCreateArchive by remember { mutableStateOf(bookmarkViewModel.createArchive) }
-
+    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
+        var localMakeArchivePublic by remember {
+        mutableStateOf(
+            when (bookmarkEditorType) {
+                BookmarkEditorType.ADD, BookmarkEditorType.ADD_MANUALLY -> bookmarkViewModel.makeArchivePublic
+                BookmarkEditorType.EDIT -> bookmark.public == 1
+            }
+        )
+    }
     BackHandler {
         onBack()
     }
@@ -63,8 +70,6 @@ fun BookmarkEditorScreen(
         )
     }
 
-    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
-
     BookmarkEditorView(
         title = title,
         url = currentUrl,
@@ -88,9 +93,9 @@ fun BookmarkEditorScreen(
                     bookmarkViewModel.editBookmark(
                         bookmark = bookmark.copy(
                             tags = assignedTags.value,
-                            createArchive = localCreateArchive,
+                            createEbook = bookmark.hasEbook,
+                            createArchive = bookmark.hasArchive,
                             public = if (localMakeArchivePublic) 1 else 0,
-                            createEbook = localCreateEbook
                         )
                     )
                 }

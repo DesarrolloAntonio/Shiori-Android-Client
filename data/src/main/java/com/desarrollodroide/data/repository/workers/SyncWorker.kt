@@ -24,6 +24,11 @@ import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.firstOrNull
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+class BookmarkNotFoundException(bookmarkId: Int) :
+    Exception("Bookmark not found for ID: $bookmarkId")
 
 class SyncWorker(
     context: Context,
@@ -88,6 +93,9 @@ class SyncWorker(
                         Log.e("SyncWorker", "Failed to refresh session")
                         Result.retry()
                     }
+                } else if (e is BookmarkNotFoundException) {
+                    Log.w("SyncWorker", "Bookmark not found, marking as success to avoid retry loop: ${e.message}")
+                    Result.success()
                 } else {
                     Log.e("SyncWorker", "Error during sync: ${e.message}", e)
                     Result.retry()
@@ -134,7 +142,9 @@ class SyncWorker(
             SyncOperationType.CREATE -> {
                 val updatedBookmark = syncCreateBookmark(xSession, serverUrl, bookmarkId)
                 bookmarksDao.deleteBookmarkById(bookmarkId)
-                bookmarksDao.insertBookmark(updatedBookmark.toEntityModel())
+                bookmarksDao.insertBookmark(updatedBookmark.toEntityModel(
+                    modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                ))
                 val outputData = workDataOf(
                     "syncResult" to "SUCCESS",
                     "originalBookmarkId" to bookmarkId,
@@ -161,26 +171,26 @@ class SyncWorker(
 
     private suspend fun syncCreateBookmark(xSession: String, serverUrl: String, bookmarkId: Int): Bookmark {
         val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
-            ?: throw IllegalStateException("Bookmark not found for ID: $bookmarkId")
+            ?: throw BookmarkNotFoundException(bookmarkId)
         return bookmarksRepository.addBookmark(xSession, serverUrl, bookmark)
     }
 
     private suspend fun syncUpdateBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {
         val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
-            ?: throw IllegalStateException("Bookmark not found for ID: $bookmarkId")
+            ?: throw BookmarkNotFoundException(bookmarkId)
         bookmarksRepository.editBookmark(xSession, serverUrl, bookmark)
     }
 
     private suspend fun syncDeleteBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {
         bookmarksRepository.deleteBookmark(xSession, serverUrl, bookmarkId)
     }
-
     private suspend fun syncCacheBookmark(token: String, serverUrl: String, bookmarkId: Int, updateCachePayload: UpdateCachePayload?) {
         if (updateCachePayload == null) {
             Log.e("SyncWorker", "UpdateCachePayload is null for CACHE operation")
             throw IllegalStateException("UpdateCachePayload is required for CACHE operation")
         }
-        bookmarksRepository.updateBookmarkCacheV1(token, serverUrl, updateCachePayload)
+        val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
+        bookmarksRepository.updateBookmarkCacheV1(token, serverUrl, updateCachePayload, bookmark)
     }
 
     class Factory : WorkerFactory(), KoinComponent {

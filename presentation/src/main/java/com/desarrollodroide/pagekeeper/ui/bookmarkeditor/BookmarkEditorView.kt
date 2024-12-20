@@ -116,7 +116,7 @@ fun BookmarkEditorView(
             )
         }
 
-        if (bookmarkEditorType == BookmarkEditorType.ADD) {
+        if (bookmarkEditorType == BookmarkEditorType.ADD || bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
             Row(verticalAlignment = CenterVertically) {
                 Checkbox(
                     checked = createArchive,
@@ -124,13 +124,13 @@ fun BookmarkEditorView(
                 )
                 Text("Create archive")
             }
-        }
-        Row(verticalAlignment = CenterVertically) {
-            Checkbox(
-                checked = createEbook,
-                onCheckedChange = onCreateEbookChanged
-            )
-            Text("Create Ebook")
+            Row(verticalAlignment = CenterVertically) {
+                Checkbox(
+                    checked = createEbook,
+                    onCheckedChange = onCreateEbookChanged
+                )
+                Text("Create Ebook")
+            }
         }
         Row(verticalAlignment = CenterVertically) {
             Checkbox(

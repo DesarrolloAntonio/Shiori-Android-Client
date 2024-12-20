@@ -1,10 +1,15 @@
 package com.desarrollodroide.data.mapper
 
 import com.desarrollodroide.data.UserPreferences
+import com.desarrollodroide.data.helpers.AddTagDTOAdapter
+import com.desarrollodroide.data.helpers.TagTypeAdapter
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.*
 import com.desarrollodroide.network.model.*
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import com.google.gson.GsonBuilder
 
 fun SessionDTO.toDomainModel() = User(
     token = token?:"",
@@ -120,7 +125,7 @@ fun BookmarkEntity.toDomainModel() = Bookmark(
     createEbook = createEbook,
 )
 
-fun Bookmark.toEntityModel() = BookmarkEntity(
+fun Bookmark.toEntityModel(modified: String? = null) = BookmarkEntity(
     id = id,
     url = url,
     title = title,
@@ -128,7 +133,7 @@ fun Bookmark.toEntityModel() = BookmarkEntity(
     author = author,
     isPublic = public,
     createdAt = createAt,
-    modified = modified,
+    modified = modified ?: this.modified,
     imageURL = imageURL,
     hasContent = hasContent,
     hasArchive = hasArchive,
@@ -163,7 +168,6 @@ fun ReleaseInfoDTO.toDomainModel() = ReleaseInfo(
     date = date?:"",
     commit = commit?:""
 )
-
 
 fun LoginResponseDTO.toProtoEntity(
     userName: String,
@@ -204,5 +208,57 @@ fun ModifiedBookmarksDTO.toDomainModel(): ModifiedBookmarks {
         page = page ?: 0
     )
 }
+
+fun Bookmark.toAddBookmarkDTO() = BookmarkDTO(
+    id = null,
+    url = url,
+    title = title,
+    excerpt = excerpt,
+    author = null,
+    public = public,
+    createdAt = null,
+    modified = null,
+    imageURL = null,
+    hasContent = null,
+    hasArchive = null,
+    hasEbook = null,
+    tags = tags.map { TagDTO(id = null, name = it.name, nBookmarks = null) },
+    createArchive = createArchive,
+    createEbook = createEbook
+)
+
+fun Bookmark.toEditBookmarkDTO() = BookmarkDTO(
+    id = id,
+    url = url,
+    title = title,
+    excerpt = excerpt,
+    author = author,
+    public = public,
+    createdAt = createAt,
+    modified = modified,
+    imageURL = imageURL,
+    hasContent = hasContent,
+    hasArchive = hasArchive,
+    hasEbook = hasEbook,
+    tags = tags.map { TagDTO(id = it.id, name = it.name, nBookmarks = null) },
+    createArchive = createArchive,
+    createEbook = createEbook
+)
+
+/**
+ * Converts a Bookmark to JSON format for updating existing bookmarks.
+ * Includes all fields of the bookmark in the JSON output.
+ */
+fun BookmarkDTO.toEditBookmarkJson() = GsonBuilder()
+    .registerTypeAdapter(TagDTO::class.java, AddTagDTOAdapter())
+    .setExclusionStrategies(object : ExclusionStrategy {
+        override fun shouldSkipField(f: FieldAttributes): Boolean {
+            return f.name == "hasEbook" || f.name == "createEbook"
+        }
+        override fun shouldSkipClass(clazz: Class<*>): Boolean = false
+    })
+    .create()
+    .toJson(this)
+
 
 

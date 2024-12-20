@@ -3,6 +3,7 @@ package com.desarrollodroide.data.mapper
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.Account
+import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import org.junit.jupiter.api.Assertions.*
@@ -667,6 +668,130 @@ class MapperTest {
 
         assertEquals("", readableMessage.content) // Default value for content
         assertEquals("", readableMessage.html) // Default value for html
+    }
+
+    @Test
+    fun `toAddBookmarkDTO should map fields correctly`() {
+        // Given
+        val tags = listOf(Tag(id = 1, name = "education"), Tag(id = 2, name = "reading"))
+        val bookmark = Bookmark(
+            url = "https://example.com",
+            tags = tags,
+            public = 1,
+            createArchive = true,
+            createEbook = true,
+            title = "Example Title"
+        )
+
+        // When
+        val dto = bookmark.toAddBookmarkDTO()
+
+        // Then
+        assertNull(dto.id)
+        assertEquals("https://example.com", dto.url)
+        assertEquals("Example Title", dto.title)
+        assertEquals("", dto.excerpt)
+        assertNull(dto.author)
+        assertEquals(1, dto.public)
+        assertNull(dto.createdAt)
+        assertNull(dto.modified)
+        assertNull(dto.imageURL)
+        assertNull(dto.hasContent)
+        assertNull(dto.hasArchive)
+        assertNull(dto.hasEbook)
+        assertEquals(2, dto.tags?.size)
+        assertEquals("education", dto.tags?.get(0)?.name)
+        assertEquals("reading", dto.tags?.get(1)?.name)
+        assertTrue(dto.createArchive == true)
+        assertTrue(dto.createEbook == true)
+    }
+
+    @Test
+    fun `toEditBookmarkDTO should map all fields correctly`() {
+        // Given
+        val tags = listOf(Tag(id = 1, name = "education"), Tag(id = 2, name = "reading"))
+        val bookmark = Bookmark(
+            id = 1,
+            url = "https://example.com",
+            title = "Example Title",
+            excerpt = "An example excerpt",
+            author = "Author Name",
+            public = 1,
+            createAt = "2023-01-01T12:00:00",
+            modified = "2023-01-01T12:00:00",
+            imageURL = "https://example.com/image.jpg",
+            hasContent = true,
+            hasArchive = false,
+            hasEbook = false,
+            tags = tags,
+            createArchive = true,
+            createEbook = false
+        )
+
+        // When
+        val dto = bookmark.toEditBookmarkDTO()
+
+        // Then
+        assertEquals(1, dto.id)
+        assertEquals("https://example.com", dto.url)
+        assertEquals("Example Title", dto.title)
+        assertEquals("An example excerpt", dto.excerpt)
+        assertEquals("Author Name", dto.author)
+        assertEquals(1, dto.public)
+        assertEquals("2023-01-01T12:00:00", dto.createdAt)
+        assertEquals("2023-01-01T12:00:00", dto.modified)
+        assertEquals("https://example.com/image.jpg", dto.imageURL)
+        assertTrue(dto.hasContent == true)
+        assertFalse(dto.hasArchive == true)
+        assertFalse(dto.hasEbook == true)
+        assertEquals(2, dto.tags?.size)
+        assertEquals("education", dto.tags?.get(0)?.name)
+        assertEquals("reading", dto.tags?.get(1)?.name)
+        assertTrue(dto.createArchive == true)
+        assertFalse(dto.createEbook == true)
+    }
+
+    @Test
+    fun `toEditBookmarkJson should include all fields except hasEbook and createEbook`() {
+        // Given
+        val tags = listOf(TagDTO(id = 1, name = "education", nBookmarks = null), TagDTO(id = 2, name = "reading", nBookmarks = null))
+        val bookmarkDTO = BookmarkDTO(
+            id = 1,
+            url = "https://example.com",
+            title = "Example Title",
+            excerpt = "An example excerpt",
+            author = "Author Name",
+            public = 1,
+            createdAt = "2023-01-01T12:00:00",
+            modified = "2023-01-01T12:00:00",
+            imageURL = "https://example.com/image.jpg",
+            hasContent = true,
+            hasArchive = false,
+            hasEbook = true,
+            tags = tags,
+            createArchive = true,
+            createEbook = true
+        )
+
+        // When
+        val json = bookmarkDTO.toEditBookmarkJson()
+
+        // Then
+        assertTrue(json.contains("\"id\":1"))
+        assertTrue(json.contains("\"url\":\"https://example.com\""))
+        assertTrue(json.contains("\"title\":\"Example Title\""))
+        assertTrue(json.contains("\"excerpt\":\"An example excerpt\""))
+        assertTrue(json.contains("\"author\":\"Author Name\""))
+        assertTrue(json.contains("\"public\":1"))
+        assertTrue(json.contains("\"createdAt\":\"2023-01-01T12:00:00\""))
+        assertTrue(json.contains("\"modified\":\"2023-01-01T12:00:00\""))
+        assertTrue(json.contains("\"imageURL\":\"https://example.com/image.jpg\""))
+        assertTrue(json.contains("\"hasContent\":true"))
+        assertTrue(json.contains("\"hasArchive\":false"))
+        assertTrue(json.contains("\"tags\":[{\"name\":\"education\"},{\"name\":\"reading\"}]"))
+        assertTrue(json.contains("\"create_archive\":true"))
+        assertFalse(json.contains("\"hasEbook\":true")) // Excluded in JSON
+        assertTrue(json.contains("\"create_archive\":true"))
     }
 
 }
