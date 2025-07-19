@@ -1,1 +1,11 @@
+Discover a new way to save, organize, and access your favorite web pages with <b>Pagekeeper</b>. Built on the renowned <b>Shiori</b> platform, our app takes bookmark management to the next level.
+
 Shiori is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust Shiori platform, Shiori offers a seamless experience across all devices.
+
+<b>Pagekeeper Key Features:</b>
+
+* <b>Save Pages Easily</b>: Capture web pages you discover in an instant and access them anytime, even offline.
+* <b>Superior Organization</b>: Sort your bookmarks with custom labels, descriptions, and thumbnails for quick retrieval.
+* <b>Cloud Synchronization</b>: Keep your bookmarks synced across all your devices, so you never lose an important page.
+* <b>Intuitive Interface</b>: Navigate through your bookmarks with a clean and user-friendly interface, designed for a seamless user experience.
+* <b>Share and Discover</b>: Share your favorite pages with friends and discover new pages through the Pagekeeper community.
