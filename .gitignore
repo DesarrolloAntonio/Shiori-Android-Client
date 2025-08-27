@@ -13,6 +13,8 @@
 /.idea/migrations.xml
 /.kotlin
 presentation/release
+presentation/production
+presentation/staging
 .DS_Store
 /build
 /captures
@@ -22,4 +24,5 @@ local.properties
 keystore.properties
 resources
 cambios.patch
-presentation/staging
+*.aab
+*.apk
