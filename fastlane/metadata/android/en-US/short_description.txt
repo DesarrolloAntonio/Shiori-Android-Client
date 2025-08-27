@@ -1,1 +1,1 @@
-Android app client for Shiori
+Android client for the Shiori Bookmark Manager
