@@ -172,7 +172,7 @@ fun ReleaseInfoDTO.toDomainModel() = ReleaseInfo(
 fun LoginResponseDTO.toProtoEntity(
     userName: String,
 ): UserPreferences = UserPreferences.newBuilder()
-    .setSession(message?.session?:"")
+    .setSession(message?.session ?: message?.token ?: "")
     .setUsername(userName)
     .setToken(message?.token?:"")
     .build()
