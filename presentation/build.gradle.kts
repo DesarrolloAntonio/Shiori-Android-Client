@@ -22,6 +22,7 @@ android {
         }
     }
 
+    /*
     signingConfigs {
         create("production") {
             keyAlias = System.getenv("RELEASE_KEY_ALIAS")
@@ -36,6 +37,7 @@ android {
             storePassword = System.getenv("RELEASE_STORE_PASSWORD")
         }
     }
+    */
 
     buildTypes {
         release {
@@ -50,12 +52,12 @@ android {
     productFlavors {
         create("production") {
             dimension = "version"
-            signingConfig = signingConfigs.getByName("production")
+            // signingConfig = signingConfigs.getByName("production")
         }
         create("staging") {
             dimension = "version"
             applicationId = "com.desarrollodroide.pagekeeper.staging"
-            signingConfig = signingConfigs.getByName("staging")
+            // signingConfig = signingConfigs.getByName("staging")
             versionNameSuffix = "-staging"
             resValue("string", "app_name", "Shiori-dev")
         }
