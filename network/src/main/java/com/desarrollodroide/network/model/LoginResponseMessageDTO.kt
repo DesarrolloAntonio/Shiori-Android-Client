@@ -7,7 +7,7 @@ data class LoginResponseMessageDTO (
 
     // Map token to session
     @SerializedName(value = "session", alternate = ["token"])
-    val session: String? // Deprecated, used only for legacy APIs
+    val session: String?, // Deprecated, used only for legacy APIs
 
     @SerializedName("token")
     val token: String? = session       
