@@ -9,6 +9,6 @@ data class TagDTO (
     @SerializedName("name")
     val name: String?,
 
-    @SerializedName("nBookmarks")
+    @SerializedName(value = "bookmark_count", alternate = ["nBookmarks"])
     val nBookmarks: Int?,
     )
