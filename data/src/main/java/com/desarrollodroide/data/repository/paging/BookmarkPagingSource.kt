@@ -40,18 +40,18 @@ class BookmarkPagingSource(
                 return LoadResult.Error(Exception(SESSION_HAS_BEEN_EXPIRED))
             }
             if (saveToLocal){
-                bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
+                bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() }?.let { bookmarksList ->
                     if (page == 1) {
                         bookmarksDao.deleteAll()
                     }
                     bookmarksDao.insertAll(bookmarksList)
                 }
             }
-            val bookmarks = bookmarksDto.body()?.bookmarks?.map { it.toDomainModel() }?: emptyList()
+            val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toDomainModel() }?: emptyList()
             LoadResult.Page(
                 data = bookmarks,
                 prevKey = if (page == 1) null else page - 1,
-                nextKey = if ((bookmarksDto.body()?.page ?: 0) >= (bookmarksDto.body()?.maxPage ?: 0)) null else page + 1
+                nextKey = if ((bookmarksDto.body()?.resolvedPage() ?: 0) >= (bookmarksDto.body()?.resolvedMaxPage() ?: 0)) null else page + 1
             )
         } catch (exception: IOException) {
             Log.e("BookmarkPagingSource", "IOException", exception)

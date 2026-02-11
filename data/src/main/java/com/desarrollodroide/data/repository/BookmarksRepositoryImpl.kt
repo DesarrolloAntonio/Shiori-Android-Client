@@ -51,7 +51,7 @@ class BookmarksRepositoryImpl(
         NetworkBoundResource<BookmarksDTO, List<Bookmark>>(errorHandler = errorHandler) {
 
         override suspend fun saveRemoteData(response: BookmarksDTO) {
-            response.bookmarks?.map { it.toEntityModel() }?.let { bookmarksList ->
+            response.resolvedBookmarks()?.map { it.toEntityModel() }?.let { bookmarksList ->
                 bookmarksDao.deleteAll()
                 bookmarksDao.insertAll(bookmarksList)
             }
@@ -190,7 +190,7 @@ class BookmarksRepositoryImpl(
                     emit(SyncStatus.Error(Result.ErrorType.SessionExpired(message = SESSION_HAS_BEEN_EXPIRED)))
                     return@flow
                 }
-                val bookmarks = bookmarksDto.body()?.bookmarks?.map { it.toEntityModel() } ?: emptyList()
+                val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() } ?: emptyList()
                 Log.d(TAG, "Fetched ${bookmarks.size} bookmarks for page $currentPage")
                 allBookmarks.addAll(bookmarks)
                 hasNextPage = hasNextPage(bookmarksDto)
@@ -211,9 +211,9 @@ class BookmarksRepositoryImpl(
 
     private fun hasNextPage(bookmarksDto: Response<BookmarksDTO>): Boolean {
         val body = bookmarksDto.body() ?: return false
-        val currentPage = body.page ?: return false
-        val maxPage = body.maxPage ?: return false
-        val bookmarks = body.bookmarks
+        val currentPage = body.resolvedPage() ?: return false
+        val maxPage = body.resolvedMaxPage() ?: return false
+        val bookmarks = body.resolvedBookmarks()
 
         return currentPage < maxPage && bookmarks?.isNotEmpty() == true
     }

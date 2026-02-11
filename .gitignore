@@ -26,3 +26,4 @@ resources
 cambios.patch
 *.aab
 *.apk
+/docs

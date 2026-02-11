@@ -34,6 +34,7 @@ interface RetrofitNetwork {
         @Body jsonData: String
     ): Response<SessionDTO>
 
+    @Headers("Content-Type: application/json")
     @POST()
     suspend fun sendLoginV1(
         @Url url: String,

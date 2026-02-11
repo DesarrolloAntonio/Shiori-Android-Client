@@ -52,9 +52,9 @@ fun BookmarkDTO.toDomainModel(serverUrl: String = "") = Bookmark(
 
 fun BookmarksDTO.toDomainModel(serverUrl: String) = Bookmarks(
     error = "",
-    page = page?:0,
-    maxPage = maxPage?:0,
-    bookmarks = bookmarks?.map { it.toDomainModel(serverUrl) }?: emptyList()
+    page = resolvedPage()?:0,
+    maxPage = resolvedMaxPage()?:0,
+    bookmarks = resolvedBookmarks()?.map { it.toDomainModel(serverUrl) }?: emptyList()
 )
 
 fun TagDTO.toDomainModel() = Tag(
@@ -172,7 +172,7 @@ fun ReleaseInfoDTO.toDomainModel() = ReleaseInfo(
 fun LoginResponseDTO.toProtoEntity(
     userName: String,
 ): UserPreferences = UserPreferences.newBuilder()
-    .setSession(message?.session?:"")
+    .setSession(message?.session ?: message?.token ?: "")
     .setUsername(userName)
     .setToken(message?.token?:"")
     .build()
