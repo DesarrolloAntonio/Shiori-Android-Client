@@ -42,6 +42,9 @@ fun FullBookmarkView(
     val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" } }
 
     Column {
+        if (bookmark.isPendingServerProcessing) {
+            PendingSyncBanner()
+        }
         if (bookmark.imageURL.isNotEmpty()) {
             BookmarkImageView(
                 imageUrl = imageUrl,

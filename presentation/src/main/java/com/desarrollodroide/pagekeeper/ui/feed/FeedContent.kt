@@ -72,6 +72,15 @@ fun FeedContent(
         }
     }
 
+    // Scroll to top when a new bookmark is added (item count increases)
+    var previousItemCount by remember { mutableStateOf(bookmarksPagingItems.itemCount) }
+    LaunchedEffect(bookmarksPagingItems.itemCount) {
+        if (bookmarksPagingItems.itemCount > previousItemCount && previousItemCount > 0) {
+            listState.animateScrollToItem(0)
+        }
+        previousItemCount = bookmarksPagingItems.itemCount
+    }
+
     fun refreshBookmarks() = refreshCoroutineScope.launch {
         actions.onRefreshFeed.invoke()
         isRefreshing = true

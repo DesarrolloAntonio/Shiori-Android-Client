@@ -60,16 +60,15 @@ fun SmallBookmarkView(
     val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
     val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
 
-//    val imageUrl =
-//        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}"
-//    val modifier =
-//        if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
-//    val isArabic = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
-    Row(
-        modifier = modifier
-            .padding(vertical = 8.dp)
-            .padding(start = 8.dp)
-    ) {
+    Column {
+        if (bookmark.isPendingServerProcessing) {
+            PendingSyncBanner()
+        }
+        Row(
+            modifier = modifier
+                .padding(vertical = 8.dp)
+                .padding(start = 8.dp)
+        ) {
         if (bookmark.imageURL.isNotEmpty()) {
             BookmarkImageView(
                 imageUrl = imageUrl,
@@ -196,6 +195,7 @@ fun SmallBookmarkView(
                     }
                 }
             }
+        }
         }
     }
 }

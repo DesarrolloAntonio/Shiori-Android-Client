@@ -1,5 +1,6 @@
 package com.desarrollodroide.model
 
+import android.webkit.URLUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -20,6 +21,25 @@ data class Bookmark (
     val createArchive: Boolean,
     val createEbook: Boolean,
 ){
+    /**
+     * A bookmark is considered pending when it hasn't been fully processed by the server yet.
+     * This covers two cases:
+     * - The bookmark hasn't been sent to the server yet (temporary timestamp ID)
+     * - The server received it but hasn't finished processing content (no content, no image, no excerpt)
+     */
+    val isPendingServerProcessing: Boolean
+        get() = isTemporaryId ||
+                (!hasContent && imageURL.isEmpty() && excerpt.isEmpty()) ||
+                (title.isNotEmpty() && URLUtil.isValidUrl(title))
+
+    /**
+     * Temporary IDs are generated from System.currentTimeMillis() / 1000 (epoch seconds),
+     * producing values like 1,700,000,000+. Real server IDs are sequential (1, 2, 3...),
+     * so any ID over 1 million is clearly a temporary local ID.
+     */
+    private val isTemporaryId: Boolean
+        get() = id > 1_000_000
+
     constructor(
         url: String,
         tags: List<Tag>,

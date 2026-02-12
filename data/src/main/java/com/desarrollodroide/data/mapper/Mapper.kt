@@ -185,7 +185,7 @@ fun LoginResponseMessageDTO.toDomainModel() = LoginResponseMessage(
 
 fun ReadableContentResponseDTO.toDomainModel() = ReadableContent(
     ok = ok?:false,
-    message = message?.toDomainModel() ?: ReadableMessage("", "")
+    message = resolvedMessage()?.toDomainModel() ?: ReadableMessage("", "")
 )
 
 fun ReadableMessageDto.toDomainModel() = ReadableMessage(
@@ -222,7 +222,7 @@ fun Bookmark.toAddBookmarkDTO() = BookmarkDTO(
     hasContent = null,
     hasArchive = null,
     hasEbook = null,
-    tags = tags.map { TagDTO(id = null, name = it.name, nBookmarks = null) },
+    tags = tags.map { TagDTO(id = null, name = it.name.lowercase().trim(), nBookmarks = null) },
     createArchive = createArchive,
     createEbook = createEbook
 )
@@ -240,7 +240,7 @@ fun Bookmark.toEditBookmarkDTO() = BookmarkDTO(
     hasContent = hasContent,
     hasArchive = hasArchive,
     hasEbook = hasEbook,
-    tags = tags.map { TagDTO(id = it.id, name = it.name, nBookmarks = null) },
+    tags = tags.map { TagDTO(id = it.id, name = it.name.lowercase().trim(), nBookmarks = null) },
     createArchive = createArchive,
     createEbook = createEbook
 )

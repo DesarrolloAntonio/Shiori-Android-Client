@@ -159,8 +159,9 @@ fun BookmarkEditorView(
                     .align(CenterVertically)
                     .padding(top = 4.dp),
                 onClick = {
-                    if (newTag.value.isNotBlank() && !assignedTags.value.map { it.name }.contains(newTag.value)) {
-                        assignedTags.value = assignedTags.value + Tag(id = -1, name = newTag.value)
+                    val normalizedName = newTag.value.lowercase().trim()
+                    if (normalizedName.isNotBlank() && !assignedTags.value.any { it.name.lowercase() == normalizedName }) {
+                        assignedTags.value = assignedTags.value + Tag(id = -1, name = normalizedName)
                         newTag.value = ""
                     }
                 }

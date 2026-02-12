@@ -22,6 +22,7 @@ import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
+import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
@@ -229,7 +230,7 @@ class BookmarksRepositoryImpl(
             body = bookmark.toAddBookmarkDTO().toJson()
         )
         if (response.isSuccessful) {
-            response.body()?.let {
+            response.body()?.resolvedBookmark()?.let {
                 return it.toDomainModel()
             }
             throw IllegalStateException("Response body is null")
@@ -290,7 +291,7 @@ class BookmarksRepositoryImpl(
             body = bookmark.toEditBookmarkDTO().toEditBookmarkJson()
         )
         if (response.isSuccessful) {
-            response.body()?.let { bookmarkDTO ->
+            response.body()?.resolvedBookmark()?.let { bookmarkDTO ->
                 // TODO force fields to avoid invalid backend response
                 val updatedEntity = bookmarkDTO.toEntityModel().copy(
                     hasEbook = bookmark.hasEbook,
@@ -401,16 +402,18 @@ class BookmarksRepositoryImpl(
         serverUrl: String,
         bookmarkId: Int
     ) = object :
-        NetworkNoCacheResource<BookmarkDTO, Bookmark>(errorHandler = errorHandler) {
+        NetworkNoCacheResource<SingleBookmarkResponseDTO, Bookmark>(errorHandler = errorHandler) {
 
-        override suspend fun fetchFromRemote(): Response<BookmarkDTO> = apiService.getBookmark(
+        override suspend fun fetchFromRemote(): Response<SingleBookmarkResponseDTO> = apiService.getBookmark(
             url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/$bookmarkId",
             authorization = "Bearer $token",
         )
 
-        override fun fetchResult(data: BookmarkDTO): Flow<Bookmark> {
+        override fun fetchResult(data: SingleBookmarkResponseDTO): Flow<Bookmark> {
             return flow {
-                emit(data.toDomainModel())
+                val bookmark = data.resolvedBookmark()
+                    ?: throw IllegalStateException("Could not resolve bookmark from response")
+                emit(bookmark.toDomainModel())
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)

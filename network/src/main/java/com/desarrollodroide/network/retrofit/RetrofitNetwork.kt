@@ -3,6 +3,7 @@ package com.desarrollodroide.network.retrofit
 import com.desarrollodroide.network.model.AccountDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
+import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
@@ -28,6 +29,7 @@ interface RetrofitNetwork {
         @Url url: String
     ): Response<BookmarksDTO>
 
+    @Headers("Content-Type: application/json")
     @POST()
     suspend fun sendLogin(
         @Url url: String,
@@ -55,20 +57,23 @@ interface RetrofitNetwork {
     ): Response<Unit>
 
     // Add Bookmark
+    @Headers("Content-Type: application/json")
     @POST
     suspend fun addBookmark(
         @Url url: String,
         @Header("X-Session-Id") xSessionId: String,
         @Body body: String
-    ): Response<BookmarkDTO>
+    ): Response<SingleBookmarkResponseDTO>
 
+    @Headers("Content-Type: application/json")
     @PUT()
     suspend fun editBookmark(
         @Url url: String,
         @Header("X-Session-Id") xSessionId: String,
         @Body body: String
-    ): Response<BookmarkDTO>
+    ): Response<SingleBookmarkResponseDTO>
 
+    @Headers("Content-Type: application/json")
     @PUT()
     suspend fun updateBookmarksCache(
         @Url url: String,
@@ -76,6 +81,7 @@ interface RetrofitNetwork {
         @Body body: String
     ): Response<List<BookmarkDTO>>
 
+    @Headers("Content-Type: application/json")
     @PUT()
     suspend fun updateBookmarksCacheV1(
         @Url url: String,
@@ -136,6 +142,7 @@ interface RetrofitNetwork {
         @Header("Authorization") authorization: String,
     ): Response<ReadableContentResponseDTO>
 
+    @Headers("Content-Type: application/json")
     @POST()
     suspend fun syncBookmarks(
         @Url url: String,
@@ -147,6 +154,6 @@ interface RetrofitNetwork {
     suspend fun getBookmark(
         @Url url: String,
         @Header("Authorization") authorization: String,
-    ): Response<BookmarkDTO>
+    ): Response<SingleBookmarkResponseDTO>
 
 }
