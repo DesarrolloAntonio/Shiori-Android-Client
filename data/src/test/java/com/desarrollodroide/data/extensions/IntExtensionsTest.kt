@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test
 class IntExtensionsTest {
 
     @Test
-    fun `isTimestampId returns true for values greater than base timestamp`() {
-        // Given
-        val timestampId = 1704067201  // One second after base timestamp
+    fun `isTimestampId returns true for timestamp-based ids`() {
+        // Given - a value generated from System.currentTimeMillis() / 1000
+        val timestampId = 1739000000
 
         // When
         val result = timestampId.isTimestampId()
@@ -18,19 +18,19 @@ class IntExtensionsTest {
     }
 
     @Test
-    fun `isTimestampId returns false for values less than base timestamp`() {
+    fun `isTimestampId returns true for values just above threshold`() {
         // Given
-        val regularId = 1704067199  // One second before base timestamp
+        val id = 1_000_001
 
         // When
-        val result = regularId.isTimestampId()
+        val result = id.isTimestampId()
 
         // Then
-        assertFalse(result)
+        assertTrue(result)
     }
 
     @Test
-    fun `isTimestampId returns false for small regular ids`() {
+    fun `isTimestampId returns false for regular server ids`() {
         // Given
         val regularId = 1
 
@@ -42,12 +42,24 @@ class IntExtensionsTest {
     }
 
     @Test
-    fun `isTimestampId returns false for base timestamp value`() {
+    fun `isTimestampId returns false for threshold value`() {
         // Given
-        val baseTimestamp = 1704067200  // Exactly the base timestamp
+        val thresholdId = 1_000_000
 
         // When
-        val result = baseTimestamp.isTimestampId()
+        val result = thresholdId.isTimestampId()
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isTimestampId returns false for large server ids`() {
+        // Given - even a server with many bookmarks
+        val largeServerId = 999_999
+
+        // When
+        val result = largeServerId.isTimestampId()
 
         // Then
         assertFalse(result)
