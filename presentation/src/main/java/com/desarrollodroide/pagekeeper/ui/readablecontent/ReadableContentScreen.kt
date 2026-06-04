@@ -1,6 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.readablecontent
 
 import android.content.Intent
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import android.os.Build
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -110,7 +112,12 @@ fun ReadableContentScreen(
                                             request: WebResourceRequest?
                                         ): Boolean {
                                             request?.url?.let { url ->
-                                                context.startActivity(Intent(Intent.ACTION_VIEW, url))
+                                                val intent = Intent(Intent.ACTION_VIEW, url)
+                                                try {
+                                                    context.startActivity(intent)
+                                                } catch (e: ActivityNotFoundException) {
+                                                    Toast.makeText(context, "No app found to open this link", Toast.LENGTH_SHORT).show()
+                                                }
                                                 return true
                                             }
                                             return false
