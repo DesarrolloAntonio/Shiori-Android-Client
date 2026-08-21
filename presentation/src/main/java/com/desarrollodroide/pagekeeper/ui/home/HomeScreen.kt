@@ -85,6 +85,7 @@ import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.PrivacyPolicyScreen
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
+import com.desarrollodroide.pagekeeper.ui.tags.TagsScreen
 import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 import com.desarrollodroide.pagekeeper.R
@@ -211,6 +212,17 @@ fun HomeScreen(
                 },
                 onViewLastCrash = {
                     navController.navigate(NavItem.LastCrashNavItem.route)
+                },
+                onNavigateToTags = {
+                    navController.navigate(NavItem.TagsNavItem.route)
+                }
+            )
+        }
+        composable(NavItem.TagsNavItem.route) {
+            TagsScreen(
+                tagsViewModel = get(),
+                onBack = {
+                    navController.navigateUp()
                 }
             )
         }

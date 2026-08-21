@@ -11,6 +11,7 @@ sealed class NavItem(
     data object LoginNavItem : NavItem("login")
     data object HomeNavItem : NavItem("home")
     data object SettingsNavItem : NavItem("settings")
+    data object TagsNavItem : NavItem("tags")
     data object TermsOfUseNavItem : NavItem("termsOfUse")
     data object PrivacyPolicyNavItem : NavItem("privacyPolicy")
     data object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}") {

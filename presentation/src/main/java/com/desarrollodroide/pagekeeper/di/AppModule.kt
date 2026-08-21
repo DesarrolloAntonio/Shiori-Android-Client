@@ -17,7 +17,10 @@ import com.desarrollodroide.domain.usecase.GetBookmarkReadableContentUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.domain.usecase.CreateTagUseCase
+import com.desarrollodroide.domain.usecase.DeleteTagUseCase
 import com.desarrollodroide.domain.usecase.RefreshTokenUseCase
+import com.desarrollodroide.domain.usecase.RenameTagUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
@@ -119,6 +122,24 @@ fun appModule() = module {
     single {
         GetBookmarkReadableContentUseCase(
             bookmarksRepository = get()
+        )
+    }
+
+    single {
+        CreateTagUseCase(
+            tagsRepository = get()
+        )
+    }
+
+    single {
+        RenameTagUseCase(
+            tagsRepository = get()
+        )
+    }
+
+    single {
+        DeleteTagUseCase(
+            tagsRepository = get()
         )
     }
 

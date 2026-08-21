@@ -61,6 +61,7 @@ fun SettingsScreen(
     onNavigateToSourceCode: () -> Unit,
     onNavigateToLogs: () -> Unit,
     onViewLastCrash: () -> Unit,
+    onNavigateToTags: () -> Unit,
     goToLogin: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -139,6 +140,7 @@ fun SettingsScreen(
                 onNavigateToSourceCode = onNavigateToSourceCode,
                 onNavigateToLogs = onNavigateToLogs,
                 onViewLastCrash = onViewLastCrash,
+                onNavigateToTags = onNavigateToTags,
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
                 onHideTagChanged = settingsViewModel::setHideTag,
@@ -171,6 +173,7 @@ fun SettingsContent(
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToLogs: () -> Unit,
     onViewLastCrash: () -> Unit,
+    onNavigateToTags: () -> Unit,
     themeMode: MutableStateFlow<ThemeMode>,
     goToLogin: () -> Unit,
     useDynamicColors: MutableStateFlow<Boolean>,
@@ -224,7 +227,8 @@ fun SettingsContent(
                 tagsUiState = tagsUiState,
                 onHideTagChanged = onHideTagChanged,
                 onClickHideDialogOption = onClickHideDialogOption,
-                hideTag = hideTag
+                hideTag = hideTag,
+                onNavigateToTags = onNavigateToTags
             )
         }
         item {
@@ -354,6 +358,7 @@ fun SettingsScreenPreview() {
         onNavigateToPrivacyPolicy = {},
         onNavigateToLogs = {},
         onViewLastCrash = {},
+        onNavigateToTags = {},
         themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         goToLogin = {},
         useDynamicColors = remember { MutableStateFlow(false) },

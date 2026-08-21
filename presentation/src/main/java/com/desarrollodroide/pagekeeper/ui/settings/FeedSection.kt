@@ -2,6 +2,7 @@ package com.desarrollodroide.pagekeeper.ui.settings
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.filled.Style
 import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +28,7 @@ fun FeedSection(
     onHideTagChanged: (Tag?) -> Unit,
     tagsUiState: UiState<List<Tag>>,
     hideTag: Tag?,
+    onNavigateToTags: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isCategoriesVisible = remember { mutableStateOf(false) }
@@ -37,6 +39,12 @@ fun FeedSection(
             icon = Icons.Filled.ViewCompactAlt,
             checked = compactView,
             onCheckedChange = onCompactViewChanged
+        )
+        ClickableOption(
+            title = "Manage tags",
+            icon = Icons.Filled.Style,
+            subtitle = "Rename or delete tags",
+            onClick = onNavigateToTags
         )
         ClickableOption(
             title = "Hide tag",

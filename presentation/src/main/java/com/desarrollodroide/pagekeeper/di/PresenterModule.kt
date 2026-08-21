@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.di
 
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
+import com.desarrollodroide.pagekeeper.ui.tags.TagsViewModel
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
 import com.desarrollodroide.pagekeeper.ui.feed.SearchViewModel
@@ -19,6 +20,16 @@ fun presenterModule() = module {
             refreshTokenUseCase = get(),
             settingsPreferenceDataSource = get(),
             livenessUseCase = get(),
+        )
+    }
+
+    viewModel {
+        TagsViewModel(
+            getTagsUseCase = get(),
+            createTagUseCase = get(),
+            renameTagUseCase = get(),
+            deleteTagUseCase = get(),
+            settingsPreferenceDataSource = get(),
         )
     }
 
