@@ -29,6 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.AssistChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -222,18 +224,22 @@ private fun TagsSelectorView(
     availableTags: List<Tag>,
     onTagSelected: (Tag) -> Unit
 ) {
+    // These were a hardcoded light grey pill with dark grey text, which in dark theme rendered as
+    // white blocks against the background. Chips take their colours from the scheme.
     FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         availableTags.forEach { category ->
-            Text(
-                color = Color.DarkGray,
-                modifier = Modifier
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFEAEDED))
-                    .clickable { onTagSelected(category) }
-                    .padding(vertical = 8.dp, horizontal = 16.dp),
-                text = category.name
+            AssistChip(
+                onClick = { onTagSelected(category) },
+                label = { Text(category.name) },
+                shape = MaterialTheme.shapes.small,
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    labelColor = MaterialTheme.colorScheme.onSurface,
+                ),
+                border = null,
             )
         }
     }

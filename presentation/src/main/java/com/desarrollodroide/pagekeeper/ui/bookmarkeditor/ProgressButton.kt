@@ -44,7 +44,7 @@ fun ProgressButton(
         ) {
             Text(
                 text = "Closing",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
