@@ -13,6 +13,7 @@ import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
+import retrofit2.Response
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
@@ -36,9 +37,23 @@ class AuthRepositoryImpl(
 
         override fun fetchFromLocal() = flowOf("")
 
-        override suspend fun fetchFromRemote() = apiService.sendLogout(
-            xSessionId = xSession,
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/auth/logout")
+        /**
+         * 1.8 moved logout to /api/v1/auth/logout and dropped /api/logout; 1.7 only has the
+         * legacy one. Trying the current route first and falling back on 404 keeps both working
+         * without having to know the server version up front.
+         */
+        override suspend fun fetchFromRemote(): Response<String> {
+            val base = serverUrl.removeTrailingSlash()
+            val response = apiService.sendLogout(
+                xSessionId = xSession,
+                url = "$base/api/v1/auth/logout"
+            )
+            return if (response.code() == HTTP_NOT_FOUND) {
+                apiService.sendLogout(xSessionId = xSession, url = "$base/api/logout")
+            } else {
+                response
+            }
+        }
 
         override fun shouldFetch(data: String?) = true
 
@@ -93,4 +108,7 @@ class AuthRepositoryImpl(
 
     }.asFlow().flowOn(Dispatchers.IO)
 
+    private companion object {
+        const val HTTP_NOT_FOUND = 404
+    }
 }
