@@ -1,5 +1,6 @@
 package com.desarrollodroide.network.di
 
+import com.desarrollodroide.network.BuildConfig
 import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import okhttp3.OkHttpClient
@@ -33,7 +34,13 @@ fun networkingModule() = module {
             }
             .addInterceptor(get<NetworkLoggerInterceptor>())
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                // BODY prints the full request body, and the login request body is the username
+                // and password in the clear. That must never reach logcat on a release build.
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             })
             .build()
     } // client

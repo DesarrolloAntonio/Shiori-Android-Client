@@ -1,6 +1,7 @@
 plugins {
     id ("com.android.library")
     id ("org.jetbrains.kotlin.android")
+    id ("de.mannodermaus.android-junit5")
 }
 
 
@@ -39,6 +40,12 @@ java {
 }
 
 dependencies {
+
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.okhttp3.mockwebserver)
+
 
     implementation(project(":common"))
     implementation (libs.bundles.retrofit)
