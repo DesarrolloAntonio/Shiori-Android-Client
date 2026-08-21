@@ -307,6 +307,15 @@ class BookmarksRepositoryImpl(
                 it.message?.forEach { dto->
                     // TODO change to toEntityModel when backend is fixed
                     val updatedEntity = dto.toEntityModel().copy(
+                        // The response carries a freshly scraped title and excerpt that the
+                        // server does not persist on the bookmark itself. Writing them here made
+                        // the card show a new title straight after an update, which the next pull
+                        // to refresh then overwrote with the old one from the list endpoint. Seen
+                        // live: raw url -> "Kotlin Docs | Kotlin" -> raw url again. Keep whatever
+                        // the list endpoint is going to hand back, so the card does not change
+                        // and then change back.
+                        title = bookmark?.title ?: dto.title.orEmpty(),
+                        excerpt = bookmark?.excerpt ?: dto.excerpt.orEmpty(),
                         createEbook = if (updateCachePayload.createEbook) true else bookmark?.createEbook?: false,
                         createArchive = if (updateCachePayload.createArchive) true else bookmark?.createArchive?: false,
                         hasEbook = if (updateCachePayload.createEbook) true else bookmark?.hasEbook?: false,
