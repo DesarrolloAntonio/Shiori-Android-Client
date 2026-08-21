@@ -65,14 +65,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "21"
-    }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packagingOptions {
         resources {
@@ -110,17 +104,14 @@ dependencies {
     implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
     implementation (libs.androidx.paging.compose)
-    implementation ("androidx.paging:paging-common-ktx:3.3.2")
+    implementation (libs.androidx.paging.common)
 
-    implementation (libs.compose.ui.ui)
-    implementation (libs.compose.ui.tooling.preview)
-    implementation (libs.compose.ui.tooling)
-    implementation (libs.compose.material3.material3)
-    implementation (libs.compose.material.iconsext)
-    implementation (libs.compose.runtime.livedata)
+    // Compose: the BOM pins every androidx.compose.* artifact, including Material 3 Expressive.
+    implementation (platform(libs.compose.bom))
+    androidTestImplementation (platform(libs.compose.bom))
+    implementation (libs.bundles.compose)
 
     implementation (libs.bundles.retrofit)
-    implementation (libs.accompanist.permissions)
 
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.datastore.preferences)
@@ -135,10 +126,6 @@ dependencies {
     testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
 
-}
-
-composeCompiler {
-    enableStrongSkippingMode = true
 }
 
 java {

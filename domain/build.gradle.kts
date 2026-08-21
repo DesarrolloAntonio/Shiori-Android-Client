@@ -9,7 +9,6 @@ android {
 
     defaultConfig {
         minSdk = (findProperty("minSdkVersion") as String).toInt()
-        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -29,9 +28,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlinOptions {
-        jvmTarget = "21"
     }
 }
 
