@@ -77,6 +77,8 @@ fun SettingsScreen(
     val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
     val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
     val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
+    val serverVersion by settingsViewModel.serverVersion.collectAsStateWithLifecycle()
+    val serverUrl by settingsViewModel.serverUrl.collectAsStateWithLifecycle()
     val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -151,8 +153,8 @@ fun SettingsScreen(
                 hideTag = tagToHide,
                 cacheSize = settingsViewModel.cacheSize,
                 onClearCache = settingsViewModel::clearImageCache,
-                serverVersion = settingsViewModel.getServerVersion(),
-                serverUrl = settingsViewModel.getServerUrl()
+                serverVersion = serverVersion,
+                serverUrl = serverUrl
             )
         }
     }

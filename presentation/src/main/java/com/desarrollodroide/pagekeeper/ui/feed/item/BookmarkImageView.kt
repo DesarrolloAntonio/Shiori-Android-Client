@@ -4,16 +4,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import coil.request.ImageRequest
-import okhttp3.Headers
+import coil3.request.ImageRequest
+import coil3.request.bitmapConfig
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
 import android.graphics.Bitmap
 import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalInspectionMode
-import coil.ImageLoader
-import coil.size.Size
+import coil3.ImageLoader
+import coil3.size.Size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.FilterQuality
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import org.koin.compose.koinInject
@@ -52,8 +54,8 @@ fun BookmarkImageView(
                         size(Size(THUMBNAIL_PX, THUMBNAIL_PX))
                     }
                 }
-                .headers(
-                    Headers.Builder().add("Authorization", "Bearer $token").build()
+                .httpHeaders(
+                    NetworkHeaders.Builder().add("Authorization", "Bearer $token").build()
                 )
                 .build(),
             contentDescription = "Bookmark image",

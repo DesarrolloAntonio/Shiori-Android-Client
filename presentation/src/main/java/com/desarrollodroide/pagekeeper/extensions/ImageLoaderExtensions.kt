@@ -1,8 +1,8 @@
 package com.desarrollodroide.pagekeeper.extensions
 
 import android.util.Log
-import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
+import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

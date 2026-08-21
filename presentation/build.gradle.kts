@@ -121,6 +121,7 @@ dependencies {
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.coil.compose)
+    implementation (libs.coil.network.okhttp)
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.

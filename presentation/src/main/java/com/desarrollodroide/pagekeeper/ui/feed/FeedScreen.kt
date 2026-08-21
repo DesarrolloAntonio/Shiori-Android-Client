@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -142,11 +143,15 @@ fun FeedScreen(
         }
     }
 
+    val serverUrl by feedViewModel.serverUrl.collectAsStateWithLifecycle()
+    val xSessionId by feedViewModel.xSessionId.collectAsStateWithLifecycle()
+    val token by feedViewModel.token.collectAsStateWithLifecycle()
+
     FeedView(
         actions = actions,
-        serverURL = feedViewModel.getServerUrl(),
-        xSessionId = feedViewModel.getSession(),
-        token = feedViewModel.getToken(),
+        serverURL = serverUrl,
+        xSessionId = xSessionId,
+        token = token,
         viewType = if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL,
         bookmarksPagingItems = bookmarksPagingItems,
         tagToHide = tagToHide,

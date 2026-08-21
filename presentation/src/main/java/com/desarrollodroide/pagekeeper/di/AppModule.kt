@@ -2,8 +2,10 @@ package com.desarrollodroide.pagekeeper.di
 
 import android.content.Context
 import android.util.Log
-import coil.ImageLoader
-import coil.disk.DiskCache
+import coil3.ImageLoader
+import coil3.disk.DiskCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import okio.Path.Companion.toOkioPath
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.helpers.ThemeManagerImpl
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -159,25 +161,30 @@ fun appModule() = module {
 
     single {
         ImageLoader.Builder(get<Context>())
-            .okHttpClient {
-                OkHttpClient.Builder()
-                    .retryOnConnectionFailure(true)
-                    .addInterceptor { chain ->
-                        val request = chain.request()
-                        val response = chain.proceed(request)
-                        if (!response.isSuccessful) {
-                            Log.e("BookmarkImageView", "HTTP error: ${response.code}")
+            // coil3 has no okHttpClient {}. The network layer is a fetcher component, and the
+            // okhttp one has to be added explicitly or nothing over http loads at all.
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = {
+                    OkHttpClient.Builder()
+                        .retryOnConnectionFailure(true)
+                        .addInterceptor { chain ->
+                            val request = chain.request()
+                            val response = chain.proceed(request)
+                            if (!response.isSuccessful) {
+                                Log.e("BookmarkImageView", "HTTP error: ${response.code}")
+                            }
+                            val newCacheControl = "public, max-age=31536000"
+                            response.newBuilder()
+                                .header("Cache-Control", newCacheControl)
+                                .build()
                         }
-                        val newCacheControl = "public, max-age=31536000"
-                        response.newBuilder()
-                            .header("Cache-Control", newCacheControl)
-                            .build()
-                    }
-                    .build()
+                        .build()
+                }))
             }
             .diskCache {
                 DiskCache.Builder()
-                    .directory(get<Context>().cacheDir.resolve("image_cache"))
+                    // okio Path, not File.
+                    .directory(get<Context>().cacheDir.resolve("image_cache").toOkioPath())
                     .maxSizeBytes(250L * 1024 * 1024) // 250MB
                     .build()
             }

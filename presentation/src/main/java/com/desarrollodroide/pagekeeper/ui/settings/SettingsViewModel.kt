@@ -3,8 +3,8 @@ package com.desarrollodroide.pagekeeper.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
+import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
@@ -47,8 +47,13 @@ class SettingsViewModel(
     val useDynamicColors = MutableStateFlow(false)
     val themeMode = MutableStateFlow(ThemeMode.AUTO)
     private var _token = ""
-    private var _serverVersion = ""
-    private var _serverUrl: String = ""
+    // These were plain vars written from a coroutine and read straight from composition. Compose
+    // never saw them change, so the server url and the version footer stayed blank unless some
+    // other state happened to force a recomposition after loadSettings() had finished.
+    private val _serverVersion = MutableStateFlow("")
+    val serverVersion: StateFlow<String> = _serverVersion.asStateFlow()
+    private val _serverUrl = MutableStateFlow("")
+    val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -136,8 +141,8 @@ class SettingsViewModel(
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             _token = settingsPreferenceDataSource.getToken()
-            _serverVersion = settingsPreferenceDataSource.getServerVersion()
-            _serverUrl = settingsPreferenceDataSource.getUrl()
+            _serverVersion.value = settingsPreferenceDataSource.getServerVersion()
+            _serverUrl.value = settingsPreferenceDataSource.getUrl()
         }
     }
 
@@ -198,9 +203,9 @@ class SettingsViewModel(
         }
     }
 
-    fun getServerUrl(): String = _serverUrl
+    fun getServerUrl(): String = _serverUrl.value
 
-    fun getServerVersion(): String = _serverVersion
+    fun getServerVersion(): String = _serverVersion.value
 
 }
 

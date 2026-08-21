@@ -75,9 +75,16 @@ class FeedViewModel(
     val currentBookmark = _currentBookmark.asStateFlow()
 
     private var tagsJob: Job? = null
-    private var serverUrl = ""
-    private var xSessionId = ""
-    private var token = ""
+    // Read from DataStore in a coroutine but consumed from composition, so these have to be
+    // observable. As plain vars the first frame saw empty strings and never recomposed: the feed's
+    // images are built from serverUrl and carry the bearer token, so a cold start that rendered
+    // cached rows before the preferences arrived requested them unauthenticated against no host.
+    private val _serverUrl = MutableStateFlow("")
+    val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
+    private val _xSessionId = MutableStateFlow("")
+    val xSessionId: StateFlow<String> = _xSessionId.asStateFlow()
+    private val _token = MutableStateFlow("")
+    val token: StateFlow<String> = _token.asStateFlow()
     val showBookmarkEditorScreen = mutableStateOf(false)
     val showDeleteConfirmationDialog = mutableStateOf(false)
     val showEpubOptionsDialog = mutableStateOf(false)
@@ -121,7 +128,7 @@ class FeedViewModel(
                 Triple(selectedTags, showOnlyHidden, hiddenTag)
             }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag) ->
                 getLocalPagingBookmarksUseCase.invoke(
-                    serverUrl = serverUrl,
+                    serverUrl = _serverUrl.value,
                     xSession = settingsPreferenceDataSource.getSession(),
                     tags = if (showOnlyHidden) emptyList() else selectedTags,
                     showOnlyHiddenTag = showOnlyHidden,
@@ -149,9 +156,9 @@ class FeedViewModel(
 
     fun loadInitialData() {
         viewModelScope.launch {
-            serverUrl = settingsPreferenceDataSource.getUrl()
-            token = settingsPreferenceDataSource.getToken()
-            xSessionId = settingsPreferenceDataSource.getSession()
+            _serverUrl.value = settingsPreferenceDataSource.getUrl()
+            _token.value = settingsPreferenceDataSource.getToken()
+            _xSessionId.value = settingsPreferenceDataSource.getSession()
             //getLocalTags()
             if (_tagsState.value.data.isNullOrEmpty()) {
                 getRemoteTags()
@@ -184,7 +191,7 @@ class FeedViewModel(
         Log.v(TAG, "Syncing bookmarks")
         viewModelScope.launch {
             getAllRemoteBookmarksUseCase.invoke(
-                serverUrl = serverUrl,
+                serverUrl = _serverUrl.value,
                 xSession = settingsPreferenceDataSource.getSession()
             ).collect { result ->
                 result.fold(
@@ -236,8 +243,8 @@ class FeedViewModel(
         tagsJob?.cancel()
         tagsJob =  viewModelScope.launch {
             getTagsUseCase.invoke(
-                serverUrl = serverUrl,
-                token = token,
+                serverUrl = _serverUrl.value,
+                token = _token.value,
             )
                 .distinctUntilChanged()
                 .collect() { result ->
@@ -300,12 +307,12 @@ class FeedViewModel(
     }
 
     fun getUrl(bookmark: Bookmark) =
-        if (bookmark.public == 1) "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/content" else {
+        if (bookmark.public == 1) "${_serverUrl.value.removeTrailingSlash()}/bookmark/${bookmark.id}/content" else {
             bookmark.url
         }
 
     fun getEpubUrl(bookmark: Bookmark) =
-        "${serverUrl.removeTrailingSlash()}/bookmark/${bookmark.id}/ebook"
+        "${_serverUrl.value.removeTrailingSlash()}/bookmark/${bookmark.id}/ebook"
 
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
@@ -346,13 +353,7 @@ class FeedViewModel(
         }
     }
 
-    fun getServerUrl() = serverUrl
-
-    fun getSession(): String = xSessionId
-
-    fun getToken(): String = runBlocking {
-        settingsPreferenceDataSource.getToken()
-    }
+    fun getServerUrl(): String = _serverUrl.value
 
     fun addSelectedTag(tag: Tag) {
         viewModelScope.launch {

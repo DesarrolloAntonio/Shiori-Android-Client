@@ -12,7 +12,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import coil.ImageLoader
+import coil3.ImageLoader
 import com.desarrollodroide.pagekeeper.extensions.logCacheDetails
 import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
