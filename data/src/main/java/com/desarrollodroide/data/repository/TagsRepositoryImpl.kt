@@ -2,6 +2,7 @@ package com.desarrollodroide.data.repository
 
 import android.util.Log
 import com.desarrollodroide.common.result.ErrorHandler
+import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.mapper.*
@@ -97,23 +98,41 @@ class TagsRepositoryImpl(
 
     }.asFlow().flowOn(Dispatchers.IO)
 
+    /**
+     * Deleting a tag answers 204 with no body at all, because the server only wraps responses
+     * that carry a JSON content type. Retrofit hands back a null body for 204, and
+     * NetworkNoCacheResource treats a null body as failure, so this one is written out by hand:
+     * success is the status code, there is nothing to deserialize.
+     */
     override fun deleteTag(
         token: String,
         serverUrl: String,
         tagId: Int
-    ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
-
-        override suspend fun fetchFromRemote() = apiService.deleteTag(
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags/$tagId",
-            authorization = "Bearer $token"
-        )
-
-        override fun fetchResult(data: Unit): Flow<Unit> = flow {
-            tagsDao.deleteTagById(tagId)
-            emit(Unit)
+    ): Flow<Result<Unit>> = flow {
+        emit(Result.Loading(null))
+        try {
+            val response = apiService.deleteTag(
+                url = "${serverUrl.removeTrailingSlash()}/api/v1/tags/$tagId",
+                authorization = "Bearer $token"
+            )
+            if (response.isSuccessful) {
+                tagsDao.deleteTagById(tagId)
+                emit(Result.Success(Unit))
+            } else {
+                emit(
+                    Result.Error(
+                        errorHandler.getApiError(
+                            statusCode = response.code(),
+                            throwable = null,
+                            message = response.errorBody()?.string()
+                        )
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            emit(Result.Error(errorHandler.getError(e), null))
         }
-
-    }.asFlow().flowOn(Dispatchers.IO)
+    }.flowOn(Dispatchers.IO)
 
     override fun getLocalTags(): Flow<List<Tag>> {
         return tagsDao.observeAllTags()

@@ -90,7 +90,8 @@ dependencies {
     testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
     testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
-    testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
+    testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.okhttp3.mockwebserver) // Serves canned Shiori responses to the real Retrofit stack.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
     testImplementation(libs.androidx.paging.common) // Common Paging library for testing.
     testImplementation("app.cash.turbine:turbine:1.1.0") // Turbine for testing flows.
