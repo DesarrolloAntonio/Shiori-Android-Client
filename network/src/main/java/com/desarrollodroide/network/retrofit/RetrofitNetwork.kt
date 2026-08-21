@@ -1,6 +1,5 @@
 package com.desarrollodroide.network.retrofit
 
-import com.desarrollodroide.network.model.AccountDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
@@ -9,7 +8,6 @@ import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.model.SessionDTO
-import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.model.TagDTO
 import com.desarrollodroide.network.model.TagsDTO
 import retrofit2.Response
@@ -28,13 +26,6 @@ interface RetrofitNetwork {
         @Header("X-Session-Id") xSessionId: String,
         @Url url: String
     ): Response<BookmarksDTO>
-
-    @Headers("Content-Type: application/json")
-    @POST()
-    suspend fun sendLogin(
-        @Url url: String,
-        @Body jsonData: String
-    ): Response<SessionDTO>
 
     @Headers("Content-Type: application/json")
     @POST()
@@ -103,33 +94,6 @@ interface RetrofitNetwork {
         @Body tag: TagDTO
     ): Response<TagDTO>
 
-    // List accounts
-    @GET("/api/accounts")
-    suspend fun listAccounts(
-        @Header("X-Session-Id") xSessionId: String
-    ): Response<List<AccountDTO>>
-
-    // Create account
-    @POST("/api/accounts")
-    suspend fun createAccount(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body account: AccountDTO
-    ): Response<AccountDTO>
-
-    // Edit account
-    @PUT("/api/accounts")
-    suspend fun editAccount(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body account: AccountDTO
-    ): Response<AccountDTO>
-
-    // Delete accounts
-    @HTTP(method = "DELETE", path = "/api/accounts", hasBody = true)
-    suspend fun deleteAccounts(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body accountNames: List<String>
-    ): Response<Unit>
-
     // Test system liveness
     @GET()
     suspend fun systemLiveness(
@@ -141,19 +105,5 @@ interface RetrofitNetwork {
         @Url url: String,
         @Header("Authorization") authorization: String,
     ): Response<ReadableContentResponseDTO>
-
-    @Headers("Content-Type: application/json")
-    @POST()
-    suspend fun syncBookmarks(
-        @Url url: String,
-        @Header("Authorization") authorization: String,
-        @Body body: String
-    ): Response<SyncBookmarksResponseDTO>
-
-    @GET
-    suspend fun getBookmark(
-        @Url url: String,
-        @Header("Authorization") authorization: String,
-    ): Response<SingleBookmarkResponseDTO>
 
 }

@@ -19,11 +19,9 @@ import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
-import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
-import com.desarrollodroide.domain.usecase.GetBookmarkByIdUseCase
 import okhttp3.OkHttpClient
 import org.koin.dsl.module
 
@@ -124,22 +122,8 @@ fun appModule() = module {
     }
 
     single {
-        GetBookmarkByIdUseCase(
-            bookmarksRepository = get()
-        )
-    }
-
-    single {
         GetAllRemoteBookmarksUseCase(
             bookmarksRepository = get()
-        )
-    }
-
-    single {
-        SyncBookmarksUseCase(
-            bookmarksRepository = get(),
-            settingsPreferenceDataSource = get(),
-            bookmarkDatabase = get()
         )
     }
 

@@ -5,8 +5,6 @@ import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.model.ReadableContent
-import com.desarrollodroide.model.SyncBookmarksRequestPayload
-import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 
@@ -68,15 +66,4 @@ interface BookmarksRepository {
     searchText: String
   ): Flow<PagingData<Bookmark>>
 
-  fun syncBookmarks(
-    token: String,
-    serverUrl: String,
-    syncBookmarksRequestPayload: SyncBookmarksRequestPayload
-  ): Flow<Result<SyncBookmarksResponse>>
-
-  fun getBookmarkById(
-      token: String,
-      serverUrl: String,
-      bookmarkId: Int
-    ): Flow<Result<Bookmark?>>
 }

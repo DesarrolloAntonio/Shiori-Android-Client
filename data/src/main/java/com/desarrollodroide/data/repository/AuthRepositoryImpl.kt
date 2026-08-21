@@ -21,35 +21,6 @@ class AuthRepositoryImpl(
     private val errorHandler: ErrorHandler
 ) : AuthRepository {
 
-    override fun sendLogin(
-        username: String,
-        password: String,
-        serverUrl: String
-    ) = object :
-        NetworkBoundResource<SessionDTO, User>(errorHandler = errorHandler) {
-
-        override suspend fun saveRemoteData(response: SessionDTO) {
-            settingsPreferenceDataSource.saveUser(
-                password = password,
-                session = response.toProtoEntity(),
-                serverUrl = serverUrl,
-            )
-        }
-        override fun fetchFromLocal() = settingsPreferenceDataSource.getUser()
-
-        override suspend fun fetchFromRemote() = apiService.sendLogin(
-            "${serverUrl.removeTrailingSlash()}/api/login",
-            LoginRequestPayload(
-                username = username,
-                password = password
-            ).toJson()
-        )
-
-        override fun shouldFetch(data: User?) = true
-
-    }.asFlow().flowOn(Dispatchers.IO)
-
-
     override fun sendLogout(
         serverUrl: String,
         xSession: String

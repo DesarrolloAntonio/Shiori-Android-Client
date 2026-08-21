@@ -194,21 +194,6 @@ fun ReadableMessageDto.toDomainModel() = ReadableMessage(
 )
 
 
-fun SyncBookmarksResponseDTO.toDomainModel(): SyncBookmarksResponse {
-    return SyncBookmarksResponse(
-        deleted = message.deleted ?: emptyList(),
-        modified = message.modified?.toDomainModel() ?: ModifiedBookmarks(emptyList(), 0, 0)
-    )
-}
-
-fun ModifiedBookmarksDTO.toDomainModel(): ModifiedBookmarks {
-    return ModifiedBookmarks(
-        bookmarks = bookmarks?.map { it.toDomainModel() } ?: emptyList(),
-        maxPage = maxPage ?: 0,
-        page = page ?: 0
-    )
-}
-
 fun Bookmark.toAddBookmarkDTO() = BookmarkDTO(
     id = null,
     url = url,
