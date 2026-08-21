@@ -1,9 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -44,11 +41,15 @@ fun BookmarkImageView(
             model = ImageRequest.Builder(context)
                 .data(imageUrl)
                 .bitmapConfig(Bitmap.Config.ARGB_8888)
+                // No size() call for the full size case on purpose. It used to ask for
+                // Size.ORIGINAL, which decodes at the image's intrinsic resolution however large
+                // that is, while the view only ever showed a couple of hundred dp of it. A big
+                // server thumbnail decoded to a 164MB bitmap and Canvas refused to draw it:
+                //   RuntimeException: Canvas: trying to draw too large bitmap
+                // Leaving it unset lets Coil measure the target and downsample to it.
                 .apply {
                     if (loadAsThumbnail) {
-                        size(Size(100, 100))
-                    } else {
-                        size(Size.ORIGINAL)
+                        size(Size(THUMBNAIL_PX, THUMBNAIL_PX))
                     }
                 }
                 .headers(
@@ -57,9 +58,9 @@ fun BookmarkImageView(
                 .build(),
             contentDescription = "Bookmark image",
             imageLoader = imageLoader,
-            modifier = modifier
-                .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
-                .fillMaxWidth(),
+            // Sizing belongs to the caller. The view used to append heightIn + fillMaxWidth,
+            // which overrode the 72dp box the compact row asks for.
+            modifier = modifier,
             alignment = Alignment.Center,
             contentScale = contentScale,
             alpha = 1.0f,
@@ -70,3 +71,5 @@ fun BookmarkImageView(
     }
 }
 
+/** Decode hint for the compact row's thumbnail, in pixels, generous enough for xxhdpi. */
+private const val THUMBNAIL_PX = 240
