@@ -23,6 +23,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -340,8 +342,9 @@ fun FeedScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun FeedView(
+internal fun FeedView(
     actions: FeedActions,
     viewType: BookmarkViewType,
     serverURL: String,
@@ -351,6 +354,11 @@ private fun FeedView(
     tagToHide: Tag?,
     showOnlyHiddenTag: Boolean
 ) {
+    // itemCount alone is not enough to decide the screen is empty. On a cold start the pager has
+    // not emitted yet, so the count is 0 while the first load is still running, and the feed used
+    // to greet every launch with "No bookmarks yet" and a Refresh button before the rows appeared.
+    val isLoadingFirstPage = bookmarksPagingItems.loadState.refresh is LoadState.Loading
+
     if (bookmarksPagingItems.itemCount > 0) {
         Column {
             Box(
@@ -370,7 +378,11 @@ private fun FeedView(
                 )
             }
         }
-    } else  {
+    } else if (isLoadingFirstPage) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            ContainedLoadingIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+    } else {
         EmptyView(actions)
     }
 }
