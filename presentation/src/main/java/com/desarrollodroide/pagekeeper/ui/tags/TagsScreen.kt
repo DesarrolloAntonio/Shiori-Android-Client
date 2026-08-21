@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.tooling.preview.Preview
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
+import com.desarrollodroide.pagekeeper.ui.components.TagSaver
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -68,9 +70,10 @@ fun TagsScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var tagBeingEdited by remember { mutableStateOf<Tag?>(null) }
-    var tagBeingDeleted by remember { mutableStateOf<Tag?>(null) }
-    var isCreating by remember { mutableStateOf(false) }
+    // An open rename or delete dialog should still be open after a rotation or a fold.
+    var tagBeingEdited by rememberSaveable(stateSaver = TagSaver) { mutableStateOf<Tag?>(null) }
+    var tagBeingDeleted by rememberSaveable(stateSaver = TagSaver) { mutableStateOf<Tag?>(null) }
+    var isCreating by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(actionError) {
         actionError?.let {

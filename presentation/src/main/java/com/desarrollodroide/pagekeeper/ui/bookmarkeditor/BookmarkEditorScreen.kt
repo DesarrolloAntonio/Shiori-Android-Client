@@ -10,9 +10,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
+import com.desarrollodroide.pagekeeper.ui.components.TagListSaver
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import org.koin.androidx.compose.get
@@ -28,16 +30,19 @@ fun BookmarkEditorScreen(
     startMainActivity: () -> Unit = {}
 ) {
     val bookmarkViewModel = get<BookmarkViewModel>()
-    val newTag = remember { mutableStateOf("") }
+    // Rotating or unfolding recreates the activity. Without rememberSaveable the user loses
+    // the url they pasted and every tag they picked, which is most of the work on this screen.
+    val newTag = rememberSaveable { mutableStateOf("") }
     val availableTags = bookmarkViewModel.availableTags.collectAsState()
     val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
-    var currentUrl by remember { mutableStateOf(bookmark.url) }
+    var currentUrl by rememberSaveable { mutableStateOf(bookmark.url) }
 
     // No need to update values in settings
-    var localCreateEbook by remember { mutableStateOf(bookmarkViewModel.createEbook) }
-    var localCreateArchive by remember { mutableStateOf(bookmarkViewModel.createArchive) }
-    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
-        var localMakeArchivePublic by remember {
+    var localCreateEbook by rememberSaveable { mutableStateOf(bookmarkViewModel.createEbook) }
+    var localCreateArchive by rememberSaveable { mutableStateOf(bookmarkViewModel.createArchive) }
+    val assignedTags: MutableState<List<Tag>> =
+        rememberSaveable(stateSaver = TagListSaver) { mutableStateOf(bookmark.tags) }
+    var localMakeArchivePublic by rememberSaveable {
         mutableStateOf(
             when (bookmarkEditorType) {
                 BookmarkEditorType.ADD, BookmarkEditorType.ADD_MANUALLY -> bookmarkViewModel.makeArchivePublic
