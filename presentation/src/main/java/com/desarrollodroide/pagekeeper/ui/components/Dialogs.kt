@@ -123,6 +123,7 @@ fun ConfirmDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InfiniteProgressDialog(
     title: String? = null,
@@ -134,33 +135,21 @@ fun InfiniteProgressDialog(
         properties = properties
     ) {
         Column(
-            horizontalAlignment = CenterHorizontally
+            horizontalAlignment = CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Surface(
-                modifier = Modifier.clip(CircleShape),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(dimensionResource(id = R.dimen.progressDialog_margin))
-                ) {
-                    CircularProgressIndicator(
-                        strokeWidth = dimensionResource(id = R.dimen.progressDialog_stroke),
-                        modifier = Modifier
-                            .height(dimensionResource(id = R.dimen.progressDialog_size))
-                            .width(dimensionResource(id = R.dimen.progressDialog_size))
-                    )
-
-                }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
+            // ContainedLoadingIndicator brings its own tonal container and shape-morphing
+            // animation, so the hand-rolled circular Surface around a spinner is no longer needed.
+            ContainedLoadingIndicator()
             if (title != null) {
                 Surface(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20)),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Text(
-                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 15.dp),
-                        text = title
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 20.dp),
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
             }

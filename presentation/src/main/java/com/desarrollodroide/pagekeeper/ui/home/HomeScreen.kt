@@ -29,16 +29,26 @@ import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +62,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -125,11 +139,12 @@ fun HomeScreen(
         startDestination = NavItem.HomeNavItem.route
     ) {
         composable(NavItem.HomeNavItem.route) {
-            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+            // exitUntilCollapsed lets the two-row flexible bar collapse to a single row as the feed scrolls.
+            val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
             val pendingJobsCount by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             Scaffold(
-                containerColor = MaterialTheme.colorScheme.background,
+                containerColor = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     AnimatedVisibility (showTopBar) {
@@ -260,7 +275,7 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TopBar(
     toggleCategoryVisibility: () -> Unit,
@@ -275,9 +290,8 @@ fun TopBar(
     pendingJobsCount: Int,
     pendingJobs: List<PendingJob>
 ) {
-    var showTooltip by remember { mutableStateOf(false) }
     val hasRunningJobs = pendingJobs.any { it.state.uppercase() == "RUNNING" }
-    val rotation by remember { mutableStateOf(Animatable(0f)) }
+    val rotation = remember { Animatable(0f) }
     LaunchedEffect(hasRunningJobs) {
         if (hasRunningJobs) {
             rotation.animateTo(
@@ -291,111 +305,174 @@ fun TopBar(
             rotation.snapTo(0f)
         }
     }
-    TopAppBar(
+
+    val subtitle = when {
+        pendingJobsCount > 0 -> "$pendingJobsCount pending to sync"
+        showOnlyHiddenTag -> "Hidden tags only"
+        selectedTagsCount > 0 -> "$selectedTagsCount tag filter" + if (selectedTagsCount > 1) "s" else ""
+        else -> null
+    }
+
+    // MediumFlexibleTopAppBar is the Expressive two-row app bar: it carries a title + subtitle when
+    // expanded and collapses to a single row as the feed scrolls, driven by [scrollBehavior].
+    MediumFlexibleTopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
-            Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Shiori",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        },
+        subtitle = {
+            if (subtitle != null) {
                 Text(
-                    color = MaterialTheme.colorScheme.primary,
-                    text = "Shiori",
-                    modifier = Modifier.align(Alignment.CenterStart),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         },
         navigationIcon = {
             Image(
                 painter = painterResource(id = R.drawable.logo_pagekeeper),
-                contentDescription = "Menu",
+                contentDescription = null,
                 modifier = Modifier
-                    .width(45.dp)
-                    .padding(8.dp)
+                    .padding(horizontal = 8.dp)
+                    .size(36.dp)
             )
         },
         actions = {
-            IconButton(onClick = onAddManuallyClick) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Manually",
-                    tint = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            IconButton(onClick = { toggleSearchBarVisibility() }) {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            Box(contentAlignment = Alignment.TopEnd) {
-                IconButton(onClick = { toggleCategoryVisibility() }) {
-                    Icon(
-                        imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
-                        contentDescription = if (showOnlyHiddenTag) "Hidden Tags" else "Filter",
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-                this@TopAppBar.AnimatedVisibility(
-                    visible = selectedTagsCount > 0 && !showOnlyHiddenTag,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    Badge(modifier = Modifier.padding(2.dp)) {
-                        Text(
-                            text = selectedTagsCount.toString(),
-                            style = MaterialTheme.typography.labelSmall
-                        )
+            // AppBarRow lays the actions out and moves whatever doesn't fit into an overflow menu,
+            // so the bar stays usable on narrow screens and in landscape without a hand-written cut-off.
+            AppBarRow(
+                overflowIndicator = { menuState ->
+                    IconButton(
+                        onClick = { if (menuState.isShowing) menuState.dismiss() else menuState.show() }
+                    ) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "More options")
                     }
                 }
-            }
-            Box(contentAlignment = Alignment.TopEnd) {
-                IconButton(
-                    onClick = {
-                        showTooltip = !showTooltip
-                        onSyncButtonClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Sync,
-                        contentDescription = "Sync",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.graphicsLayer {
-                            rotationZ = rotation.value
+            ) {
+                clickableItem(
+                    onClick = onAddManuallyClick,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    label = "Add bookmark",
+                )
+                clickableItem(
+                    onClick = toggleSearchBarVisibility,
+                    icon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    label = "Search",
+                )
+                customItem(
+                    appbarContent = {
+                        BadgedIconButton(
+                            onClick = toggleCategoryVisibility,
+                            badgeCount = if (showOnlyHiddenTag) 0 else selectedTagsCount,
+                            description = if (showOnlyHiddenTag) "Hidden tags" else "Filter by tag",
+                        ) {
+                            Icon(
+                                imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
+                                contentDescription = null,
+                            )
                         }
-                    )
-                }
-                this@TopAppBar.AnimatedVisibility(
-                    visible = pendingJobsCount > 0,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    Badge(modifier = Modifier.padding(2.dp)) {
-                        Text(
-                            text = pendingJobsCount.toString(),
-                            style = MaterialTheme.typography.labelSmall
+                    },
+                    menuContent = { menuState ->
+                        DropdownMenuItem(
+                            text = { Text(if (showOnlyHiddenTag) "Hidden tags" else "Filter by tag") },
+                            onClick = {
+                                menuState.dismiss()
+                                toggleCategoryVisibility()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
+                                    contentDescription = null,
+                                )
+                            },
                         )
-                    }
-                }
-            }
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.secondary
+                    },
+                )
+                customItem(
+                    appbarContent = {
+                        BadgedIconButton(
+                            onClick = onSyncButtonClick,
+                            badgeCount = pendingJobsCount,
+                            description = "Sync",
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = null,
+                                modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
+                            )
+                        }
+                    },
+                    menuContent = { menuState ->
+                        DropdownMenuItem(
+                            text = { Text("Sync") },
+                            onClick = {
+                                menuState.dismiss()
+                                onSyncButtonClick()
+                            },
+                            leadingIcon = { Icon(Icons.Default.Sync, contentDescription = null) },
+                        )
+                    },
+                )
+                clickableItem(
+                    onClick = onSettingsClick,
+                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                    label = "Settings",
                 )
             }
         },
-
-            colors = TopAppBarDefaults.smallTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background, // Sets the background color of the TopAppBar
-            titleContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the title color if needed
-            navigationIconContentColor = MaterialTheme.colorScheme.primary, // Optional: Set the navigation icon color if needed
-            actionIconContentColor = MaterialTheme.colorScheme.primary // Optional: Set the action icons color if needed
-        )
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
     )
 }
 
+/** Icon button that carries a count badge, animated in and out. */
+@Composable
+private fun BadgedIconButton(
+    onClick: () -> Unit,
+    badgeCount: Int,
+    description: String,
+    icon: @Composable () -> Unit,
+) {
+    BadgedBox(
+        badge = {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = badgeCount > 0,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                Badge {
+                    Text(
+                        text = badgeCount.toString(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+        }
+    ) {
+        // The description goes on the button, not the glyph, so TalkBack announces the action once
+        // ("Sync") rather than describing the icon inside a separately-labelled clickable.
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.semantics { this.contentDescription = description },
+        ) {
+            icon()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SyncJobsBottomSheetContent(
     pendingJobs: List<PendingJob>,
@@ -406,90 +483,92 @@ fun SyncJobsBottomSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(bottom = 26.dp)
+            .padding(bottom = 32.dp)
     ) {
         Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentWidth(Alignment.CenterHorizontally),
-            text = "Pending Sync Jobs",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
+            text = "Pending sync jobs",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 8.dp, bottom = 16.dp),
         )
-        Spacer(modifier = Modifier.height(16.dp))
         if (pendingJobs.isEmpty()) {
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally),
-                text = "No pending jobs",
-                style = MaterialTheme.typography.bodyMedium
+                    .padding(vertical = 24.dp),
+                text = "Nothing waiting to sync",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         } else {
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-            pendingJobs.forEach { job ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = job.operationType.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium
-                            )
-                            if (job.state.uppercase() == "RUNNING") {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(12.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Column {
+                    pendingJobs.forEach { job ->
+                        val state = job.state.uppercase()
+                        ListItem(
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            overlineContent = {
+                                Text(
+                                    text = job.operationType.name,
+                                    style = MaterialTheme.typography.labelMedium,
                                 )
-                            }
-                        }
-                        Text(
-                            text = job.bookmarkTitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            },
+                            headlineContent = {
+                                Text(
+                                    text = job.bookmarkTitle,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            trailingContent = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (state == "RUNNING") {
+                                        LoadingIndicator(modifier = Modifier.size(20.dp))
+                                    }
+                                    Text(
+                                        text = job.state,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = when (state) {
+                                            "RUNNING", "ENQUEUED" -> MaterialTheme.colorScheme.primary
+                                            "BLOCKED", "FAILED" -> MaterialTheme.colorScheme.error
+                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    )
+                                }
+                            },
                         )
                     }
-                    Text(
-                        text = job.state,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = when (job.state.uppercase()) {
-                            "RUNNING", "ENQUEUED" -> MaterialTheme.colorScheme.primary
-                            "BLOCKED", "FAILED" -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        }
-                    )
                 }
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Button(
-                onClick = onRetryAll,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Retry All")
-            }
-            Button(
+            OutlinedButton(
                 onClick = onDismiss,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.large,
             ) {
                 Text("Close")
+            }
+            Button(
+                onClick = onRetryAll,
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.large,
+                enabled = pendingJobs.isNotEmpty(),
+            ) {
+                Text("Retry all")
             }
         }
     }
