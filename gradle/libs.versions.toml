@@ -5,9 +5,9 @@ kotlin = "2.3.21"
 coroutines = "1.10.2"
 
 # Compose — BOM drives compose-ui, material3 and friends. Do not pin them individually.
-composeBom = "2026.05.01"
+composeBom = "2026.08.00"
 # Material 3 Expressive lives ahead of the BOM: pin it explicitly.
-composeMaterial3 = "1.5.0-alpha18"
+composeMaterial3 = "1.5.0-alpha26"
 
 # AndroidX
 androidxCore = "1.17.0"
@@ -76,6 +76,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
 junit-platform-suite-api = { module = "org.junit.platform:junit-platform-suite-api", version.ref = "junitPlatformSuiteApi" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatformSuiteApi" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 

@@ -1,7 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("de.mannodermaus.android-junit5")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -67,24 +65,32 @@ android {
     }
     buildFeatures {
         compose = true
+        // AGP 9 turned these off by default and removed the gradle.properties flags that
+        // used to switch them on for every module at once.
+        buildConfig = true
+        // The staging flavor renames the app with resValue("string", "app_name", ...).
+        resValues = true
     }
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-    applicationVariants.configureEach {
-        outputs.configureEach {
-            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output?.outputFileName = "Shiori v$versionName.apk"
-        }
-    }
-
-
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+}
+
+// Names the apk after the resolved version, so the staging build lands as
+// "Shiori v1.51.02-staging.apk" rather than app-staging-debug.apk. This was
+// applicationVariants.outputs, which AGP 9 removed along with the rest of the
+// legacy variant API.
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(output.versionName.map { name -> "Shiori v$name.apk" })
+        }
     }
 }
 
@@ -125,7 +131,8 @@ dependencies {
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
-    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher) // JUnit Jupiter Engine for running JUnit 5 tests.
     testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
     testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
@@ -138,4 +145,12 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+// The android-junit5 plugin drove this before. It configured the test tasks through
+// unitTestVariants, which AGP 9 removed, so it stopped discovering anything at all while still
+// applying cleanly. Every unit test here is JUnit 5 and every instrumented test is JUnit 4, so
+// plain Gradle covers it and the plugin is gone.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
