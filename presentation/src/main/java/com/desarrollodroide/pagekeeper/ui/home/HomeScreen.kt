@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -144,41 +147,39 @@ fun HomeScreen(
         startDestination = NavItem.HomeNavItem.route
     ) {
         composable(NavItem.HomeNavItem.route) {
-            // exitUntilCollapsed lets the two-row flexible bar collapse to a single row as the feed scrolls.
-            val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
             val pendingJobsCount by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     AnimatedVisibility (showTopBar) {
                         TopBar(
-                            onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
-                            scrollBehavior = scrollBehavior,
-                            selectedTagsCount = selectedTags.size,
-                            showOnlyHiddenTag = showOnlyHiddenTag,
-                            pendingJobsCount = pendingJobsCount.size,
-                        )
-                    }
-                },
-                bottomBar = {
-                    AnimatedVisibility(showTopBar) {
-                        FeedBottomBar(
                             onSearchClick = { isSearchBarVisible.value = !isSearchBarVisible.value },
                             onFilterClick = { isCategoriesVisible.value = !isCategoriesVisible.value },
+                            onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             onSyncClick = {
                                 coroutineScope.launch {
                                     showBottomSheet.value = true
                                     bottomSheetState.show()
                                 }
                             },
-                            onAddClick = onAddManuallyClick,
                             selectedTagsCount = selectedTags.size,
                             showOnlyHiddenTag = showOnlyHiddenTag,
                             pendingJobsCount = pendingJobsCount.size,
                             pendingJobs = pendingJobs,
                         )
+                    }
+                },
+                floatingActionButton = {
+                    AnimatedVisibility(showTopBar) {
+                        FloatingActionButton(
+                            onClick = onAddManuallyClick,
+                            shape = MaterialTheme.shapes.large,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add bookmark")
+                        }
                     }
                 }
             ) { paddingValues ->
@@ -299,82 +300,26 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+/**
+ * Search app bar.
+ *
+ * M3 names this variant for exactly this case: "use on home pages when search is key to the
+ * product", with a search field in place of heading text, a product logo as the leading element
+ * and at most two trailing icons. It replaces both the two row flexible bar and the separate
+ * search icon, so the feed gets one 64dp row of chrome instead of roughly 230dp of bar top and
+ * bottom.
+ *
+ * The guidance also says an app bar should carry one or two actions and that anything more
+ * belongs elsewhere, which is what forced the choice here: filter and settings are the two, add
+ * is the fab, and sync only appears when there is actually something pending.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    onSettingsClick: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
-    selectedTagsCount: Int,
-    showOnlyHiddenTag: Boolean,
-    pendingJobsCount: Int,
-) {
-    val subtitle = when {
-        pendingJobsCount > 0 -> "$pendingJobsCount pending to sync"
-        showOnlyHiddenTag -> "Hidden tags only"
-        selectedTagsCount > 0 -> "$selectedTagsCount tag filter" + if (selectedTagsCount > 1) "s" else ""
-        else -> null
-    }
-
-    // The bar carries identity and state, not a row of controls. Everything actionable moved to
-    // the bottom bar, where it is reachable one handed: five icons up here had no hierarchy and
-    // put the primary action, adding a bookmark, in the hardest corner to reach on a tall phone.
-    MediumFlexibleTopAppBar(
-        scrollBehavior = scrollBehavior,
-        title = {
-            Text(
-                text = "Shiori",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        },
-        subtitle = {
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        },
-        navigationIcon = {
-            Image(
-                painter = painterResource(id = R.drawable.logo_pagekeeper),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .size(36.dp)
-            )
-        },
-        actions = {
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
-    )
-}
-
-/**
- * The feed's actions, in a bottom bar with the primary one as a docked fab.
- *
- * Search, filtering and sync are the things a reader reaches for repeatedly, so they sit within
- * thumb reach rather than in the top corner. Adding a bookmark is the primary action and gets the
- * fab, which is what M3 asks for and what the top bar's small plus icon was not.
- */
-@Composable
-private fun FeedBottomBar(
     onSearchClick: () -> Unit,
     onFilterClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onSyncClick: () -> Unit,
-    onAddClick: () -> Unit,
     selectedTagsCount: Int,
     showOnlyHiddenTag: Boolean,
     pendingJobsCount: Int,
@@ -396,11 +341,72 @@ private fun FeedBottomBar(
         }
     }
 
-    BottomAppBar(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        actions = {
-            IconButton(onClick = onSearchClick) {
-                Icon(Icons.Filled.Search, contentDescription = "Search")
+    val hint = when {
+        showOnlyHiddenTag -> "Hidden tags only"
+        selectedTagsCount > 0 -> "$selectedTagsCount tag filter" + if (selectedTagsCount > 1) "s" else ""
+        else -> "Search bookmarks"
+    }
+
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_pagekeeper),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(32.dp)
+            )
+            // The field is the headline. surfaceContainerHigh keeps it distinct from the app
+            // background, which is what the spec asks for.
+            Surface(
+                onClick = onSearchClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = hint,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            // Sync earns its place only while something is queued, so the bar stays at two
+            // actions the rest of the time.
+            AnimatedVisibility(visible = pendingJobsCount > 0) {
+                BadgedIconButton(
+                    onClick = onSyncClick,
+                    badgeCount = pendingJobsCount,
+                    description = "Pending sync",
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = null,
+                        modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
+                    )
+                }
             }
             BadgedIconButton(
                 onClick = onFilterClick,
@@ -412,30 +418,11 @@ private fun FeedBottomBar(
                     contentDescription = null,
                 )
             }
-            BadgedIconButton(
-                onClick = onSyncClick,
-                badgeCount = pendingJobsCount,
-                description = "Sync",
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Sync,
-                    contentDescription = null,
-                    modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
-                )
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add bookmark")
-            }
-        },
-    )
+        }
+    }
 }
 
 /** Icon button that carries a count badge, animated in and out. */
@@ -589,30 +576,32 @@ fun SyncJobsBottomSheetContentPreview() {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun TopBarPreview() {
     ShioriTheme {
         TopBar(
+            onSearchClick = { },
+            onFilterClick = { },
             onSettingsClick = { },
-            scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-            selectedTagsCount = 2,
+            onSyncClick = { },
+            selectedTagsCount = 0,
             showOnlyHiddenTag = false,
             pendingJobsCount = 0,
+            pendingJobs = emptyList(),
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun FeedBottomBarPreview() {
+private fun TopBarWithPendingPreview() {
     ShioriTheme {
-        FeedBottomBar(
+        TopBar(
             onSearchClick = { },
             onFilterClick = { },
+            onSettingsClick = { },
             onSyncClick = { },
-            onAddClick = { },
             selectedTagsCount = 2,
             showOnlyHiddenTag = false,
             pendingJobsCount = 3,
