@@ -22,14 +22,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.model.Bookmark
-import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(
     onBookmarkClick: (Bookmark) -> Unit,
     onDismiss: () -> Unit,
-    viewModel: SearchViewModel = getViewModel()
+    viewModel: SearchViewModel = koinViewModel()
 ) {
     val searchText by viewModel.searchQuery.collectAsStateWithLifecycle()
     var expanded by rememberSaveable { mutableStateOf(true) }

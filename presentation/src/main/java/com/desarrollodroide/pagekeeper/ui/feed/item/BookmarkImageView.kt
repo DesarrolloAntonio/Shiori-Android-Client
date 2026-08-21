@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
-import org.koin.androidx.compose.get
+import org.koin.compose.koinInject
 
 @Composable
 fun BookmarkImageView(
@@ -35,7 +35,7 @@ fun BookmarkImageView(
         )
     } else {
         val context = LocalContext.current
-        val imageLoader = get<ImageLoader>()
+        val imageLoader = koinInject<ImageLoader>()
 
         AsyncImage(
             model = ImageRequest.Builder(context)

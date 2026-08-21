@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.common.result.NetworkLogEntry
-import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,7 +47,7 @@ fun NetworkLogScreen(
     onBack: () -> Unit,
     onShare:(String) -> Unit
 ) {
-    val viewModel: NetworkLogViewModel = getViewModel()
+    val viewModel: NetworkLogViewModel = koinViewModel()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
 
     BackHandler {

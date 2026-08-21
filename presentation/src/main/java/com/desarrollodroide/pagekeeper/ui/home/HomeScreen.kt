@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.Modifier
-import org.koin.androidx.compose.get
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -206,7 +206,7 @@ fun HomeScreen(
         }
         composable(NavItem.SettingsNavItem.route) {
             SettingsScreen(
-                settingsViewModel = get(),
+                settingsViewModel = koinViewModel(),
                 goToLogin = goToLogin,
                 onNavigateToPrivacyPolicy = {
                     navController.navigate(NavItem.PrivacyPolicyNavItem.route)
@@ -233,7 +233,7 @@ fun HomeScreen(
         }
         composable(NavItem.TagsNavItem.route) {
             TagsScreen(
-                tagsViewModel = get(),
+                tagsViewModel = koinViewModel(),
                 onBack = {
                     navController.navigateUp()
                 }
@@ -284,7 +284,7 @@ fun HomeScreen(
 
             bookmark?.let {
                 ReadableContentScreen(
-                    readableContentViewModel = get(),
+                    readableContentViewModel = koinViewModel(),
                     bookmarkId = bookmarkId,
                     bookmarkUrl = it.url,
                     onBack = {

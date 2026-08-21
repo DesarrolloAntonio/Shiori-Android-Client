@@ -10,7 +10,7 @@ import com.desarrollodroide.pagekeeper.ui.settings.SettingsViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogViewModel
 import org.koin.dsl.module
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 
 fun presenterModule() = module {
 

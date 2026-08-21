@@ -23,8 +23,7 @@ work = "2.9.1"
 # Third party
 protobuf = "3.21.9"
 coil = "2.7.0"
-koin = "3.3.3"
-koinAndroidxCompose = "3.4.2"
+koin = "4.1.0"
 
 # Testing
 junitJupiter = "5.14.4"
@@ -81,7 +80,7 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxCompose" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 okhttp3-logging-interceptor = "com.squareup.okhttp3:logging-interceptor:4.12.0"
 okhttp3-mockwebserver = "com.squareup.okhttp3:mockwebserver:4.12.0"
 retrofit2-retrofit = "com.squareup.retrofit2:retrofit:2.12.0"

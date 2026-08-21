@@ -13,7 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +37,7 @@ fun CrashLogScreen(
     onBack: () -> Unit,
     onShare:(String) -> Unit
 ) {
-    val viewModel: CrashLogViewModel = getViewModel()
+    val viewModel: CrashLogViewModel = koinViewModel()
     val crashLog by viewModel.crashLog.collectAsStateWithLifecycle()
 
     BackHandler {

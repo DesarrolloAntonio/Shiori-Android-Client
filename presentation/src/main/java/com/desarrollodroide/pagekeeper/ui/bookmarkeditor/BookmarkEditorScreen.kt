@@ -17,7 +17,7 @@ import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.TagListSaver
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
-import org.koin.androidx.compose.get
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun BookmarkEditorScreen(
@@ -29,7 +29,7 @@ fun BookmarkEditorScreen(
     showToast: (String) -> Unit = {},
     startMainActivity: () -> Unit = {}
 ) {
-    val bookmarkViewModel = get<BookmarkViewModel>()
+    val bookmarkViewModel = koinViewModel<BookmarkViewModel>()
     // Rotating or unfolding recreates the activity. Without rememberSaveable the user loses
     // the url they pasted and every tag they picked, which is most of the work on this screen.
     val newTag = rememberSaveable { mutableStateOf("") }
