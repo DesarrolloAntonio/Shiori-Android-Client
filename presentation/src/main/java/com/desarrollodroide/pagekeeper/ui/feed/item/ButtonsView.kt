@@ -1,17 +1,17 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -26,55 +26,70 @@ import com.desarrollodroide.pagekeeper.R
 /**
  * Row of per-bookmark actions.
  *
- * Uses the Expressive [ButtonGroup]: buttons squeeze and stretch against their neighbours as you
- * press them, and anything that doesn't fit collapses into the overflow menu automatically —
- * which matters here because the number of actions varies per bookmark (epub, sync).
+ * This used the Expressive ButtonGroup, which crashes when measured inside a LazyColumn:
+ * ButtonGroupMeasurePolicy builds constraints with maxWidth below minWidth and throws, taking the
+ * whole feed down on the first frame. It is not a usage problem, removing the custom arrangement
+ * changes nothing, so it is a defect in material3 1.5.0-alpha18. See BookmarkItemLayoutTest, which
+ * fails against ButtonGroup and passes against this.
+ *
+ * Tonal icon buttons keep the expressive look without the alpha component.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ButtonsView(
     getBookmark: GetBookmark,
     actions: BookmarkActions,
+    modifier: Modifier = Modifier,
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
 
-    ButtonGroup(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-        overflowIndicator = { menuState ->
-            IconButton(onClick = { if (menuState.isShowing) menuState.dismiss() else menuState.show() }) {
-                Icon(Icons.Outlined.MoreVert, contentDescription = "More actions")
-            }
-        },
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        clickableItem(
+        IconButton(
             onClick = { actions.onClickEdit(getBookmark) },
-            label = "Edit",
-            icon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
-        )
-        clickableItem(
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+        ) {
+            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+        }
+        IconButton(
             onClick = { actions.onClickShare(getBookmark) },
-            label = "Share",
-            icon = { Icon(Icons.Outlined.Share, contentDescription = null) },
-        )
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+        ) {
+            Icon(Icons.Outlined.Share, contentDescription = "Share")
+        }
         if (bookmark.hasEbook) {
-            clickableItem(
+            IconButton(
                 onClick = { actions.onClickEpub(getBookmark) },
-                label = "Epub",
-                icon = { Icon(painterResource(id = R.drawable.ic_book), contentDescription = null) },
-            )
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+            ) {
+                Icon(painterResource(id = R.drawable.ic_book), contentDescription = "Epub")
+            }
         }
         if (!bookmark.id.isTimestampId()) {
-            clickableItem(
+            IconButton(
                 onClick = { actions.onClickSync(getBookmark) },
-                label = "Update",
-                icon = { Icon(Icons.Outlined.CloudUpload, contentDescription = null) },
-            )
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+            ) {
+                Icon(Icons.Outlined.CloudUpload, contentDescription = "Update")
+            }
         }
-        clickableItem(
+        IconButton(
             onClick = { actions.onClickDelete(getBookmark) },
-            label = "Delete",
-            icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-        )
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
+        ) {
+            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+        }
     }
 }
