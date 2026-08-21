@@ -194,7 +194,7 @@ class AuthRepositoryImplTest {
         }
 
         verify(settingsPreferenceDataSource).resetData()
-        verify(apiService).sendLogout(check { it.endsWith("/api/logout") }, eq(xSession))
+        verify(apiService).sendLogout(check { it.endsWith("/api/v1/auth/logout") }, eq(xSession))
     }
 
     @Test
@@ -218,7 +218,7 @@ class AuthRepositoryImplTest {
         assertTrue(results[2] is Result.Error && (results[2] as Result.Error).error is Result.ErrorType.HttpError, "Third result should be Error with HttpError type")
         assertEquals((results[2] as Result.Error).error?.message, errorMessage, "Error message should match expected message")
 
-        verify(apiService).sendLogout(check { it.endsWith("/api/logout") }, eq(xSession))
+        verify(apiService).sendLogout(check { it.endsWith("/api/v1/auth/logout") }, eq(xSession))
     }
 
     @Test
@@ -245,7 +245,7 @@ class AuthRepositoryImplTest {
         assertTrue(results[2] is Result.Error && (results[2] as Result.Error).error is Result.ErrorType.IOError)
         assertEquals(networkErrorMessage, (results[2] as Result.Error).error?.throwable?.message)
 
-        verify(apiService).sendLogout(check { it.endsWith("/api/logout") }, eq(xSession))
+        verify(apiService).sendLogout(check { it.endsWith("/api/v1/auth/logout") }, eq(xSession))
     }
 
     @Test
