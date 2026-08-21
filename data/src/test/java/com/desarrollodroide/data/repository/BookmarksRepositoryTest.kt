@@ -88,8 +88,10 @@ class BookmarksRepositoryTest {
         assertTrue(results[1] is Result.Loading && results[1].data != null)
         assertTrue(results[2] is Result.Success && results[2].data == expectedBookmarks)
 
-        verify(bookmarksDao).deleteAll()
-        verify(bookmarksDao).insertAll(bookmarkEntities)
+        // One transactional call, not a delete followed by an insert: a failure between the two
+        // used to leave the cache empty.
+        verify(bookmarksDao).insertAllWithTags(bookmarkEntities)
+        verify(bookmarksDao, never()).deleteAll()
         verify(apiService).getBookmarks(eq(xSessionId), check { it.endsWith("/api/bookmarks") })
     }
 

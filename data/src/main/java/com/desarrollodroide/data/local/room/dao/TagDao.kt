@@ -26,6 +26,16 @@ interface TagDao {
     @Query("DELETE FROM tags")
     suspend fun deleteAllTags()
 
+    /**
+     * Replaces the cached tags in one transaction. As two separate calls, a failure between them
+     * left the user with no tags at all.
+     */
+    @Transaction
+    suspend fun replaceAllTags(tags: List<TagEntity>) {
+        deleteAllTags()
+        insertAllTags(tags)
+    }
+
     @Query("DELETE FROM tags WHERE id = :tagId")
     suspend fun deleteTagById(tagId: Int)
 

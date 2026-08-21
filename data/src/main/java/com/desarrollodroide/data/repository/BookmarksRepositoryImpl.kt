@@ -50,8 +50,9 @@ class BookmarksRepositoryImpl(
 
         override suspend fun saveRemoteData(response: BookmarksDTO) {
             response.resolvedBookmarks()?.map { it.toEntityModel() }?.let { bookmarksList ->
-                bookmarksDao.deleteAll()
-                bookmarksDao.insertAll(bookmarksList)
+                // One transaction: a crash between the delete and the insert used to leave the
+                // user with an empty cache and nothing to read offline.
+                bookmarksDao.insertAllWithTags(bookmarksList)
             }
         }
 

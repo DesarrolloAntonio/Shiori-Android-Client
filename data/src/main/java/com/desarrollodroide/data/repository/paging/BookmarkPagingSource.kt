@@ -41,10 +41,13 @@ class BookmarkPagingSource(
             }
             if (saveToLocal){
                 bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() }?.let { bookmarksList ->
+                    // The first page replaces the cache, later pages append, and either way it
+                    // happens in one transaction so a failure cannot leave the cache empty.
                     if (page == 1) {
-                        bookmarksDao.deleteAll()
+                        bookmarksDao.insertAllWithTags(bookmarksList)
+                    } else {
+                        bookmarksDao.insertPageWithTags(bookmarksList)
                     }
-                    bookmarksDao.insertAll(bookmarksList)
                 }
             }
             val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toDomainModel() }?: emptyList()

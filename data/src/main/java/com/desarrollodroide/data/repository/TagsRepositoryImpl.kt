@@ -34,8 +34,7 @@ class TagsRepositoryImpl(
 
         override suspend fun saveRemoteData(response: TagsDTO) {
             response.message?.map { it.toEntityModel() }?.let { tagsList ->
-                tagsDao.deleteAllTags()
-                tagsDao.insertAllTags(tagsList)
+                tagsDao.replaceAllTags(tagsList)
             }
         }
 

@@ -51,10 +51,13 @@ class BookmarksRemoteMediator(
                 val bookmarksDto = response.body()
                 val bookmarks = bookmarksDto?.bookmarks?.map { it.toEntityModel() } ?: emptyList()
 
+                // Both branches are transactional. Deleting and inserting as two separate calls
+                // meant a refresh that died in between wiped the cache.
                 if (loadType == LoadType.REFRESH) {
-                    bookmarksDao.deleteAll()
+                    bookmarksDao.insertAllWithTags(bookmarks)
+                } else {
+                    bookmarksDao.insertPageWithTags(bookmarks)
                 }
-                bookmarksDao.insertAll(bookmarks)
 
                 val endOfPaginationReached = (bookmarksDto?.page ?: 0) >= (bookmarksDto?.maxPage ?: 0)
 

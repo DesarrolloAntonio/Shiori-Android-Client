@@ -160,6 +160,22 @@ interface BookmarksDao {
   }
 
   /**
+   * Appends a page of bookmarks and their tag cross references in one transaction.
+   *
+   * The counterpart to [insertAllWithTags] for paging: it keeps what is already cached instead of
+   * clearing it, which is what a second or later page needs.
+   */
+  @Transaction
+  suspend fun insertPageWithTags(bookmarks: List<BookmarkEntity>) {
+    insertAll(bookmarks)
+    bookmarks.filter { it.tags.isNotEmpty() }.forEach { bookmark ->
+      insertBookmarkTagCrossRefs(
+        bookmark.tags.map { tag -> BookmarkTagCrossRef(bookmarkId = bookmark.id, tagId = tag.id) }
+      )
+    }
+  }
+
+  /**
    * Updates an existing bookmark in the local database.
    *
    * This method uses Room's @Update annotation, which generates the necessary SQL
