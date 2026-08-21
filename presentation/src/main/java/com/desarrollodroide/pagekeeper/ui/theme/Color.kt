@@ -64,6 +64,28 @@ val md_theme_dark_outlineVariant = Color(0xFF3F4946)
 val md_theme_dark_scrim = Color(0xFF000000)
 
 
+// Surface container tones.
+// M3 (and Expressive especially) expresses depth with tonal surfaces rather than shadows, so the
+// neutral ramp below is what cards, sheets and bars sit on. Without these roles every elevated
+// container falls back to `surface` and the whole screen reads flat.
+val md_theme_light_surfaceDim = Color(0xFFDADDDA)
+val md_theme_light_surfaceBright = Color(0xFFFAFDFA)
+val md_theme_light_surfaceContainerLowest = Color(0xFFFFFFFF)
+val md_theme_light_surfaceContainerLow = Color(0xFFF1F4F1)
+val md_theme_light_surfaceContainer = Color(0xFFEBEEEB)
+val md_theme_light_surfaceContainerHigh = Color(0xFFE8EBE9)
+val md_theme_light_surfaceContainerHighest = Color(0xFFE2E6E3)
+
+// Each step must be visibly lighter than `surface` (0xFF191C1B) or containers disappear into the
+// background in dark mode — surfaceContainerLow starts *above* surface, not level with it.
+val md_theme_dark_surfaceDim = Color(0xFF111413)
+val md_theme_dark_surfaceBright = Color(0xFF373B3A)
+val md_theme_dark_surfaceContainerLowest = Color(0xFF0F1211)
+val md_theme_dark_surfaceContainerLow = Color(0xFF1E2221)
+val md_theme_dark_surfaceContainer = Color(0xFF232726)
+val md_theme_dark_surfaceContainerHigh = Color(0xFF2D3130)
+val md_theme_dark_surfaceContainerHighest = Color(0xFF383C3B)
+
 val seed = Color(0xFF00584D)
 
 
