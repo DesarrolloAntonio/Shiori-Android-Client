@@ -20,7 +20,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -192,21 +192,24 @@ fun FeedContent(
             derivedStateOf { listState.firstVisibleItemIndex > 0 }
         }
 
+        // Offset above the scaffold's add fab, which owns the bottom end corner. Without the
+        // offset this sat underneath it at identical coordinates: composed, invisible and
+        // impossible to tap. Small, so the primary action stays the prominent one.
         AnimatedVisibility(
             visible = showScrollToTopButton,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
+                .padding(end = 16.dp, bottom = 88.dp),
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut()
         ) {
-            FloatingActionButton(
+            SmallFloatingActionButton(
                 onClick = {
                     coroutineScope.launch { listState.animateScrollToItem(0) }
                 },
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = MaterialTheme.shapes.medium,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             ) {
                 Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
             }

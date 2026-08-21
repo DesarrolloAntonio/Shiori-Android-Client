@@ -10,6 +10,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.SideEffect
+import android.app.Activity
 import androidx.compose.ui.platform.LocalContext
 
 private val lightColors = lightColorScheme(
@@ -113,6 +117,22 @@ fun ShioriTheme(
         }
         darkTheme -> darkColors
         else -> lightColors
+    }
+
+    // The window is edge to edge, but the system bar icons still have to follow the app's theme
+    // rather than the system's. Without this, choosing Light while the device is in dark mode
+    // leaves white status bar icons on a white background. Only statusBarColor was deprecated,
+    // this controller is not.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        val darkIcons = !darkTheme
+        SideEffect {
+            val window = (view.context as Activity).window
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = darkIcons
+                isAppearanceLightNavigationBars = darkIcons
+            }
+        }
     }
 
     MaterialExpressiveTheme(
