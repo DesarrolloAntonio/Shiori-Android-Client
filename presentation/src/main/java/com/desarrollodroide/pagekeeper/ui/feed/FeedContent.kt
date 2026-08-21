@@ -1,47 +1,52 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
-import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.PullRefreshIndicator
-import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.pullRefresh
-import com.desarrollodroide.pagekeeper.ui.components.pulltorefresh.rememberPullRefreshState
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkActions
@@ -49,6 +54,7 @@ import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FeedContent(
     actions: FeedActions,
@@ -63,6 +69,7 @@ fun FeedContent(
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(bookmarksPagingItems.loadState.refresh) {
         if (bookmarksPagingItems.loadState.refresh is LoadState.NotLoading && isRefreshing) {
@@ -73,7 +80,7 @@ fun FeedContent(
     }
 
     // Scroll to top when a new bookmark is added (item count increases)
-    var previousItemCount by remember { mutableStateOf(bookmarksPagingItems.itemCount) }
+    var previousItemCount by remember { mutableIntStateOf(bookmarksPagingItems.itemCount) }
     LaunchedEffect(bookmarksPagingItems.itemCount) {
         if (bookmarksPagingItems.itemCount > previousItemCount && previousItemCount > 0) {
             listState.animateScrollToItem(0)
@@ -81,29 +88,38 @@ fun FeedContent(
         previousItemCount = bookmarksPagingItems.itemCount
     }
 
-    fun refreshBookmarks() = refreshCoroutineScope.launch {
-        actions.onRefreshFeed.invoke()
-        isRefreshing = true
-        delay(1500)
-        isRefreshing = false
+    fun refreshBookmarks() {
+        refreshCoroutineScope.launch {
+            actions.onRefreshFeed.invoke()
+            isRefreshing = true
+            delay(1500)
+            isRefreshing = false
+        }
     }
 
-    val refreshState = rememberPullRefreshState(isRefreshing, ::refreshBookmarks)
     val coroutineScope = rememberCoroutineScope()
 
-    Box(
-        Modifier.fillMaxHeight()
-            .padding(bottom = 10.dp)
+    // PullToRefreshBox is the M3 pull-to-refresh; it replaces the copy of the old Material 2
+    // implementation that used to live under ui/components/pulltorefresh. The indicator is the
+    // Expressive shape-morphing loading indicator rather than the legacy arrow spinner.
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = ::refreshBookmarks,
+        state = pullToRefreshState,
+        modifier = Modifier.fillMaxSize(),
+        indicator = {
+            PullToRefreshDefaults.LoadingIndicator(
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        },
     ) {
-        //val listState = rememberLazyListState()
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(horizontal = 10.dp)
-                .pullRefresh(state = refreshState)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(
                 count = bookmarksPagingItems.itemCount,
@@ -112,11 +128,11 @@ fun FeedContent(
                     // Compose recognizes it as a new item and recomposes it. This updates the UI immediately
                     // after data changes
                     val bookmark = bookmarksPagingItems[index]
-                    "${bookmark?.id}_${bookmark?.modified}" ?: index
+                    if (bookmark != null) "${bookmark.id}_${bookmark.modified}" else "index_$index"
                 }
             ) { index ->
                 val bookmark = bookmarksPagingItems[index]
-                if (bookmark != null ) {
+                if (bookmark != null) {
                     BookmarkItem(
                         getBookmark = { bookmark },
                         serverURL = serverURL,
@@ -130,17 +146,9 @@ fun FeedContent(
                             onClickBookmark = { getBookmark -> actions.onBookmarkSelect(getBookmark()) },
                             onClickEpub = { getBookmark -> actions.onBookmarkEpub(getBookmark()) },
                             onClickSync = { getBookmark -> actions.onClickSync(getBookmark()) },
-                            onClickCategory = { category -> }
+                            onClickCategory = { }
                         ),
                     )
-                    if (index < bookmarksPagingItems.itemCount - 1) {
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .height(1.dp)
-                                .padding(horizontal = 6.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        )
-                    }
                 }
             }
             bookmarksPagingItems.apply {
@@ -148,6 +156,7 @@ fun FeedContent(
                     loadState.refresh is LoadState.Loading -> {
                         item { PageLoader(modifier = Modifier.fillParentMaxSize()) }
                     }
+
                     loadState.refresh is LoadState.Error -> {
                         val error = loadState.refresh as LoadState.Error
                         if (error.error.localizedMessage == SESSION_HAS_BEEN_EXPIRED) {
@@ -161,29 +170,24 @@ fun FeedContent(
                             }
                         }
                     }
+
                     loadState.append is LoadState.Loading -> {
-                        item { LoadingNextPageItem(modifier = Modifier) }
+                        item { LoadingNextPageItem() }
                     }
+
                     loadState.append is LoadState.Error -> {
                         val error = loadState.append as LoadState.Error
                         item {
                             ErrorMessage(
-                                modifier = Modifier,
                                 message = error.error.localizedMessage ?: "Unknown error",
                                 onClickRetry = { retry() })
                         }
                     }
                 }
             }
-            item {  Spacer(modifier = Modifier.height(30.dp))  }
+            item { Spacer(modifier = Modifier.height(88.dp)) }
         }
 
-        PullRefreshIndicator(
-            modifier = Modifier.align(alignment = Alignment.TopCenter),
-            refreshing = isRefreshing,
-            state = refreshState,
-            scale = true
-        )
         val showScrollToTopButton by remember {
             derivedStateOf { listState.firstVisibleItemIndex > 0 }
         }
@@ -198,10 +202,11 @@ fun FeedContent(
         ) {
             FloatingActionButton(
                 onClick = {
-                    coroutineScope.launch {
-                        listState.animateScrollToItem(0)
-                    }
-                }
+                    coroutineScope.launch { listState.animateScrollToItem(0) }
+                },
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
                 Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
             }
@@ -223,14 +228,8 @@ fun BookmarkSuggestions(
             val bookmark = bookmarks[index]
             if (bookmark != null) {
                 ListItem(
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .clickable {
-                            onClickSuggestion(bookmark)
-                        }
-                        .background(Color.Transparent),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier.clickable { onClickSuggestion(bookmark) },
                     headlineContent = {
                         Text(
                             text = bookmark.title,
