@@ -41,9 +41,16 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <!--
+            Its own task affinity. This activity used to finish itself in onPause so that it could
+            not come back when the launcher icon was tapped, which also meant that pulling down the
+            notification shade, taking a call or entering split screen threw away everything the
+            user had typed. A separate task keeps it out of the main task without killing it.
+        -->
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
             android:label="Save in Shiori"
             android:exported="true"
+            android:taskAffinity="${applicationId}.share"
             tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

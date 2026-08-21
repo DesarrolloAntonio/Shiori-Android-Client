@@ -2,6 +2,9 @@ package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
@@ -68,144 +73,150 @@ fun BookmarkEditorView(
     onCreateEbookChanged: (Boolean) -> Unit,
     onUrlChange: (String) -> Unit = {}
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
-            .padding(top = 16.dp)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-
-            Text(
-                text = title,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(CenterVertically)
-            )
-            IconButton(onClick = {
-                saveBookmark(bookmarkEditorType)
-            }) {
-                Icon(Icons.Outlined.Save, contentDescription = "Save")
-            }
-        }
-        if (bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
-            OutlinedTextField(
-                value = url,
-                onValueChange = onUrlChange,
-                label = { Text("URL") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                singleLine = true
-            )
-        } else {
-            Text(
-                text = url,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp),
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        if (bookmarkEditorType == BookmarkEditorType.ADD || bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
-            Row(verticalAlignment = CenterVertically) {
-                Checkbox(
-                    checked = createArchive,
-                    onCheckedChange = onCreateArchiveChanged
-                )
-                Text("Create archive")
-            }
-            Row(verticalAlignment = CenterVertically) {
-                Checkbox(
-                    checked = createEbook,
-                    onCheckedChange = onCreateEbookChanged
-                )
-                Text("Create Ebook")
-            }
-        }
-        Row(verticalAlignment = CenterVertically) {
-            Checkbox(
-                checked = makeArchivePublic,
-                onCheckedChange = onMakeArchivePublicChanged
-            )
-            Text("Make bookmark publicly available")
-        }
-
-        Row {
-            OutlinedTextField(
-                modifier = Modifier
-                    .weight(1f)
-                    .align(CenterVertically),
-                value = newTag.value,
-                onValueChange = { newTag.value = it },
-                label = { Text("Add Tag") },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Tag")
-                }
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Button(
-                modifier = Modifier
-                    .align(CenterVertically)
-                    .padding(top = 4.dp),
-                onClick = {
-                    val normalizedName = newTag.value.lowercase().trim()
-                    if (normalizedName.isNotBlank() && !assignedTags.value.any { it.name.lowercase() == normalizedName }) {
-                        assignedTags.value = assignedTags.value + Tag(id = -1, name = normalizedName)
-                        newTag.value = ""
-                    }
-                }
-            ) {
-                Text(text = "Add")
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
         Column(
-            Modifier
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .heightIn(max = 145.dp)
+            // Capped and centred: in landscape or on a tablet the fields ran the whole 1280dp.
+            // Scrollable because the tag list grows and a landscape phone with the keyboard up has
+            // very little height left.
+            modifier = Modifier
+                .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
-                .border(
-                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                    RoundedCornerShape(4.dp)
-                )
-                .padding(horizontal = 6.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
         ) {
-            Categories(
-                categoriesType = CategoriesType.REMOVEABLES,
-                showCategories = true,
-                uniqueCategories = assignedTags.value,
-                selectedTags = assignedTags.value,
-                onCategorySelected = { /* No se usa en modo REMOVEABLES */ },
-                onCategoryDeselected = { deselectedTag ->
-                    assignedTags.value = assignedTags.value.filter { it != deselectedTag }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
+
+                Text(
+                    text = title,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(CenterVertically)
+                )
+                IconButton(onClick = {
+                    saveBookmark(bookmarkEditorType)
+                }) {
+                    Icon(Icons.Outlined.Save, contentDescription = "Save")
+                }
+            }
+            if (bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = onUrlChange,
+                    label = { Text("URL") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    singleLine = true
+                )
+            } else {
+                Text(
+                    text = url,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(8.dp),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            if (bookmarkEditorType == BookmarkEditorType.ADD || bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY) {
+                Row(verticalAlignment = CenterVertically) {
+                    Checkbox(
+                        checked = createArchive,
+                        onCheckedChange = onCreateArchiveChanged
+                    )
+                    Text("Create archive")
+                }
+                Row(verticalAlignment = CenterVertically) {
+                    Checkbox(
+                        checked = createEbook,
+                        onCheckedChange = onCreateEbookChanged
+                    )
+                    Text("Create Ebook")
+                }
+            }
+            Row(verticalAlignment = CenterVertically) {
+                Checkbox(
+                    checked = makeArchivePublic,
+                    onCheckedChange = onMakeArchivePublicChanged
+                )
+                Text("Make bookmark publicly available")
+            }
+
+            Row {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(CenterVertically),
+                    value = newTag.value,
+                    onValueChange = { newTag.value = it },
+                    label = { Text("Add Tag") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Tag")
+                    }
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Button(
+                    modifier = Modifier
+                        .align(CenterVertically)
+                        .padding(top = 4.dp),
+                    onClick = {
+                        val normalizedName = newTag.value.lowercase().trim()
+                        if (normalizedName.isNotBlank() && !assignedTags.value.any { it.name.lowercase() == normalizedName }) {
+                            assignedTags.value = assignedTags.value + Tag(id = -1, name = normalizedName)
+                            newTag.value = ""
+                        }
+                    }
+                ) {
+                    Text(text = "Add")
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Column(
+                Modifier
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .heightIn(max = 145.dp)
+                    .fillMaxWidth()
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 6.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Categories(
+                    categoriesType = CategoriesType.REMOVEABLES,
+                    showCategories = true,
+                    uniqueCategories = assignedTags.value,
+                    selectedTags = assignedTags.value,
+                    onCategorySelected = { /* No se usa en modo REMOVEABLES */ },
+                    onCategoryDeselected = { deselectedTag ->
+                        assignedTags.value = assignedTags.value.filter { it != deselectedTag }
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.heightIn(10.dp))
+            Text(
+                style = MaterialTheme.typography.titleMedium,
+                text = "All Tags"
             )
-        }
-        Spacer(modifier = Modifier.heightIn(10.dp))
-        Text(
-            style = MaterialTheme.typography.titleMedium,
-            text = "All Tags"
-        )
-        Spacer(modifier = Modifier.heightIn(5.dp))
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-        ) {
+            Spacer(modifier = Modifier.heightIn(5.dp))
             TagsSelectorView(
                 availableTags = availableTags.value,
                 onTagSelected = {
@@ -214,6 +225,7 @@ fun BookmarkEditorView(
                     }
                 }
             )
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

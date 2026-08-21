@@ -137,11 +137,6 @@ class BookmarkEditorActivity : ComponentActivity() {
         startActivity(intent)
         finish()
     }
-
-    override fun onPause() {
-        super.onPause()
-        finish()
-    }
 }
 
 
