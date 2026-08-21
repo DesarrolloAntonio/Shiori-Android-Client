@@ -28,10 +28,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:theme="@style/Theme.Shiori"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,9 +43,8 @@
         </activity>
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
             android:label="Save in Shiori"
-            android:screenOrientation="portrait"
             android:exported="true"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

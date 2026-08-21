@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Bookmark
@@ -68,12 +72,12 @@ fun FeedContent(
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
-    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val pullToRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(bookmarksPagingItems.loadState.refresh) {
         if (bookmarksPagingItems.loadState.refresh is LoadState.NotLoading && isRefreshing) {
-            listState.animateScrollToItem(0)
+            gridState.animateScrollToItem(0)
             delay(100)
             isRefreshing = false
         }
@@ -83,7 +87,7 @@ fun FeedContent(
     var previousItemCount by remember { mutableIntStateOf(bookmarksPagingItems.itemCount) }
     LaunchedEffect(bookmarksPagingItems.itemCount) {
         if (bookmarksPagingItems.itemCount > previousItemCount && previousItemCount > 0) {
-            listState.animateScrollToItem(0)
+            gridState.animateScrollToItem(0)
         }
         previousItemCount = bookmarksPagingItems.itemCount
     }
@@ -115,11 +119,17 @@ fun FeedContent(
             )
         },
     ) {
-        LazyColumn(
-            state = listState,
+        // Adaptive columns rather than a fixed single column. A phone in portrait still gets
+        // one, but a landscape phone, a tablet or an unfolded foldable gets two or three instead
+        // of one card stretched across the whole width, which was unreadable and let a single
+        // item fill the entire viewport.
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 340.dp),
+            state = gridState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(
                 count = bookmarksPagingItems.itemCount,
@@ -154,7 +164,7 @@ fun FeedContent(
             bookmarksPagingItems.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
-                        item { PageLoader(modifier = Modifier.fillParentMaxSize()) }
+                        item(span = { GridItemSpan(maxLineSpan) }) { PageLoader(modifier = Modifier.fillMaxWidth()) }
                     }
 
                     loadState.refresh is LoadState.Error -> {
@@ -162,9 +172,9 @@ fun FeedContent(
                         if (error.error.localizedMessage == SESSION_HAS_BEEN_EXPIRED) {
                             actions.goToLogin()
                         } else {
-                            item {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
                                 ErrorMessage(
-                                    modifier = Modifier.fillParentMaxSize(),
+                                    modifier = Modifier.fillMaxWidth(),
                                     message = error.error.localizedMessage ?: "Unknown error",
                                     onClickRetry = { retry() })
                             }
@@ -172,12 +182,12 @@ fun FeedContent(
                     }
 
                     loadState.append is LoadState.Loading -> {
-                        item { LoadingNextPageItem() }
+                        item(span = { GridItemSpan(maxLineSpan) }) { LoadingNextPageItem() }
                     }
 
                     loadState.append is LoadState.Error -> {
                         val error = loadState.append as LoadState.Error
-                        item {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             ErrorMessage(
                                 message = error.error.localizedMessage ?: "Unknown error",
                                 onClickRetry = { retry() })
@@ -185,11 +195,11 @@ fun FeedContent(
                     }
                 }
             }
-            item { Spacer(modifier = Modifier.height(88.dp)) }
+            item(span = { GridItemSpan(maxLineSpan) }) { Spacer(modifier = Modifier.height(88.dp)) }
         }
 
         val showScrollToTopButton by remember {
-            derivedStateOf { listState.firstVisibleItemIndex > 0 }
+            derivedStateOf { gridState.firstVisibleItemIndex > 0 }
         }
 
         // Offset above the scaffold's add fab, which owns the bottom end corner. Without the
@@ -205,7 +215,7 @@ fun FeedContent(
         ) {
             SmallFloatingActionButton(
                 onClick = {
-                    coroutineScope.launch { listState.animateScrollToItem(0) }
+                    coroutineScope.launch { gridState.animateScrollToItem(0) }
                 },
                 shape = MaterialTheme.shapes.medium,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,

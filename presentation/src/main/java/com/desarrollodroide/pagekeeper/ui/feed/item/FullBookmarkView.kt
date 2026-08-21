@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,8 +44,10 @@ fun FullBookmarkView(
             PendingSyncBanner()
         }
         if (bookmark.imageURL.isNotEmpty()) {
-            // A fixed 16:9 crop instead of FillWidth: variable-height hero images made the feed
-            // jump around as each one resolved.
+            // A fixed 16:9 crop instead of FillWidth, because variable height heroes made the
+            // feed jump around as each image resolved. heightIn caps it: on a landscape phone
+            // fillMaxWidth is the long edge, and 16:9 of that is taller than the screen, so a
+            // single card's image filled the viewport and the list looked empty.
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
@@ -52,6 +55,7 @@ fun FullBookmarkView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp)
+                    .heightIn(max = 240.dp)
                     .aspectRatio(16f / 9f)
                     .clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Crop,

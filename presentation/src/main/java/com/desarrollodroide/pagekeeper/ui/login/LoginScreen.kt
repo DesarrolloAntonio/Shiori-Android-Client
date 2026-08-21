@@ -24,6 +24,7 @@ import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
+import com.desarrollodroide.pagekeeper.ui.components.FormMaxWidth
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
@@ -208,7 +209,11 @@ private fun ContentViews(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                // widthIn before fillMaxWidth. The other way round, fillMaxWidth pins the width
+                // to the parent's max and there is nothing left for widthIn to clamp.
+                modifier = Modifier
+                    .widthIn(max = FormMaxWidth)
+                    .fillMaxWidth(),
                 shape = MaterialTheme.shapes.extraLarge,
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
             ) {

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,6 +48,7 @@ import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
+import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.desarrollodroide.pagekeeper.BuildConfig
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
@@ -105,6 +107,8 @@ fun SettingsScreen(
         Box(
             modifier = Modifier
                 .padding(paddingValues)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter,
         ) {
             SettingsContent(
                 settingsUiState = settingsUiState,
@@ -210,7 +214,10 @@ fun SettingsContent(
         }
     }
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        // Centred and capped: settings rows stretched the full 1280dp of a tablet otherwise.
+        modifier = Modifier
+            .widthIn(max = ContentMaxWidth)
+            .fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
