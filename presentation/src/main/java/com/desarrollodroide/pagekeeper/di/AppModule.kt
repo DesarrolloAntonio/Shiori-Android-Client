@@ -17,6 +17,7 @@ import com.desarrollodroide.domain.usecase.GetBookmarkReadableContentUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.domain.usecase.RefreshTokenUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
@@ -118,6 +119,12 @@ fun appModule() = module {
     single {
         GetBookmarkReadableContentUseCase(
             bookmarksRepository = get()
+        )
+    }
+
+    single {
+        RefreshTokenUseCase(
+            authRepository = get()
         )
     }
 

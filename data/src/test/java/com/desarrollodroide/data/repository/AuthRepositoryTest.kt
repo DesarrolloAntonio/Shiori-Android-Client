@@ -160,5 +160,75 @@ class AuthRepositoryImplTest {
         verify(settingsPreferenceDataSource).saveUser(any(), eq(serverUrl), eq(password))
         verify(apiService).sendLoginV1(check { it.endsWith("/api/v1/auth/login") }, any())
     }
-}
 
+    @Test
+    fun `refreshToken should persist the new token and emit it`() = runTest {
+        // Arrange
+        val serverUrl = "http://test.com"
+        val oldToken = "oldToken"
+        val refreshResponse = LoginResponseDTO(
+            ok = true,
+            message = LoginResponseMessageDTO(expires = null, session = null, token = "newToken"),
+            error = null
+        )
+
+        `when`(apiService.refreshToken(anyString(), anyString())).thenReturn(Response.success(refreshResponse))
+
+        // Act
+        val results = authRepository.refreshToken(serverUrl, oldToken).toList()
+
+        // Assert
+        assertEquals(2, results.size, "Expected 2 emitted results")
+        assertTrue(results[0] is Result.Loading)
+        assertTrue(results[1] is Result.Success && results[1].data == "newToken")
+
+        verify(settingsPreferenceDataSource).updateAuthToken("newToken")
+        verify(apiService).refreshToken(
+            check { it.endsWith("/api/v1/auth/refresh") },
+            eq("Bearer $oldToken")
+        )
+    }
+
+    @Test
+    fun `refreshToken should emit Error and keep the stored token when the server rejects it`() = runTest {
+        // Arrange
+        val serverUrl = "http://test.com"
+        val errorBody = "Token not provided/invalid".toResponseBody("text/plain".toMediaTypeOrNull())
+
+        `when`(apiService.refreshToken(anyString(), anyString()))
+            .thenReturn(Response.error(403, errorBody))
+        `when`(errorHandler.getApiError(eq(403), anyOrNull(), anyOrNull()))
+            .thenReturn(Result.ErrorType.HttpError(statusCode = 403))
+
+        // Act
+        val results = authRepository.refreshToken(serverUrl, "expiredToken").toList()
+
+        // Assert
+        assertEquals(2, results.size, "Expected 2 emitted results")
+        assertTrue(results[0] is Result.Loading)
+        assertTrue(results[1] is Result.Error)
+        assertEquals(403, ((results[1] as Result.Error).error as Result.ErrorType.HttpError).statusCode)
+
+        verify(settingsPreferenceDataSource, never()).updateAuthToken(anyString())
+    }
+
+    @Test
+    fun `refreshToken should emit Error when the response carries no token`() = runTest {
+        // Arrange
+        val emptyResponse = LoginResponseDTO(
+            ok = true,
+            message = LoginResponseMessageDTO(expires = null, session = null, token = null),
+            error = null
+        )
+
+        `when`(apiService.refreshToken(anyString(), anyString())).thenReturn(Response.success(emptyResponse))
+        `when`(errorHandler.getError(any())).thenReturn(Result.ErrorType.Unknown())
+
+        // Act
+        val results = authRepository.refreshToken("http://test.com", "oldToken").toList()
+
+        // Assert
+        assertTrue(results.last() is Result.Error)
+        verify(settingsPreferenceDataSource, never()).updateAuthToken(anyString())
+    }
+}

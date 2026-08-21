@@ -139,6 +139,20 @@ class SettingsPreferencesDataSourceImpl(
 
     override suspend fun getToken(): String = getUser().first().token
 
+    /**
+     * Replaces the stored credentials with a freshly issued token, leaving username, url and
+     * password alone. Both fields are written because the legacy endpoints read `session` while
+     * the v1 endpoints read `token`, and a refresh only ever returns the latter.
+     */
+    override suspend fun updateAuthToken(token: String) {
+        protoDataStore.updateData { protoSession ->
+            protoSession.copy {
+                this.session = token
+                this.token = token
+            }
+        }
+    }
+
     override suspend fun resetData() {
         saveUser(
             password = "",

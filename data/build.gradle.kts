@@ -30,6 +30,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+    testOptions {
+        unitTests {
+            // NetworkNoCacheResource logs with android.util.Log on its error path, which is a
+            // stub that throws in JVM tests. Returning defaults lets those branches be tested.
+            isReturnDefaultValues = true
+        }
+    }
     packagingOptions {
         jniLibs {
             excludes += setOf("META-INF/LICENSE*")

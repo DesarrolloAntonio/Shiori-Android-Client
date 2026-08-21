@@ -35,6 +35,12 @@ interface RetrofitNetwork {
     ): Response<LoginResponseDTO>
 
     @POST()
+    suspend fun refreshToken(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+    ): Response<LoginResponseDTO>
+
+    @POST()
     suspend fun sendLogout(
         @Url url: String,
         @Header("X-Session-Id") xSessionId: String,

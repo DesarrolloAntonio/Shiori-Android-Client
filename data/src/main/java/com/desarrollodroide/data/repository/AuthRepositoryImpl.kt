@@ -10,10 +10,13 @@ import com.desarrollodroide.network.model.LoginRequestPayload
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
+import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class AuthRepositoryImpl(
     private val apiService: RetrofitNetwork,
@@ -38,6 +41,27 @@ class AuthRepositoryImpl(
             url = "${serverUrl.removeTrailingSlash()}/api/v1/auth/logout")
 
         override fun shouldFetch(data: String?) = true
+
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun refreshToken(
+        serverUrl: String,
+        token: String
+    ) = object : NetworkNoCacheResource<LoginResponseDTO, String>(errorHandler = errorHandler) {
+
+        override suspend fun fetchFromRemote() = apiService.refreshToken(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/auth/refresh",
+            authorization = "Bearer $token"
+        )
+
+        override fun fetchResult(data: LoginResponseDTO): Flow<String> = flow {
+            val newToken = data.message?.token
+            if (newToken.isNullOrEmpty()) {
+                throw IllegalStateException("Refresh response did not contain a token")
+            }
+            settingsPreferenceDataSource.updateAuthToken(newToken)
+            emit(newToken)
+        }
 
     }.asFlow().flowOn(Dispatchers.IO)
 

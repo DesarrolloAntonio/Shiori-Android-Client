@@ -16,6 +16,7 @@ fun presenterModule() = module {
     viewModel {
         LoginViewModel(
             loginUseCase = get(),
+            refreshTokenUseCase = get(),
             settingsPreferenceDataSource = get(),
             livenessUseCase = get(),
         )

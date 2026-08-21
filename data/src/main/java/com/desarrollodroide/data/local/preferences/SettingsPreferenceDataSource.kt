@@ -34,6 +34,7 @@ interface SettingsPreferenceDataSource {
 
     suspend fun getUrl(): String
     suspend fun getSession(): String
+    suspend fun updateAuthToken(token: String)
     suspend fun getToken(): String
     suspend fun resetData()
     suspend fun resetRememberUser()
