@@ -172,7 +172,13 @@ private fun ContentViews(
             painter = painterResource(id = R.drawable.curved_wave_bottom),
             contentDescription = null,
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
-            contentScale = ContentScale.Crop,
+            // FillBounds, not Crop. The drawable is 1440x560, about 2.6:1. On a phone the band
+            // below happens to be almost exactly that ratio so nothing is lost, but on a 1280dp
+            // tablet the same band is 8.5:1, and Crop scales the wave to some 500dp tall and shows
+            // the middle slice of it: solid fill with a severed piece of curve. Mapping the whole
+            // drawable onto the band flattens the crest on wide screens, which is what a
+            // decorative wave is supposed to do, and leaves phones as they were.
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
