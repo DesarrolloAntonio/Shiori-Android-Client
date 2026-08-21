@@ -42,6 +42,18 @@ dependencies {
     implementation (libs.androidx.paging.compose)
     testImplementation (libs.kotlinx.coroutines.android)
     testImplementation (libs.kotlin.coroutines.test)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+}
+
+// There is no JUnit 5 plugin: each module wires the platform itself, and a module that forgets to
+// runs zero tests without saying so.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 java {
