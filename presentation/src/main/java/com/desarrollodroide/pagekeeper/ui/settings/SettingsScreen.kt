@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,13 +18,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +52,7 @@ import com.desarrollodroide.pagekeeper.BuildConfig
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
 import kotlinx.coroutines.flow.StateFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
@@ -73,10 +76,13 @@ fun SettingsScreen(
     val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
     val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Settings", style = MaterialTheme.typography.titleLarge) },
+            LargeFlexibleTopAppBar(
+                title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -85,12 +91,14 @@ fun SettingsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
 
         Box(
@@ -199,16 +207,17 @@ fun SettingsContent(
         }
     }
     LazyColumn(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
             VisualSection(
                 themeMode = themeMode,
                 dynamicColors = useDynamicColors
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             FeedSection(
                 compactView = compactView,
                 onCompactViewChanged = onCompactViewChanged,
@@ -217,8 +226,8 @@ fun SettingsContent(
                 onClickHideDialogOption = onClickHideDialogOption,
                 hideTag = hideTag
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
                 onMakeArchivePublicChanged = onMakeArchivePublicChanged,
@@ -229,22 +238,22 @@ fun SettingsContent(
                 autoAddBookmark = autoAddBookmark,
                 onAutoAddBookmarkChanged = onAutoAddBookmarkChanged
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             DataSection(
                 cacheSize = cacheSize,
                 onClearCache = onClearCache
             )
-            if (BuildConfig.FLAVOR == "staging") {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(18.dp))
-                DebugSection (
+        }
+        if (BuildConfig.FLAVOR == "staging") {
+            item {
+                DebugSection(
                     onNavigateToLogs = onNavigateToLogs,
                     onViewLastCrash = onViewLastCrash
                 )
             }
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             AccountSection(
                 serverUrl = serverUrl,
                 onLogout = onLogout,
@@ -258,63 +267,61 @@ fun SettingsContent(
                 },
                 onNavigateToSourceCode = onNavigateToSourceCode
             )
-            Spacer(modifier = Modifier.height(18.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (serverVersion.isNotEmpty()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Storage,
-                            contentDescription = "Server version",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Server v${serverVersion}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Smartphone,
-                        contentDescription = "App version",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "App v${BuildConfig.VERSION_NAME}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
+            VersionFooter(serverVersion = serverVersion)
         }
     }
 }
 
+/** Server + app version, shown once at the bottom of the settings list. */
 @Composable
-private fun HorizontalDivider(){
-    HorizontalDivider(
+private fun VersionFooter(serverVersion: String) {
+    Row(
         modifier = Modifier
-            .height(1.dp)
-            .padding(horizontal = 6.dp,),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-    )
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        if (serverVersion.isNotEmpty()) {
+            VersionLabel(
+                icon = Icons.Default.Storage,
+                text = "Server v$serverVersion",
+                contentDescription = "Server version",
+            )
+        } else {
+            Spacer(modifier = Modifier.width(0.dp))
+        }
+        VersionLabel(
+            icon = Icons.Default.Smartphone,
+            text = "App v${BuildConfig.VERSION_NAME}",
+            contentDescription = "App version",
+        )
+    }
+}
+
+@Composable
+private fun VersionLabel(
+    icon: ImageVector,
+    text: String,
+    contentDescription: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 data class Item(
