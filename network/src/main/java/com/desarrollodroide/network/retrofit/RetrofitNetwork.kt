@@ -3,6 +3,8 @@ package com.desarrollodroide.network.retrofit
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
+import com.desarrollodroide.network.model.SingleTagDTO
+import com.desarrollodroide.network.model.TagPayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
@@ -99,6 +101,29 @@ interface RetrofitNetwork {
         @Header("X-Session-Id") xSessionId: String,
         @Body tag: TagDTO
     ): Response<TagDTO>
+
+    @Headers("Content-Type: application/json")
+    @POST
+    suspend fun createTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body tag: TagPayloadDTO
+    ): Response<SingleTagDTO>
+
+    @Headers("Content-Type: application/json")
+    @PUT
+    suspend fun updateTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body tag: TagPayloadDTO
+    ): Response<SingleTagDTO>
+
+    // Returns 204 with no body, so there is nothing to deserialize.
+    @DELETE
+    suspend fun deleteTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+    ): Response<Unit>
 
     // Test system liveness
     @GET()

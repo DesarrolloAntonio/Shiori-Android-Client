@@ -6,11 +6,15 @@ import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.network.model.SingleTagDTO
+import com.desarrollodroide.network.model.TagPayloadDTO
 import com.desarrollodroide.network.model.TagsDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
+import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -38,12 +42,76 @@ class TagsRepositoryImpl(
             it.map { it.toDomainModel() }
         }
 
+        // with_bookmark_count is what fills TagDTO.bookmark_count; without it every tag comes
+        // back with a zero count and the management screen has nothing to show. Servers that
+        // predate the parameter ignore it.
         override suspend fun fetchFromRemote() = apiService.getTags(
             authorization = "Bearer $token",
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags"
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags?with_bookmark_count=true"
         )
 
         override fun shouldFetch(data: List<Tag>?) = true
+
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun createTag(
+        token: String,
+        serverUrl: String,
+        name: String
+    ) = object : NetworkNoCacheResource<SingleTagDTO, Tag>(errorHandler = errorHandler) {
+
+        override suspend fun fetchFromRemote() = apiService.createTag(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags",
+            authorization = "Bearer $token",
+            tag = TagPayloadDTO(name = name.trim())
+        )
+
+        override fun fetchResult(data: SingleTagDTO): Flow<Tag> = flow {
+            val tag = data.message?.toDomainModel()
+                ?: throw IllegalStateException("Create tag response did not contain a tag")
+            tagsDao.insertTag(tag.toEntityModel())
+            emit(tag)
+        }
+
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun renameTag(
+        token: String,
+        serverUrl: String,
+        tagId: Int,
+        name: String
+    ) = object : NetworkNoCacheResource<SingleTagDTO, Tag>(errorHandler = errorHandler) {
+
+        override suspend fun fetchFromRemote() = apiService.updateTag(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags/$tagId",
+            authorization = "Bearer $token",
+            tag = TagPayloadDTO(name = name.trim())
+        )
+
+        override fun fetchResult(data: SingleTagDTO): Flow<Tag> = flow {
+            // The rename is applied locally rather than reinserting what came back: the response
+            // carries no bookmark count, and overwriting the row would blank it in the list.
+            tagsDao.renameTag(tagId = tagId, name = name.trim())
+            emit(data.message?.toDomainModel() ?: Tag(id = tagId, name = name.trim()))
+        }
+
+    }.asFlow().flowOn(Dispatchers.IO)
+
+    override fun deleteTag(
+        token: String,
+        serverUrl: String,
+        tagId: Int
+    ) = object : NetworkNoCacheResource<Unit, Unit>(errorHandler = errorHandler) {
+
+        override suspend fun fetchFromRemote() = apiService.deleteTag(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/tags/$tagId",
+            authorization = "Bearer $token"
+        )
+
+        override fun fetchResult(data: Unit): Flow<Unit> = flow {
+            tagsDao.deleteTagById(tagId)
+            emit(Unit)
+        }
 
     }.asFlow().flowOn(Dispatchers.IO)
 

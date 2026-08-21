@@ -12,4 +12,23 @@ interface TagsRepository {
   ): Flow<Result<List<Tag>?>>
 
   fun getLocalTags(): Flow<List<Tag>>
+
+  fun createTag(
+    token: String,
+    serverUrl: String,
+    name: String
+  ): Flow<Result<Tag?>>
+
+  fun renameTag(
+    token: String,
+    serverUrl: String,
+    tagId: Int,
+    name: String
+  ): Flow<Result<Tag?>>
+
+  fun deleteTag(
+    token: String,
+    serverUrl: String,
+    tagId: Int
+  ): Flow<Result<Unit>>
 }

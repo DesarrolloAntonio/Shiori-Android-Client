@@ -26,6 +26,12 @@ interface TagDao {
     @Query("DELETE FROM tags")
     suspend fun deleteAllTags()
 
+    @Query("DELETE FROM tags WHERE id = :tagId")
+    suspend fun deleteTagById(tagId: Int)
+
+    @Query("UPDATE tags SET name = :name WHERE id = :tagId")
+    suspend fun renameTag(tagId: Int, name: String)
+
     @Transaction
     @Query("""
         SELECT DISTINCT t.* 
