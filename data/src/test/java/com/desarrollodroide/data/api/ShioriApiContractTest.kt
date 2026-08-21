@@ -227,4 +227,46 @@ class ShioriApiContractTest {
         assertEquals("/api/v1/auth/logout", server.takeRequest().path)
         assertEquals("/api/logout", server.takeRequest().path)
     }
+
+    // --- bookmarks --------------------------------------------------------------------------
+
+    @Test
+    fun `update cache sends the snake_case flags the v1 endpoint reads`() = runTest {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody("""{"ok":true,"message":[]}""")
+        )
+
+        com.desarrollodroide.data.repository.BookmarksRepositoryImpl(
+            apiService = api,
+            bookmarksDao = org.mockito.Mockito.mock(com.desarrollodroide.data.local.room.dao.BookmarksDao::class.java),
+            errorHandler = errorHandler,
+        ).updateBookmarkCacheV1(
+            token = "tok",
+            serverUrl = baseUrl(),
+            updateCachePayload = com.desarrollodroide.model.UpdateCachePayload(
+                createArchive = true,
+                createEbook = true,
+                ids = listOf(7),
+                keepMetadata = true,
+                skipExist = true,
+            ),
+            bookmark = null,
+        )
+
+        val request = server.takeRequest()
+        assertEquals("PUT", request.method)
+        assertEquals("/api/v1/bookmarks/cache", request.path)
+        val body = request.body.readUtf8()
+        // Go silently drops unknown fields, so a camelCase key here is not an error, it is a
+        // flag that never arrives and defaults to false.
+        for (key in listOf("create_archive", "create_ebook", "keep_metadata", "skip_exist")) {
+            assertTrue(body.contains("\"$key\":true"), "expected $key=true in body, got: $body")
+        }
+        for (key in listOf("createArchive", "createEbook", "keepMetadata", "skipExist")) {
+            assertTrue(!body.contains(key), "camelCase key $key must not be sent, got: $body")
+        }
+    }
 }

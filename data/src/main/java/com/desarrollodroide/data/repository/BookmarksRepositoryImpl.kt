@@ -313,7 +313,10 @@ class BookmarksRepositoryImpl(
         val response = apiService.updateBookmarksCacheV1(
             url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/cache",
             authorization = "Bearer $token",
-            body = updateCachePayload.toDTO().toJson()
+            // The v1 endpoint reads snake_case (keep_metadata, create_archive, create_ebook,
+            // skip_exist). Sending the legacy camelCase DTO meant Go dropped every flag as an
+            // unknown field and defaulted them to false, so the dialog's checkboxes did nothing.
+            body = updateCachePayload.toV1DTO().toJson()
         )
         if (response.isSuccessful) {
             response.body()?.let {
