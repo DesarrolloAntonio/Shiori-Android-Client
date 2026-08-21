@@ -1,6 +1,5 @@
 package com.desarrollodroide.model
 
-import android.webkit.URLUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -27,10 +26,21 @@ data class Bookmark (
      * - The bookmark hasn't been sent to the server yet (temporary timestamp ID)
      * - The server received it but hasn't finished processing content (no content, no image, no excerpt)
      */
+    /**
+     * Whether the server still has work to do on this bookmark.
+     *
+     * Two signals, both of which clear on their own:
+     *  - the id is still the locally generated one, so the create has not reached the server;
+     *  - the server returned it with no content, image or excerpt, so it has not scraped it yet.
+     *
+     * A third check used to treat "the title looks like a URL" as pending. That is not a pending
+     * state, it is what the server stores permanently when a page has no title it can read, so
+     * those bookmarks displayed "Pending server processing, pull to refresh" forever and
+     * refreshing never cleared it. A freshly created bookmark is already covered by the other two.
+     */
     val isPendingServerProcessing: Boolean
         get() = isTemporaryId ||
-                (!hasContent && imageURL.isEmpty() && excerpt.isEmpty()) ||
-                (title.isNotEmpty() && URLUtil.isValidUrl(title))
+                (!hasContent && imageURL.isEmpty() && excerpt.isEmpty())
 
     /**
      * Temporary IDs are generated from System.currentTimeMillis() / 1000 (epoch seconds),

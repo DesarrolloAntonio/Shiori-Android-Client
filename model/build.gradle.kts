@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id ("org.jetbrains.kotlin.android")
+    id ("de.mannodermaus.android-junit5")
 }
 
 android {
@@ -21,4 +22,10 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+dependencies {
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.junit.jupiter.api)
 }
