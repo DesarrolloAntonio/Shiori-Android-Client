@@ -109,6 +109,11 @@ dependencies {
     // Compose: the BOM pins every androidx.compose.* artifact, including Material 3 Expressive.
     implementation (platform(libs.compose.bom))
     androidTestImplementation (platform(libs.compose.bom))
+    androidTestImplementation (libs.compose.ui.test.junit4)
+    androidTestImplementation (libs.androidx.test.ext.junit)
+    // ui-test-manifest supplies the empty ComponentActivity that createComposeRule() launches;
+    // without it the tests fail with ActivityNotFoundException.
+    debugImplementation (libs.compose.ui.test.manifest)
     implementation (libs.bundles.compose)
 
     implementation (libs.bundles.retrofit)

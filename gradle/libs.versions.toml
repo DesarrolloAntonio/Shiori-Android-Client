@@ -43,6 +43,9 @@ compose-material3-material3 = { module = "androidx.compose.material3:material3",
 compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite" }
 compose-material3-windowsize = { module = "androidx.compose.material3:material3-window-size-class" }
 compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
 
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
