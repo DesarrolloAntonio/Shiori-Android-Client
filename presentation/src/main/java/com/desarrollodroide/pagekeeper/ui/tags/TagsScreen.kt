@@ -193,7 +193,8 @@ fun TagsScreen(
 }
 
 @Composable
-private fun TagsList(
+// internal rather than private so ActionMenuTest can drive the per-tag overflow menu.
+internal fun TagsList(
     tags: List<Tag>,
     onRename: (Tag) -> Unit,
     onDelete: (Tag) -> Unit,
