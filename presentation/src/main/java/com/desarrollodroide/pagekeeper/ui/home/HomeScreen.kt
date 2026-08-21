@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.Badge
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -44,6 +45,8 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
@@ -89,6 +92,7 @@ import com.desarrollodroide.pagekeeper.ui.tags.TagsScreen
 import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 import com.desarrollodroide.pagekeeper.R
+import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
@@ -150,22 +154,30 @@ fun HomeScreen(
                 topBar = {
                     AnimatedVisibility (showTopBar) {
                         TopBar(
-                            toggleCategoryVisibility = { isCategoriesVisible.value = !isCategoriesVisible.value },
-                            toggleSearchBarVisibility = { isSearchBarVisible.value = !isSearchBarVisible.value },
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             scrollBehavior = scrollBehavior,
-                            hasBookmarks = hasBookmarks,
                             selectedTagsCount = selectedTags.size,
                             showOnlyHiddenTag = showOnlyHiddenTag,
                             pendingJobsCount = pendingJobsCount.size,
-                            onSyncButtonClick = {
+                        )
+                    }
+                },
+                bottomBar = {
+                    AnimatedVisibility(showTopBar) {
+                        FeedBottomBar(
+                            onSearchClick = { isSearchBarVisible.value = !isSearchBarVisible.value },
+                            onFilterClick = { isCategoriesVisible.value = !isCategoriesVisible.value },
+                            onSyncClick = {
                                 coroutineScope.launch {
                                     showBottomSheet.value = true
                                     bottomSheetState.show()
                                 }
                             },
+                            onAddClick = onAddManuallyClick,
+                            selectedTagsCount = selectedTags.size,
+                            showOnlyHiddenTag = showOnlyHiddenTag,
+                            pendingJobsCount = pendingJobsCount.size,
                             pendingJobs = pendingJobs,
-                            onAddManuallyClick = onAddManuallyClick,
                         )
                     }
                 }
@@ -290,34 +302,12 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TopBar(
-    toggleCategoryVisibility: () -> Unit,
-    toggleSearchBarVisibility: () -> Unit,
-    onAddManuallyClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSyncButtonClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    hasBookmarks: Boolean,
     selectedTagsCount: Int,
     showOnlyHiddenTag: Boolean,
     pendingJobsCount: Int,
-    pendingJobs: List<PendingJob>
 ) {
-    val hasRunningJobs = pendingJobs.any { it.state.uppercase() == "RUNNING" }
-    val rotation = remember { Animatable(0f) }
-    LaunchedEffect(hasRunningJobs) {
-        if (hasRunningJobs) {
-            rotation.animateTo(
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(2000, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                )
-            )
-        } else {
-            rotation.snapTo(0f)
-        }
-    }
-
     val subtitle = when {
         pendingJobsCount > 0 -> "$pendingJobsCount pending to sync"
         showOnlyHiddenTag -> "Hidden tags only"
@@ -325,8 +315,9 @@ fun TopBar(
         else -> null
     }
 
-    // MediumFlexibleTopAppBar is the Expressive two-row app bar: it carries a title + subtitle when
-    // expanded and collapses to a single row as the feed scrolls, driven by [scrollBehavior].
+    // The bar carries identity and state, not a row of controls. Everything actionable moved to
+    // the bottom bar, where it is reachable one handed: five icons up here had no hierarchy and
+    // put the primary action, adding a bookmark, in the hardest corner to reach on a tall phone.
     MediumFlexibleTopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
@@ -357,86 +348,8 @@ fun TopBar(
             )
         },
         actions = {
-            // AppBarRow lays the actions out and moves whatever doesn't fit into an overflow menu,
-            // so the bar stays usable on narrow screens and in landscape without a hand-written cut-off.
-            AppBarRow(
-                overflowIndicator = { menuState ->
-                    IconButton(
-                        onClick = { if (menuState.isShowing) menuState.dismiss() else menuState.show() }
-                    ) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                    }
-                }
-            ) {
-                clickableItem(
-                    onClick = onAddManuallyClick,
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    label = "Add bookmark",
-                )
-                clickableItem(
-                    onClick = toggleSearchBarVisibility,
-                    icon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                    label = "Search",
-                )
-                customItem(
-                    appbarContent = {
-                        BadgedIconButton(
-                            onClick = toggleCategoryVisibility,
-                            badgeCount = if (showOnlyHiddenTag) 0 else selectedTagsCount,
-                            description = if (showOnlyHiddenTag) "Hidden tags" else "Filter by tag",
-                        ) {
-                            Icon(
-                                imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    menuContent = { menuState ->
-                        DropdownMenuItem(
-                            text = { Text(if (showOnlyHiddenTag) "Hidden tags" else "Filter by tag") },
-                            onClick = {
-                                menuState.dismiss()
-                                toggleCategoryVisibility()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    },
-                )
-                customItem(
-                    appbarContent = {
-                        BadgedIconButton(
-                            onClick = onSyncButtonClick,
-                            badgeCount = pendingJobsCount,
-                            description = "Sync",
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Sync,
-                                contentDescription = null,
-                                modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
-                            )
-                        }
-                    },
-                    menuContent = { menuState ->
-                        DropdownMenuItem(
-                            text = { Text("Sync") },
-                            onClick = {
-                                menuState.dismiss()
-                                onSyncButtonClick()
-                            },
-                            leadingIcon = { Icon(Icons.Default.Sync, contentDescription = null) },
-                        )
-                    },
-                )
-                clickableItem(
-                    onClick = onSettingsClick,
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    label = "Settings",
-                )
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -446,6 +359,82 @@ fun TopBar(
             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
             actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
+    )
+}
+
+/**
+ * The feed's actions, in a bottom bar with the primary one as a docked fab.
+ *
+ * Search, filtering and sync are the things a reader reaches for repeatedly, so they sit within
+ * thumb reach rather than in the top corner. Adding a bookmark is the primary action and gets the
+ * fab, which is what M3 asks for and what the top bar's small plus icon was not.
+ */
+@Composable
+private fun FeedBottomBar(
+    onSearchClick: () -> Unit,
+    onFilterClick: () -> Unit,
+    onSyncClick: () -> Unit,
+    onAddClick: () -> Unit,
+    selectedTagsCount: Int,
+    showOnlyHiddenTag: Boolean,
+    pendingJobsCount: Int,
+    pendingJobs: List<PendingJob>,
+) {
+    val hasRunningJobs = pendingJobs.any { it.state.uppercase() == "RUNNING" }
+    val rotation = remember { Animatable(0f) }
+    LaunchedEffect(hasRunningJobs) {
+        if (hasRunningJobs) {
+            rotation.animateTo(
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                )
+            )
+        } else {
+            rotation.snapTo(0f)
+        }
+    }
+
+    BottomAppBar(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        actions = {
+            IconButton(onClick = onSearchClick) {
+                Icon(Icons.Filled.Search, contentDescription = "Search")
+            }
+            BadgedIconButton(
+                onClick = onFilterClick,
+                badgeCount = if (showOnlyHiddenTag) 0 else selectedTagsCount,
+                description = if (showOnlyHiddenTag) "Hidden tags" else "Filter by tag",
+            ) {
+                Icon(
+                    imageVector = if (showOnlyHiddenTag) Icons.Default.VisibilityOff else Icons.Outlined.Sell,
+                    contentDescription = null,
+                )
+            }
+            BadgedIconButton(
+                onClick = onSyncClick,
+                badgeCount = pendingJobsCount,
+                description = "Sync",
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Sync,
+                    contentDescription = null,
+                    modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
+                )
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddClick,
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add bookmark")
+            }
+        },
     )
 }
 
@@ -603,21 +592,31 @@ fun SyncJobsBottomSheetContentPreview() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun TopBarPreview() {
-    MaterialTheme {
+private fun TopBarPreview() {
+    ShioriTheme {
         TopBar(
-            toggleCategoryVisibility = { },
-            toggleSearchBarVisibility = { },
             onSettingsClick = { },
-            onAddManuallyClick = { },
             scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-            hasBookmarks = true,
             selectedTagsCount = 2,
             showOnlyHiddenTag = false,
             pendingJobsCount = 0,
-            onSyncButtonClick = { },
-            pendingJobs = emptyList(),
         )
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun FeedBottomBarPreview() {
+    ShioriTheme {
+        FeedBottomBar(
+            onSearchClick = { },
+            onFilterClick = { },
+            onSyncClick = { },
+            onAddClick = { },
+            selectedTagsCount = 2,
+            showOnlyHiddenTag = false,
+            pendingJobsCount = 3,
+            pendingJobs = emptyList(),
+        )
+    }
+}
