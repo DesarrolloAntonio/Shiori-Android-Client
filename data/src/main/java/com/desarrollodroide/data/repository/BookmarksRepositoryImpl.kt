@@ -13,7 +13,6 @@ import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
-import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
@@ -68,29 +67,6 @@ class BookmarksRepositoryImpl(
         override fun shouldFetch(data: List<Bookmark>?) = true
 
     }.asFlow().flowOn(Dispatchers.IO)
-
-    override fun getPagingBookmarks(
-        xSession: String,
-        serverUrl: String,
-        searchText: String,
-        tags: List<Tag>,
-        saveToLocal: Boolean
-    ): Flow<PagingData<Bookmark>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
-            pagingSourceFactory = {
-                BookmarkPagingSource(
-                    remoteDataSource = apiService,
-                    bookmarksDao = bookmarksDao,
-                    serverUrl = serverUrl,
-                    xSessionId = xSession,
-                    searchText = searchText,
-                    tags = tags,
-                    saveToLocal = saveToLocal
-                )
-            }
-        ).flow
-    }
 
     /**
      * Retrieves a paginated list of bookmarks from the local database using Room and Paging.
@@ -171,37 +147,44 @@ class BookmarksRepositoryImpl(
     ): Flow<SyncStatus> = flow {
         var currentPage = 1
         var hasNextPage = true
-        val allBookmarks = mutableListOf<BookmarkEntity>()
+        // Only ids are held across the whole sync, not entities. The previous version accumulated
+        // every bookmark in memory and wrote nothing until the last page arrived, so a large
+        // library was held twice over and a failure on any page discarded all the work.
+        val seenIds = mutableListOf<Int>()
         try {
-            Log.d(TAG, "Sync started")
             emit(SyncStatus.Started)
 
             while (hasNextPage) {
-                Log.d(TAG, "Fetching bookmarks for page $currentPage")
                 emit(SyncStatus.InProgress(currentPage))
                 val bookmarksDto = apiService.getPagingBookmarks(
                     xSessionId = xSession,
                     url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$currentPage"
                 )
-                Log.d(TAG, "Received response for page $currentPage with status: ${bookmarksDto.code()}")
                 if (bookmarksDto.errorBody()?.string() == SESSION_HAS_BEEN_EXPIRED) {
-                    Log.e(TAG, "Session has expired")
                     emit(SyncStatus.Error(Result.ErrorType.SessionExpired(message = SESSION_HAS_BEEN_EXPIRED)))
                     return@flow
                 }
-                val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() } ?: emptyList()
-                Log.d(TAG, "Fetched ${bookmarks.size} bookmarks for page $currentPage")
-                allBookmarks.addAll(bookmarks)
+                val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() }
+                    ?: emptyList()
+
+                // Written as it arrives, so the feed fills in progressively and a sync that dies
+                // half way leaves the pages it did fetch rather than nothing.
+                bookmarksDao.insertPageWithTags(bookmarks)
+                seenIds.addAll(bookmarks.map { it.id })
+
                 hasNextPage = hasNextPage(bookmarksDto)
-                Log.d(TAG, "Has next page: $hasNextPage")
                 if (hasNextPage) {
                     currentPage++
                 }
             }
-            Log.d(TAG, "Inserting ${allBookmarks.size} bookmarks into database")
-            bookmarksDao.insertAllWithTags(allBookmarks)
-            Log.d(TAG, "Sync completed with ${allBookmarks.size} bookmarks")
-            emit(SyncStatus.Completed(allBookmarks.size))
+
+            // Prune only once every page has been accounted for. Deleting up front, as the old
+            // code did, meant a failure mid-sync left the user with an empty cache.
+            if (seenIds.isNotEmpty()) {
+                bookmarksDao.deleteBookmarksNotIn(seenIds)
+            }
+            Log.d(TAG, "Sync completed with ${seenIds.size} bookmarks")
+            emit(SyncStatus.Completed(seenIds.size))
         } catch (e: Exception) {
             Log.e(TAG, "Error during sync: ${e.message}")
             emit(SyncStatus.Error(Result.ErrorType.Unknown(throwable = e)))

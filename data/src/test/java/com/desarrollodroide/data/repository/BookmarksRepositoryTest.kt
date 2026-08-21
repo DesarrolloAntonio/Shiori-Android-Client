@@ -22,10 +22,10 @@ import retrofit2.Response
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
-import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.network.model.BookmarkDTO
@@ -171,48 +171,68 @@ class BookmarksRepositoryTest {
     }
 
     @Test
-    fun `getPagingBookmarks should return paginated data when API call is successful`() = runTest {
-        // Arrange
+    fun `a full sync writes each page as it arrives instead of buffering the library`() = runTest {
         val xSessionId = "testSessionId"
         val serverUrl = "http://test.com"
-        val searchText = "test"
-        val tags = listOf<Tag>()
-        val saveToLocal = true
-        val bookmarksDTO = BookmarksDTO(
-            maxPage = 1,
-            page = 1,
-            bookmarks = listOf(
-                BookmarkDTO(1, "http://bookmark1.com", "Bookmark 1", "Excerpt 1", "Author 1", 1, "2023-01-01", "", "http://image1.com", true, true, true, listOf(), true, true),
-                BookmarkDTO(2, "http://bookmark2.com", "Bookmark 2", "Excerpt 2", "Author 2", 1, "2023-01-02", "", "http://image2.com", true, true, true, listOf(), true, true)
+        // Arrange: two pages.
+        val page1 = BookmarksDTO(
+            page = 1, maxPage = 2, bookmarks = listOf(
+                BookmarkDTO(1, "http://a.com", "A", "", "", 1, "2023-01-01", "", "", true, true, true, listOf(), true, true)
             )
         )
-        val expectedBookmarks = bookmarksDTO.bookmarks?.map { it.toDomainModel() }
-
-        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString())).thenReturn(Response.success(bookmarksDTO))
-        `when`(bookmarksDao.getAll()).thenReturn(flowOf(emptyList()))
+        val page2 = BookmarksDTO(
+            page = 2, maxPage = 2, bookmarks = listOf(
+                BookmarkDTO(2, "http://b.com", "B", "", "", 1, "2023-01-02", "", "", true, true, true, listOf(), true, true)
+            )
+        )
+        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString()))
+            .thenReturn(Response.success(page1), Response.success(page2))
 
         // Act
-        val pagingSource = BookmarkPagingSource(
-            remoteDataSource = apiService,
-            bookmarksDao = bookmarksDao,
-            serverUrl = serverUrl,
-            xSessionId = xSessionId,
-            searchText = searchText,
-            tags = tags,
-            saveToLocal = saveToLocal
-        )
+        bookmarksRepository.syncAllBookmarks(xSessionId, serverUrl).toList()
 
-        val loadResult = pagingSource.load(
-            PagingSource.LoadParams.Refresh(
-                key = null,
-                loadSize = 20,
-                placeholdersEnabled = false
+        // Assert: one write per page, and the whole-table delete is never used.
+        verify(bookmarksDao, times(2)).insertPageWithTags(anyList())
+        verify(bookmarksDao, never()).insertAllWithTags(anyList())
+        verify(bookmarksDao, never()).deleteAll()
+    }
+
+    @Test
+    fun `a full sync prunes only what the server stopped returning, and only at the end`() = runTest {
+        val xSessionId = "testSessionId"
+        val serverUrl = "http://test.com"
+        val page = BookmarksDTO(
+            page = 1, maxPage = 1, bookmarks = listOf(
+                BookmarkDTO(7, "http://a.com", "A", "", "", 1, "2023-01-01", "", "", true, true, true, listOf(), true, true)
             )
         )
+        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString())).thenReturn(Response.success(page))
 
-        // Assert
-        assertTrue(loadResult is PagingSource.LoadResult.Page)
-        loadResult as PagingSource.LoadResult.Page
-        assertEquals(expectedBookmarks, loadResult.data)
+        bookmarksRepository.syncAllBookmarks(xSessionId, serverUrl).toList()
+
+        verify(bookmarksDao).deleteBookmarksNotIn(check { assertEquals(listOf(7), it) })
+    }
+
+    @Test
+    fun `a sync that fails part way leaves the cache alone rather than emptying it`() = runTest {
+        val xSessionId = "testSessionId"
+        val serverUrl = "http://test.com"
+        // Page 1 succeeds, page 2 blows up. The old code deleted everything up front and buffered
+        // the rest, so a failure here left the user with nothing to read offline.
+        val page1 = BookmarksDTO(
+            page = 1, maxPage = 2, bookmarks = listOf(
+                BookmarkDTO(1, "http://a.com", "A", "", "", 1, "2023-01-01", "", "", true, true, true, listOf(), true, true)
+            )
+        )
+        `when`(apiService.getPagingBookmarks(eq(xSessionId), anyString()))
+            .thenReturn(Response.success(page1))
+            .thenThrow(RuntimeException("network died"))
+
+        val statuses = bookmarksRepository.syncAllBookmarks(xSessionId, serverUrl).toList()
+
+        assertTrue(statuses.last() is SyncStatus.Error)
+        verify(bookmarksDao).insertPageWithTags(anyList())
+        verify(bookmarksDao, never()).deleteBookmarksNotIn(anyList())
+        verify(bookmarksDao, never()).deleteAll()
     }
 }

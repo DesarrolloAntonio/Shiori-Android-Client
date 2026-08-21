@@ -160,6 +160,14 @@ interface BookmarksDao {
   }
 
   /**
+   * Removes cached bookmarks the server no longer returned, after a full sync has upserted
+   * everything it did return. Together with [insertPageWithTags] this replaces the old
+   * delete-everything-then-insert approach, which lost the whole cache if a sync failed part way.
+   */
+  @Query("DELETE FROM bookmarks WHERE id NOT IN (:keepIds)")
+  suspend fun deleteBookmarksNotIn(keepIds: List<Int>)
+
+  /**
    * Appends a page of bookmarks and their tag cross references in one transaction.
    *
    * The counterpart to [insertAllWithTags] for paging: it keeps what is already cached instead of
