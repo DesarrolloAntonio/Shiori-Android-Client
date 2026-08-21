@@ -3,6 +3,9 @@ package com.desarrollodroide.pagekeeper.ui.login
 import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -159,16 +162,11 @@ private fun ContentViews(
     serverVersion: String,
     resetServerAvailabilityState: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_logo),
-            contentDescription = null,
-            contentScale = ContentScale.FillHeight,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-                .height(120.dp)
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
         Image(
             painter = painterResource(id = R.drawable.curved_wave_bottom),
             contentDescription = null,
@@ -176,61 +174,85 @@ private fun ContentViews(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp)
                 .height(150.dp)
                 .align(Alignment.BottomCenter)
         )
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Bottom,
+                .fillMaxSize()
+                // The form used to sit in a fixed-height Box, so on short screens (or with the
+                // keyboard up) the login button went off-screen with no way to reach it.
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .safeDrawingPadding()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            ServerUrlTextField(
-                modifier = Modifier,
-                serverUrl = serverUrl,
-                serverErrorState = urlErrorState,
-                serverAvailabilityUiState = serverAvailabilityUiState,
-                serverVersion = serverVersion,
-                resetServerAvailabilityState = resetServerAvailabilityState,
-                onClick = onClickTestButton,
-                isTestingServer = isTestingServer
+            Image(
+                painter = painterResource(id = R.drawable.ic_logo),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.height(110.dp)
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            UserTextField(
-                user = user,
-                userErrorState = userErrorState
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Welcome back",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            PasswordTextField(
-                password = password,
-                passwordErrorState = passwordErrorState
+            Text(
+                text = "Sign in to your Shiori server",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.size(14.dp))
-            LoginButton(
-                user = user,
-                userErrorState = userErrorState,
-                password = password,
-                passwordErrorState = passwordErrorState,
-                onClickLoginButton = onClickLoginButton,
-                serverErrorState = urlErrorState
-            )
-            RememberSessionSection(
-                checked = checked,
-                onCheckedChange = onCheckedRememberSessionChange
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                contentAlignment = Alignment.Center
+            Spacer(modifier = Modifier.height(24.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
             ) {
-                LinkableText(
-                    text = "Server Setup Guide",
-                    url = SHIORI_GITHUB_URL
-                )
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ServerUrlTextField(
+                        serverUrl = serverUrl,
+                        serverErrorState = urlErrorState,
+                        serverAvailabilityUiState = serverAvailabilityUiState,
+                        serverVersion = serverVersion,
+                        resetServerAvailabilityState = resetServerAvailabilityState,
+                        onClick = onClickTestButton,
+                        isTestingServer = isTestingServer
+                    )
+                    UserTextField(
+                        user = user,
+                        userErrorState = userErrorState
+                    )
+                    PasswordTextField(
+                        password = password,
+                        passwordErrorState = passwordErrorState
+                    )
+                    RememberSessionSection(
+                        checked = checked,
+                        onCheckedChange = onCheckedRememberSessionChange
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LoginButton(
+                        user = user,
+                        userErrorState = userErrorState,
+                        password = password,
+                        passwordErrorState = passwordErrorState,
+                        onClickLoginButton = onClickLoginButton,
+                        serverErrorState = urlErrorState
+                    )
+                }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            LinkableText(
+                text = "Server Setup Guide",
+                url = SHIORI_GITHUB_URL
+            )
         }
     }
 }

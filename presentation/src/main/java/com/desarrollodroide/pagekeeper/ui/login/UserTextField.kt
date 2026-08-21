@@ -1,47 +1,46 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
 
 @Composable
 fun UserTextField(
     user: MutableState<String>,
-    userErrorState: MutableState<Boolean>
+    userErrorState: MutableState<Boolean>,
+    modifier: Modifier = Modifier,
 ) {
-    Column {
-        OutlinedTextField(
-            value = user.value,
-            leadingIcon = {
-                Icon(imageVector = Icons.Filled.Person, contentDescription = null)
-            },
-            onValueChange = {
-                if (userErrorState.value) {
-                    userErrorState.value = false
-                }
-                user.value = it
-            },
-            isError = userErrorState.value,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(text = "UserName")
-            },
-        )
-        if (userErrorState.value) {
-            Text(
-                modifier = Modifier.align(Alignment.End),
-                color = Color.Red,
-                text = "Invalid username"
-            )
-        }
-    }
+    OutlinedTextField(
+        value = user.value,
+        onValueChange = {
+            if (userErrorState.value) userErrorState.value = false
+            user.value = it
+        },
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = null) },
+        label = { Text(text = "Username") },
+        isError = userErrorState.value,
+        // supportingText is the M3 slot for validation messages: it reserves its own line so the
+        // form doesn't jump when an error appears, and it inherits the error colour from isError
+        // instead of a hardcoded Color.Red that ignores the theme.
+        supportingText = if (userErrorState.value) {
+            { Text("Invalid username") }
+        } else null,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            imeAction = ImeAction.Next,
+        ),
+    )
 }
