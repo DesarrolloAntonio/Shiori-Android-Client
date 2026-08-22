@@ -18,6 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,7 +40,9 @@ fun PasswordTextField(
             if (passwordErrorState.value) passwordErrorState.value = false
             password.value = it
         },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .semantics { contentType = ContentType.Password }
+            .fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         leadingIcon = { Icon(imageVector = Icons.Filled.Lock, contentDescription = null) },
         trailingIcon = {

@@ -10,6 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,7 +29,9 @@ fun UserTextField(
             if (userErrorState.value) userErrorState.value = false
             user.value = it
         },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .semantics { contentType = ContentType.Username }
+            .fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = null) },
         label = { Text(text = "Username") },
