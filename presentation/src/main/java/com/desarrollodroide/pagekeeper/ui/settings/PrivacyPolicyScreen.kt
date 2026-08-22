@@ -66,7 +66,6 @@ fun PrivacyPolicyScreen(
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                         append("Privacy Policy of Shiori\n\n")
                     }
-                    append("Effective as of [Insert Date Here].\n\n")
                     append("This Privacy Policy outlines our policies and procedures on the collection, use, and disclosure of personal information. Shiori values your privacy and is committed to protecting it through our compliance with this policy. Our app is designed not to collect or store any personal data from our users, ensuring your privacy and security.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

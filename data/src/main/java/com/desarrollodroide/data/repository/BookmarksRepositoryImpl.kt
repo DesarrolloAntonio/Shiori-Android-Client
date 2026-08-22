@@ -11,6 +11,7 @@ import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Bookmark
@@ -38,6 +39,7 @@ import java.time.format.DateTimeFormatter
 class BookmarksRepositoryImpl(
     private val apiService: RetrofitNetwork,
     private val bookmarksDao: BookmarksDao,
+    private val tagDao: TagDao,
     private val errorHandler: ErrorHandler
 ) : BookmarksRepository {
 
@@ -357,7 +359,18 @@ class BookmarksRepositoryImpl(
         }
     }
 
-    override suspend fun deleteAllLocalBookmarks()  { bookmarksDao.deleteAll() }
+    /**
+     * Wipes the local cache. Used on logout.
+     *
+     * Tags and their cross references go too. Deleting only the bookmarks left the previous
+     * account's tags in the database and fifteen cross references pointing at rows that no longer
+     * existed, so the next person to sign in on that device inherited them.
+     */
+    override suspend fun deleteAllLocalBookmarks() {
+        bookmarksDao.deleteAll()
+        bookmarksDao.clearBookmarkTagCrossRefs()
+        tagDao.deleteAllTags()
+    }
 
     override fun getBookmarkReadableContent(
         token: String,

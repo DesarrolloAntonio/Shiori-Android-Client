@@ -109,6 +109,7 @@ fun dataModule() = module {
     single { BookmarksRepositoryImpl(
         apiService = get(),
         bookmarksDao = get(),
+        tagDao = get(),
         errorHandler = get()
     ) as BookmarksRepository }
 
