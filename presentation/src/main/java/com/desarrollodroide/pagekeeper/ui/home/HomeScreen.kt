@@ -101,6 +101,20 @@ import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
 import kotlinx.coroutines.launch
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.desarrollodroide.pagekeeper.ui.components.TwoPaneEmptyDetail
+import com.desarrollodroide.pagekeeper.ui.components.shouldUseTwoPanes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,24 +197,60 @@ fun HomeScreen(
                     }
                 }
             ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .padding(paddingValues)
+                val useTwoPaneLayout by feedViewModel.useTwoPaneLayout.collectAsStateWithLifecycle()
+                // Which bookmark the detail pane is showing. Only the id is kept: Bookmark is not
+                // parcelable, and the feed view model can resolve it again after a rotation.
+                var openBookmarkId by rememberSaveable { mutableStateOf<Int?>(null) }
+
+                BoxWithConstraints(
+                    modifier = Modifier.padding(paddingValues)
                 ) {
-                    FeedScreen(
-                        feedViewModel = feedViewModel,
-                        isCategoriesVisible = isCategoriesVisible,
-                        goToLogin = goToLogin,
-                        openUrlInBrowser = openUrlInBrowser,
-                        shareEpubFile = shareEpubFile,
-                        isSearchBarVisible = isSearchBarVisible,
-                        setShowTopBar = setShowTopBar,
-                        goToReadableContent = { bookmark->
-                             navController.navigate(NavItem.ReadableContentNavItem.createRoute(
-                                 bookmarkId = bookmark.id,
-                             ))
-                        },
-                    )
+                    // Measured rather than taken from a window size class, so the same decision can
+                    // be driven from a test by handing the composable a width.
+                    val twoPanes = shouldUseTwoPanes(useTwoPaneLayout, maxWidth)
+
+                    val feed: @Composable (Modifier) -> Unit = { _ ->
+                        FeedScreen(
+                            feedViewModel = feedViewModel,
+                            isCategoriesVisible = isCategoriesVisible,
+                            goToLogin = goToLogin,
+                            openUrlInBrowser = openUrlInBrowser,
+                            shareEpubFile = shareEpubFile,
+                            isSearchBarVisible = isSearchBarVisible,
+                            setShowTopBar = setShowTopBar,
+                            goToReadableContent = { bookmark ->
+                                if (twoPanes) {
+                                    openBookmarkId = bookmark.id
+                                } else {
+                                    navController.navigate(
+                                        NavItem.ReadableContentNavItem.createRoute(
+                                            bookmarkId = bookmark.id,
+                                        )
+                                    )
+                                }
+                            },
+                        )
+                    }
+
+                    if (twoPanes) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            Box(modifier = Modifier.weight(1f)) { feed(Modifier) }
+                            VerticalDivider()
+                            Box(modifier = Modifier.weight(1f)) {
+                                TwoPaneDetail(
+                                    bookmarkId = openBookmarkId,
+                                    feedViewModel = feedViewModel,
+                                    openUrlInBrowser = openUrlInBrowser,
+                                    onClose = { openBookmarkId = null },
+                                )
+                            }
+                        }
+                    } else {
+                        // The pane can only have been opened on a wider window. Drop it, or the
+                        // selection would come back on the next rotation into landscape.
+                        LaunchedEffect(twoPanes) { openBookmarkId = null }
+                        feed(Modifier)
+                    }
                 }
             }
         }
@@ -607,5 +657,44 @@ private fun TopBarWithPendingPreview() {
             pendingJobsCount = 3,
             pendingJobs = emptyList(),
         )
+    }
+}
+
+/**
+ * Right hand pane of the two pane feed: the article for whichever bookmark is open.
+ *
+ * Reuses ReadableContentScreen rather than a second reader. Its own BackHandler becomes "close the
+ * article", which is what back should do when the list is still on screen beside it.
+ */
+@RequiresApi(Build.VERSION_CODES.N)
+@Composable
+private fun TwoPaneDetail(
+    bookmarkId: Int?,
+    feedViewModel: FeedViewModel,
+    openUrlInBrowser: (String) -> Unit,
+    onClose: () -> Unit,
+) {
+    if (bookmarkId == null) {
+        TwoPaneEmptyDetail()
+        return
+    }
+    val bookmark by feedViewModel.currentBookmark.collectAsState()
+    LaunchedEffect(bookmarkId) { feedViewModel.loadBookmarkById(bookmarkId) }
+
+    bookmark?.takeIf { it.id == bookmarkId }?.let {
+        // Keyed so that picking a second bookmark builds a fresh reader. Without it the screen's
+        // LaunchedEffect(Unit) never runs again and the pane keeps the first article.
+        key(bookmarkId) {
+            ReadableContentScreen(
+                readableContentViewModel = koinViewModel(),
+                bookmarkId = bookmarkId,
+                bookmarkUrl = it.url,
+                onBack = onClose,
+                openUrlInBrowser = openUrlInBrowser,
+                bookmarkDate = it.modified,
+                bookmarkTitle = it.title,
+                isRtl = it.title.isRTLText() || it.excerpt.isRTLText(),
+            )
+        }
     }
 }

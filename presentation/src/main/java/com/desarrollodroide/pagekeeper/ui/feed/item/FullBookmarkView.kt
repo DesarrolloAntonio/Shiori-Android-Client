@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,10 +44,12 @@ fun FullBookmarkView(
             PendingSyncBanner()
         }
         if (bookmark.imageURL.isNotEmpty()) {
-            // A fixed 16:9 crop instead of FillWidth, because variable height heroes made the
-            // feed jump around as each image resolved. heightIn caps it: on a landscape phone
-            // fillMaxWidth is the long edge, and 16:9 of that is taller than the screen, so a
-            // single card's image filled the viewport and the list looked empty.
+            // A fixed height rather than an aspect ratio. Variable height heroes made the feed
+            // jump around as each image resolved, and heightIn + aspectRatio only looked like a
+            // fix: past about 430dp of card width the two cannot both be satisfied, the image
+            // drew taller than the row the column had reserved for it, and the title rendered on
+            // top of the picture. That width is reachable in the two pane layout, where a single
+            // column fills half a tablet. One number, the same at every width.
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
@@ -55,8 +57,7 @@ fun FullBookmarkView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp)
-                    .heightIn(max = 240.dp)
-                    .aspectRatio(16f / 9f)
+                    .height(HeroImageHeight)
                     .clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Crop,
                 loadAsThumbnail = false
@@ -109,3 +110,6 @@ fun FullBookmarkView(
         }
     }
 }
+
+/** Hero image height. Fixed so a card is the same shape on a phone and in a half width pane. */
+private val HeroImageHeight = 200.dp

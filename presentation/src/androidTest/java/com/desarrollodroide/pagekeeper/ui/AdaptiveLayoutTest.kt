@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -110,5 +112,57 @@ class AdaptiveLayoutTest {
             }
         }
         rule.onNodeWithTag("content").assertWidthIsEqualTo(320.dp)
+    }
+
+    /**
+     * The hero image keeps its height however wide the card is.
+     *
+     * It used to be heightIn(240) plus aspectRatio(16:9), which cannot both be satisfied once a
+     * card is wider than about 430dp: the image drew taller than the row the column had reserved
+     * and the title rendered on top of the picture. Nothing was wrong on a phone, or in the three
+     * column tablet grid, because the columns were narrow. It appeared the moment a single column
+     * filled half a tablet in the two pane layout.
+     */
+    @Test
+    fun theHeroImageKeepsItsHeightOnAWideCard() {
+        rule.setContent {
+            ShioriTheme {
+                Column(modifier = Modifier.requiredWidth(900.dp)) {
+                    BookmarkItem(
+                        getBookmark = { Bookmark.mock().copy(id = 1) },
+                        serverURL = "",
+                        xSessionId = "",
+                        token = "",
+                        actions = noopActions,
+                        viewType = BookmarkViewType.FULL,
+                    )
+                }
+            }
+        }
+
+        rule.onNodeWithContentDescription("Bookmark image", useUnmergedTree = true)
+            .assertHeightIsEqualTo(200.dp)
+    }
+
+    /** The same height on a phone width card, so the two look like the same component. */
+    @Test
+    fun theHeroImageKeepsItsHeightOnANarrowCard() {
+        rule.setContent {
+            ShioriTheme {
+                Column(modifier = Modifier.requiredWidth(411.dp)) {
+                    BookmarkItem(
+                        getBookmark = { Bookmark.mock().copy(id = 1) },
+                        serverURL = "",
+                        xSessionId = "",
+                        token = "",
+                        actions = noopActions,
+                        viewType = BookmarkViewType.FULL,
+                    )
+                }
+            }
+        }
+
+        rule.onNodeWithContentDescription("Bookmark image", useUnmergedTree = true)
+            .assertHeightIsEqualTo(200.dp)
     }
 }

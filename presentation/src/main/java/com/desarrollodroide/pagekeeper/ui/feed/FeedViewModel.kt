@@ -96,6 +96,9 @@ class FeedViewModel(
     val selectedOptionIndex = mutableStateOf(0)
     private var isInitialized = false
 
+    val useTwoPaneLayout: StateFlow<Boolean> = settingsPreferenceDataSource.useTwoPaneLayoutFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow

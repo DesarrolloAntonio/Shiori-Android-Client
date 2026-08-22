@@ -3,6 +3,7 @@ package com.desarrollodroide.pagekeeper.ui.settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sell
 import androidx.compose.material.icons.filled.Style
+import androidx.compose.material.icons.filled.ViewColumn
 import androidx.compose.material.icons.filled.ViewCompactAlt
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,8 @@ import kotlinx.coroutines.launch
 fun FeedSection(
     compactView: Boolean,
     onCompactViewChanged: (Boolean) -> Unit,
+    useTwoPaneLayout: Boolean,
+    onUseTwoPaneLayoutChanged: (Boolean) -> Unit,
     onClickHideDialogOption: () -> Unit,
     onHideTagChanged: (Tag?) -> Unit,
     tagsUiState: UiState<List<Tag>>,
@@ -39,6 +42,13 @@ fun FeedSection(
             icon = Icons.Filled.ViewCompactAlt,
             checked = compactView,
             onCheckedChange = onCompactViewChanged
+        )
+        SwitchOption(
+            title = "Two panes on large screens",
+            icon = Icons.Filled.ViewColumn,
+            subtitle = "Read an article beside the list instead of over it",
+            checked = useTwoPaneLayout,
+            onCheckedChange = onUseTwoPaneLayoutChanged
         )
         ClickableOption(
             title = "Manage tags",

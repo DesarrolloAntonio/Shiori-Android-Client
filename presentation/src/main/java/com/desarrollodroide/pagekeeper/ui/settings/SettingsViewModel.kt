@@ -58,6 +58,9 @@ class SettingsViewModel(
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val useTwoPaneLayout: StateFlow<Boolean> = settingsPreferenceDataSource.useTwoPaneLayoutFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -83,6 +86,12 @@ class SettingsViewModel(
     fun setCompactView(isCompact: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCompactView(isCompact)
+        }
+    }
+
+    fun setUseTwoPaneLayout(useTwoPane: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setUseTwoPaneLayout(useTwoPane)
         }
     }
 

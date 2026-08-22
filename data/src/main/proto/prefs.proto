@@ -37,6 +37,9 @@ message SystemPreferences {
   int64 lastSyncTimestamp = 7;
   string serverVersion = 8;
   string lastCrashLog = 9;
+  // Two panes side by side on a large window: the feed on the left, the article on the right.
+  // Off by default, so a phone that rotates into landscape keeps the layout it had.
+  bool useTwoPaneLayout = 10;
 
 }
 

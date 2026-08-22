@@ -200,6 +200,17 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
+    override val useTwoPaneLayoutFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.useTwoPaneLayout }
+    }
+
+    override suspend fun setUseTwoPaneLayout(useTwoPane: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setUseTwoPaneLayout(useTwoPane).build()
+        }
+    }
+
     override suspend fun setCategoriesVisible(isCategoriesVisible: Boolean) {
         runBlocking {
             dataStore.edit { preferences ->

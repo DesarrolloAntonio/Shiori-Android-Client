@@ -74,6 +74,7 @@ fun SettingsScreen(
     val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
     val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
+    val useTwoPaneLayout by settingsViewModel.useTwoPaneLayout.collectAsStateWithLifecycle()
     val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
     val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
     val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
@@ -137,6 +138,10 @@ fun SettingsScreen(
                 onCompactViewChanged = { isCompact ->
                     settingsViewModel.setCompactView(isCompact)
                 },
+                useTwoPaneLayout = useTwoPaneLayout,
+                onUseTwoPaneLayoutChanged = { useTwoPane ->
+                    settingsViewModel.setUseTwoPaneLayout(useTwoPane)
+                },
                 autoAddBookmark = autoAddBookmark,
                 onAutoAddBookmarkChanged = { isAuto ->
                     settingsViewModel.setAutoAddBookmark(isAuto)
@@ -173,6 +178,8 @@ fun SettingsContent(
     onAutoAddBookmarkChanged: (Boolean) -> Unit,
     compactView: Boolean,
     onCompactViewChanged: (Boolean) -> Unit,
+    useTwoPaneLayout: Boolean,
+    onUseTwoPaneLayoutChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
@@ -233,6 +240,8 @@ fun SettingsContent(
             FeedSection(
                 compactView = compactView,
                 onCompactViewChanged = onCompactViewChanged,
+                useTwoPaneLayout = useTwoPaneLayout,
+                onUseTwoPaneLayoutChanged = onUseTwoPaneLayoutChanged,
                 tagsUiState = tagsUiState,
                 onHideTagChanged = onHideTagChanged,
                 onClickHideDialogOption = onClickHideDialogOption,
@@ -361,6 +370,8 @@ fun SettingsScreenPreview() {
         onAutoAddBookmarkChanged = { },
         compactView = false,
         onCompactViewChanged = {},
+        useTwoPaneLayout = false,
+        onUseTwoPaneLayoutChanged = {},
         onLogout = {},
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
