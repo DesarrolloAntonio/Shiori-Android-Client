@@ -27,6 +27,12 @@ import androidx.compose.ui.unit.dp
 val TwoPaneMinWidth: Dp = 840.dp
 
 /**
+ * Width of the list pane. Fixed, not half the window: the list is a column of cards and stops
+ * gaining anything past roughly one card, while the article always reads better with more room.
+ */
+val ListPaneWidth: Dp = 400.dp
+
+/**
  * Whether the feed and an article should sit side by side.
  *
  * Takes a width rather than a window size class so the same decision can be made from a test, and
