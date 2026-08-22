@@ -35,6 +35,17 @@ interface BookmarksRepository {
 
   suspend fun deleteAllLocalBookmarks()
 
+  /**
+   * Sets the tags on the given bookmarks. This replaces what they had, it does not merge, so the
+   * caller has to send the full set it wants each bookmark to end up with.
+   */
+  suspend fun addTagsToBookmarks(
+    token: String,
+    serverUrl: String,
+    bookmarkIds: List<Int>,
+    tagIds: List<Int>,
+  ): List<Bookmark>
+
   suspend fun updateBookmarkCacheV1(
     token: String,
     serverUrl: String,

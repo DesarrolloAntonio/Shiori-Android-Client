@@ -45,6 +45,8 @@ fun presenterModule() = module {
             getAllRemoteBookmarksUseCase = get(),
             deleteLocalBookmarkUseCase = get(),
             syncManager = get(),
+            bookmarksRepository = get(),
+            tagsRepository = get(),
         )
     }
 

@@ -32,7 +32,9 @@ import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
+import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.SyncWorks
+import com.desarrollodroide.data.repository.TagsRepository
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
@@ -57,6 +59,8 @@ class FeedViewModel(
     private val getAllRemoteBookmarksUseCase: GetAllRemoteBookmarksUseCase,
     private val deleteLocalBookmarkUseCase: DeleteLocalBookmarkUseCase,
     private val syncManager: SyncWorks,
+    private val bookmarksRepository: BookmarksRepository,
+    private val tagsRepository: TagsRepository,
 
     ) : ViewModel() {
 
@@ -340,6 +344,54 @@ class FeedViewModel(
 
     fun clearSelection() {
         _selectedBookmarks.value = emptyList()
+    }
+
+    /**
+     * Adds tags to everything selected.
+     *
+     * Two things about the endpoint. It links tag ids rather than names, so a tag the user typed
+     * that does not exist yet has to be created first. And it *sets* a bookmark's tags rather than
+     * adding to them, so each bookmark is sent the union of what it already has and what was asked
+     * for. Sending only the new ids is how this was first written, and it stripped three tags off a
+     * bookmark on the live server before it was caught.
+     */
+    fun addTagsToSelected(tagNames: List<String>) {
+        val selected = _selectedBookmarks.value
+        if (selected.isEmpty() || tagNames.isEmpty()) return
+        clearSelection()
+        viewModelScope.launch {
+            runCatching {
+                val known = _tagsState.value.data.orEmpty().associateBy { it.name.lowercase() }
+                val newTagIds = tagNames.mapNotNull { name -> known[name]?.id ?: createTag(name) }
+                if (newTagIds.isEmpty()) error("None of those tags could be created")
+
+                selected.forEach { bookmark ->
+                    bookmarksRepository.addTagsToBookmarks(
+                        token = _token.value,
+                        serverUrl = _serverUrl.value,
+                        bookmarkIds = listOf(bookmark.id),
+                        tagIds = (bookmark.tags.map { it.id } + newTagIds).distinct(),
+                    )
+                }
+                getRemoteTags()
+                refreshFeed()
+            }.onFailure {
+                Log.e(TAG, "Could not add tags to the selection", it)
+                _bookmarksUiState.error(errorMessage = it.message ?: "Could not add tags")
+            }
+        }
+    }
+
+    private suspend fun createTag(name: String): Int? {
+        var created: Int? = null
+        tagsRepository.createTag(
+            token = _token.value,
+            serverUrl = _serverUrl.value,
+            name = name,
+        ).collect { result ->
+            if (result is Result.Success) created = result.data?.id
+        }
+        return created
     }
 
     /**

@@ -80,6 +80,18 @@ interface RetrofitNetwork {
         @Body body: String
     ): Response<List<BookmarkDTO>>
 
+    /**
+     * Adds tags to several bookmarks at once. Body is {"ids":[..],"tags":[{"name":".."}]} and the
+     * response is the updated bookmarks, the same shape the cache endpoint returns.
+     */
+    @Headers("Content-Type: application/json")
+    @PUT()
+    suspend fun addTagsToBookmarks(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body body: String
+    ): Response<BookmarkResponseDTO>
+
     @Headers("Content-Type: application/json")
     @PUT()
     suspend fun updateBookmarksCacheV1(

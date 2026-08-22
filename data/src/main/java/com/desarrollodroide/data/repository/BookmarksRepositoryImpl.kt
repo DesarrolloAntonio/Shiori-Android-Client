@@ -17,6 +17,8 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
+import com.desarrollodroide.network.model.BulkAddTagsPayloadDTO
+import com.desarrollodroide.network.model.TagNameDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
@@ -287,6 +289,28 @@ class BookmarksRepositoryImpl(
         }
     }
 
+
+    override suspend fun addTagsToBookmarks(
+        token: String,
+        serverUrl: String,
+        bookmarkIds: List<Int>,
+        tagIds: List<Int>,
+    ): List<Bookmark> {
+        val response = apiService.addTagsToBookmarks(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/bulk/tags",
+            authorization = "Bearer $token",
+            body = BulkAddTagsPayloadDTO(
+                bookmarkIds = bookmarkIds,
+                tagIds = tagIds,
+            ).toJson(),
+        )
+        if (!response.isSuccessful) {
+            throw IllegalStateException("${response.errorBody()?.string()}")
+        }
+        val updated = response.body()?.message.orEmpty()
+        updated.forEach { dto -> bookmarksDao.updateBookmark(dto.toEntityModel()) }
+        return updated.map { it.toDomainModel() }
+    }
 
     override suspend fun updateBookmarkCacheV1(
         token: String,
