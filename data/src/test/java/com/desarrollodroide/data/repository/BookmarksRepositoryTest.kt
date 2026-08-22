@@ -24,6 +24,7 @@ import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.model.Bookmark
@@ -47,6 +48,9 @@ class BookmarksRepositoryTest {
     private lateinit var bookmarksDao: BookmarksDao
 
     @Mock
+    private lateinit var tagDao: TagDao
+
+    @Mock
     private lateinit var errorHandler: ErrorHandler
 
     private lateinit var bookmarksRepository: BookmarksRepositoryImpl
@@ -54,7 +58,7 @@ class BookmarksRepositoryTest {
     @BeforeEach
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, errorHandler)
+        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, tagDao, errorHandler)
     }
 
     @Test
