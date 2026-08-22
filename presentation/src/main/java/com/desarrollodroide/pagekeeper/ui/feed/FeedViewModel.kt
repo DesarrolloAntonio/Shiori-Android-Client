@@ -86,6 +86,11 @@ class FeedViewModel(
     private val _token = MutableStateFlow("")
     val token: StateFlow<String> = _token.asStateFlow()
     val showBookmarkEditorScreen = mutableStateOf(false)
+    // Batch edit. The web calls it that; here it starts on a long press and ends when nothing is
+    // selected any more, which is what Android users expect from a list.
+    private val _selectedBookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
+    val selectedBookmarks: StateFlow<List<Bookmark>> = _selectedBookmarks.asStateFlow()
+
     val showDeleteConfirmationDialog = mutableStateOf(false)
     val showEpubOptionsDialog = mutableStateOf(false)
     val showSyncDialog = mutableStateOf(false)
@@ -320,6 +325,56 @@ class FeedViewModel(
     fun deleteBookmark(bookmark: Bookmark) {
         viewModelScope.launch {
             deleteBookmarkUseCase.invoke(bookmark = bookmark)
+        }
+    }
+
+    fun toggleSelection(bookmark: Bookmark) {
+        _selectedBookmarks.update { current ->
+            if (current.any { it.id == bookmark.id }) {
+                current.filterNot { it.id == bookmark.id }
+            } else {
+                current + bookmark
+            }
+        }
+    }
+
+    fun clearSelection() {
+        _selectedBookmarks.value = emptyList()
+    }
+
+    /**
+     * Deletes everything selected, one call each.
+     *
+     * The API takes a list of ids, but the local side of a delete is per bookmark, so this reuses
+     * the single delete rather than growing a second path that would have to be kept in step.
+     */
+    fun deleteSelected() {
+        val selected = _selectedBookmarks.value
+        clearSelection()
+        selected.forEach { deleteLocalBookmark(it) }
+    }
+
+    /** Same reasoning as deleteSelected: reuse the single bookmark path once per selection. */
+    fun updateCacheForSelected(
+        keepOldTitle: Boolean,
+        updateArchive: Boolean,
+        updateEbook: Boolean,
+    ) {
+        val selected = _selectedBookmarks.value
+        clearSelection()
+        selected.forEach { bookmark ->
+            viewModelScope.launch {
+                updateBookmarkCacheUseCase.invoke(
+                    bookmark = bookmark,
+                    updateCachePayload = UpdateCachePayload(
+                        ids = listOf(bookmark.id),
+                        createArchive = updateArchive,
+                        createEbook = updateEbook,
+                        keepMetadata = keepOldTitle,
+                        skipExist = false,
+                    ),
+                )
+            }
         }
     }
 

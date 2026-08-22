@@ -101,10 +101,13 @@ fun FeedScreen(
         skipPartiallyExpanded = false
     )
 
+    val selectedBookmarks by feedViewModel.selectedBookmarks.collectAsStateWithLifecycle()
+
     val actions = FeedActions(
         goToLogin = {
             goToLogin()
         },
+        onToggleSelection = { bookmark -> feedViewModel.toggleSelection(bookmark) },
         onBookmarkSelect = { bookmark ->
             goToReadableContent(bookmark)
         },
@@ -156,6 +159,7 @@ fun FeedScreen(
         token = token,
         viewType = if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL,
         bookmarksPagingItems = bookmarksPagingItems,
+        selectedIds = selectedBookmarks.map { it.id }.toSet(),
         tagToHide = tagToHide,
         showOnlyHiddenTag = showOnlyHiddenTag
     )
@@ -352,7 +356,8 @@ internal fun FeedView(
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
-    showOnlyHiddenTag: Boolean
+    showOnlyHiddenTag: Boolean,
+    selectedIds: Set<Int> = emptySet(),
 ) {
     // itemCount alone is not enough to decide the screen is empty. On a cold start the pager has
     // not emitted yet, so the count is 0 while the first load is still running, and the feed used
@@ -374,7 +379,8 @@ internal fun FeedView(
                     viewType = viewType,
                     bookmarksPagingItems = bookmarksPagingItems,
                     tagToHide = tagToHide,
-                    showOnlyHiddenTag = showOnlyHiddenTag
+                    showOnlyHiddenTag = showOnlyHiddenTag,
+                    selectedIds = selectedIds,
                 )
             }
         }
@@ -412,4 +418,5 @@ data class FeedActions(
     val onClickSync: (Bookmark) -> Unit,
     val onClearError: () -> Unit,
     val onCategoriesSelectedChanged: (List<Tag>) -> Unit,
+    val onToggleSelection: (Bookmark) -> Unit = {},
 )

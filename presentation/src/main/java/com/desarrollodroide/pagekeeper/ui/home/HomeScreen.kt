@@ -117,6 +117,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.TwoPaneEmptyDetail
 import com.desarrollodroide.pagekeeper.ui.components.ListPaneWidth
 import com.desarrollodroide.pagekeeper.ui.components.shouldUseTwoPanes
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.runtime.remember
+import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
+import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -163,11 +169,47 @@ fun HomeScreen(
         startDestination = NavItem.HomeNavItem.route
     ) {
         composable(NavItem.HomeNavItem.route) {
+            val selectedBookmarks by feedViewModel.selectedBookmarks.collectAsStateWithLifecycle()
+            val showDeleteSelectedDialog = remember { mutableStateOf(false) }
+            val showUpdateSelectedDialog = remember { mutableStateOf(false) }
+
+            if (showDeleteSelectedDialog.value) {
+                ConfirmDialog(
+                    title = "Delete bookmarks",
+                    content = "Delete ${selectedBookmarks.size} selected bookmarks? This action is irreversible.",
+                    confirmButton = "Delete",
+                    dismissButton = "Cancel",
+                    onConfirm = {
+                        feedViewModel.deleteSelected()
+                        showDeleteSelectedDialog.value = false
+                    },
+                    openDialog = showDeleteSelectedDialog,
+                )
+            }
+            UpdateCacheDialog(
+                isLoading = false,
+                showDialog = showUpdateSelectedDialog,
+                onConfirm = { keepOldTitle, updateArchive, updateEbook ->
+                    feedViewModel.updateCacheForSelected(keepOldTitle, updateArchive, updateEbook)
+                    showUpdateSelectedDialog.value = false
+                },
+            )
+
             val pendingJobsCount by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.surface,
                 topBar = {
+                    // Batch edit takes the app bar over, the way a contextual action bar does, so
+                    // the actions apply to the selection rather than to the whole feed.
+                    if (selectedBookmarks.isNotEmpty()) {
+                        SelectionTopBar(
+                            selectedCount = selectedBookmarks.size,
+                            onClose = { feedViewModel.clearSelection() },
+                            onDelete = { showDeleteSelectedDialog.value = true },
+                            onUpdateCache = { showUpdateSelectedDialog.value = true },
+                        )
+                    } else
                     AnimatedVisibility (showTopBar) {
                         TopBar(
                             onSearchClick = { isSearchBarVisible.value = !isSearchBarVisible.value },
@@ -699,4 +741,43 @@ private fun TwoPaneDetail(
             )
         }
     }
+}
+
+/**
+ * App bar while bookmarks are selected.
+ *
+ * Replaces the search bar rather than sitting beside it, so it is obvious that the buttons act on
+ * the selection and not on the feed.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionTopBar(
+    selectedCount: Int,
+    onClose: () -> Unit,
+    onDelete: () -> Unit,
+    onUpdateCache: () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(text = "$selectedCount selected") },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = "Cancel selection")
+            }
+        },
+        actions = {
+            IconButton(onClick = onUpdateCache) {
+                Icon(Icons.Outlined.CloudUpload, contentDescription = "Update selected")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Delete selected",
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+    )
 }

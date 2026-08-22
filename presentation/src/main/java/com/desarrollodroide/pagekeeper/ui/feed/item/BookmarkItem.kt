@@ -1,5 +1,10 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Card
@@ -20,7 +25,8 @@ data class BookmarkActions(
     val onClickCategory: (Tag) -> Unit,
     val onClickBookmark: (GetBookmark) -> Unit,
     val onClickEpub: (GetBookmark) -> Unit,
-    val onClickSync: (GetBookmark) -> Unit
+    val onClickSync: (GetBookmark) -> Unit,
+    val onToggleSelection: (Int) -> Unit = {},
 )
 
 typealias GetBookmark = () -> Bookmark
@@ -39,14 +45,40 @@ fun BookmarkItem(
     xSessionId: String,
     token: String,
     actions: BookmarkActions,
-    viewType: BookmarkViewType
+    viewType: BookmarkViewType,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
 ) {
     Card(
-        onClick = { actions.onClickBookmark(getBookmark) },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // Long press starts batch edit. Once it is running a plain tap picks bookmarks instead
+            // of opening them, otherwise selecting a second one would navigate away from the list.
+            .combinedClickable(
+                onClick = {
+                    if (isSelectionMode) {
+                        actions.onToggleSelection(getBookmark().id)
+                    } else {
+                        actions.onClickBookmark(getBookmark)
+                    }
+                },
+                onLongClick = { actions.onToggleSelection(getBookmark().id) },
+            )
+            .semantics { selected = isSelected },
         shape = MaterialTheme.shapes.large,
+        border = if (isSelected) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            null
+        },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            // Not secondaryContainer: the tag chips already use it, so on a selected card the
+            // chips lost their pill and read as loose text. The border carries the selection.
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
         ),
     ) {
         when (viewType) {

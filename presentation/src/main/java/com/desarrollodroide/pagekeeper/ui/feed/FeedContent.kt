@@ -68,7 +68,8 @@ fun FeedContent(
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
-    showOnlyHiddenTag: Boolean
+    showOnlyHiddenTag: Boolean,
+    selectedIds: Set<Int> = emptySet(),
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -149,6 +150,8 @@ fun FeedContent(
                         xSessionId = xSessionId,
                         token = token,
                         viewType = viewType,
+                        isSelected = bookmark.id in selectedIds,
+                        isSelectionMode = selectedIds.isNotEmpty(),
                         actions = BookmarkActions(
                             onClickEdit = { getBookmark -> actions.onEditBookmark(getBookmark()) },
                             onClickDelete = { getBookmark -> actions.onDeleteBookmark(getBookmark()) },
@@ -156,7 +159,8 @@ fun FeedContent(
                             onClickBookmark = { getBookmark -> actions.onBookmarkSelect(getBookmark()) },
                             onClickEpub = { getBookmark -> actions.onBookmarkEpub(getBookmark()) },
                             onClickSync = { getBookmark -> actions.onClickSync(getBookmark()) },
-                            onClickCategory = { }
+                            onClickCategory = { },
+                            onToggleSelection = { actions.onToggleSelection(bookmark) },
                         ),
                     )
                 }
