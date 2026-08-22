@@ -176,12 +176,27 @@ interface BookmarksDao {
   @Transaction
   suspend fun insertPageWithTags(bookmarks: List<BookmarkEntity>) {
     insertAll(bookmarks)
-    bookmarks.filter { it.tags.isNotEmpty() }.forEach { bookmark ->
-      insertBookmarkTagCrossRefs(
-        bookmark.tags.map { tag -> BookmarkTagCrossRef(bookmarkId = bookmark.id, tagId = tag.id) }
-      )
+    bookmarks.forEach { bookmark ->
+      // The server decides what tags a bookmark has, so its cross references are replaced rather
+      // than added to. Only inserting meant a tag removed on the server stayed attached locally for
+      // ever: it survived a full pull to refresh and there was no way to get rid of it from the app.
+      deleteBookmarkTagCrossRefs(bookmark.id)
+      if (bookmark.tags.isNotEmpty()) {
+        insertBookmarkTagCrossRefs(
+          bookmark.tags.map { tag -> BookmarkTagCrossRef(bookmarkId = bookmark.id, tagId = tag.id) }
+        )
+      }
     }
   }
+
+  /**
+   * Drops cross references pointing at bookmarks that are no longer stored.
+   *
+   * [deleteBookmarksNotIn] removes the bookmark rows but nothing cascades to this table, so rows
+   * for deleted bookmarks piled up and kept their tags looking used.
+   */
+  @Query("DELETE FROM bookmark_tag_cross_ref WHERE bookmarkId NOT IN (SELECT id FROM bookmarks)")
+  suspend fun deleteOrphanedTagCrossRefs()
 
   /**
    * Updates an existing bookmark in the local database.

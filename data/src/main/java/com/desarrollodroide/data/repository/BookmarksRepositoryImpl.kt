@@ -184,6 +184,7 @@ class BookmarksRepositoryImpl(
             // code did, meant a failure mid-sync left the user with an empty cache.
             if (seenIds.isNotEmpty()) {
                 bookmarksDao.deleteBookmarksNotIn(seenIds)
+                bookmarksDao.deleteOrphanedTagCrossRefs()
             }
             Log.d(TAG, "Sync completed with ${seenIds.size} bookmarks")
             emit(SyncStatus.Completed(seenIds.size))
