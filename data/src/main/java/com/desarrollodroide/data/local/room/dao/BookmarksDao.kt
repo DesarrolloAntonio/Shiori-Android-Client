@@ -63,13 +63,16 @@ interface BookmarksDao {
 
   /**
    * Retrieves bookmarks for paging, filtered by search text and tags.
-   * @param searchText The text to search for in bookmark titles.
+   * @param searchText The text to search for in the title, excerpt or url.
    * @param tagIds The list of tag IDs to filter by.
    * @return A PagingSource of BookmarkEntity objects.
    */
   @Query("""
         SELECT * FROM bookmarks
-        WHERE (:searchText = '' OR title LIKE '%' || :searchText || '%')
+        WHERE (:searchText = ''
+            OR title LIKE '%' || :searchText || '%'
+            OR excerpt LIKE '%' || :searchText || '%'
+            OR url LIKE '%' || :searchText || '%')
         AND EXISTS (
             SELECT 1 FROM bookmark_tag_cross_ref 
             WHERE bookmark_tag_cross_ref.bookmarkId = bookmarks.id
@@ -84,12 +87,19 @@ interface BookmarksDao {
 
   /**
    * Retrieves bookmarks for paging, filtered by search text without considering tags.
-   * @param searchText The text to search for in bookmark titles.
+   *
+   * Matches the title, the excerpt and the url. Title alone was too narrow to be useful now that
+   * this backs the feed's own field: the web searches the content as well, which is not stored
+   * locally, so the url is the closest stand-in the cache has.
+   *
+   * @param searchText The text to search for in the title, excerpt or url.
    * @return A PagingSource of BookmarkEntity objects.
    */
   @Query("""
         SELECT * FROM bookmarks
         WHERE title LIKE '%' || :searchText || '%'
+           OR excerpt LIKE '%' || :searchText || '%'
+           OR url LIKE '%' || :searchText || '%'
         ORDER BY id DESC
     """)
   fun getPagingBookmarksWithoutTags(searchText: String): PagingSource<Int, BookmarkEntity>

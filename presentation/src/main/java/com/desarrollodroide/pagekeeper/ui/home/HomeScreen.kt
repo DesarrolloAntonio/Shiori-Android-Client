@@ -12,6 +12,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +75,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -140,9 +146,9 @@ fun HomeScreen(
 ) {
     val navController = rememberNavController()
     val isCategoriesVisible = remember { mutableStateOf(false) }
-    val isSearchBarVisible = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
+    val searchQuery by feedViewModel.searchQuery.collectAsState()
     val selectedTags by feedViewModel.selectedTags.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -228,7 +234,9 @@ fun HomeScreen(
                     } else
                     AnimatedVisibility (showTopBar) {
                         TopBar(
-                            onSearchClick = { isSearchBarVisible.value = !isSearchBarVisible.value },
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = feedViewModel::updateSearchQuery,
+                            onClearSearch = feedViewModel::clearSearch,
                             onFilterClick = { isCategoriesVisible.value = !isCategoriesVisible.value },
                             onSettingsClick = { navController.navigate(NavItem.SettingsNavItem.route) },
                             onSyncClick = {
@@ -276,7 +284,6 @@ fun HomeScreen(
                             goToLogin = goToLogin,
                             openUrlInBrowser = openUrlInBrowser,
                             shareEpubFile = shareEpubFile,
-                            isSearchBarVisible = isSearchBarVisible,
                             setShowTopBar = setShowTopBar,
                             goToReadableContent = { bookmark ->
                                 if (twoPanes) {
@@ -426,7 +433,9 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    onSearchClick: () -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onClearSearch: () -> Unit,
     onFilterClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSyncClick: () -> Unit,
@@ -451,11 +460,7 @@ fun TopBar(
         }
     }
 
-    val hint = when {
-        showOnlyHiddenTag -> "Hidden tags only"
-        selectedTagsCount > 0 -> "$selectedTagsCount tag filter" + if (selectedTagsCount > 1) "s" else ""
-        else -> "Search bookmarks"
-    }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Surface(color = MaterialTheme.colorScheme.surface) {
         Row(
@@ -473,10 +478,12 @@ fun TopBar(
                     .padding(start = 4.dp, end = 4.dp)
                     .size(32.dp)
             )
-            // The field is the headline. surfaceContainerHigh keeps it distinct from the app
-            // background, which is what the spec asks for.
+            // The field is the headline, and it is a real field. It used to be a Surface styled to
+            // look like one whose only job was to open a full screen search sheet: it invited
+            // typing and answered with a different screen carrying a second, identical looking box.
+            // Typing here filters the feed underneath instead, which is what the web does.
+            // surfaceContainerHigh keeps it distinct from the app background, per the spec.
             Surface(
-                onClick = onSearchClick,
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
@@ -484,7 +491,7 @@ fun TopBar(
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -494,13 +501,52 @@ fun TopBar(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
                     )
-                    Text(
-                        text = hint,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchQueryChange,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { contentDescription = "Search bookmarks" },
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        // The results are already on screen, so the only thing left to do on
+                        // Search is get the keyboard out of the way.
+                        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                        decorationBox = { innerTextField ->
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    text = "Search bookmarks",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            innerTextField()
+                        },
                     )
+                    // Takes no room until there is something to clear, so an empty field keeps the
+                    // full width for the placeholder.
+                    AnimatedVisibility(visible = searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                onClearSearch()
+                                keyboardController?.hide()
+                            },
+                            modifier = Modifier.size(40.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
                 }
             }
             // Sync earns its place only while something is queued, so the bar stays at two
@@ -691,7 +737,9 @@ fun SyncJobsBottomSheetContentPreview() {
 private fun TopBarPreview() {
     ShioriTheme {
         TopBar(
-            onSearchClick = { },
+            searchQuery = "",
+            onSearchQueryChange = { },
+            onClearSearch = { },
             onFilterClick = { },
             onSettingsClick = { },
             onSyncClick = { },
@@ -708,7 +756,9 @@ private fun TopBarPreview() {
 private fun TopBarWithPendingPreview() {
     ShioriTheme {
         TopBar(
-            onSearchClick = { },
+            searchQuery = "kotlin",
+            onSearchQueryChange = { },
+            onClearSearch = { },
             onFilterClick = { },
             onSettingsClick = { },
             onSyncClick = { },

@@ -4,7 +4,6 @@ import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
 import com.desarrollodroide.pagekeeper.ui.tags.TagsViewModel
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
-import com.desarrollodroide.pagekeeper.ui.feed.SearchViewModel
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogViewModel
@@ -69,13 +68,6 @@ fun presenterModule() = module {
             editBookmarkUseCase = get(),
             userPreferences = get(),
             settingsPreferenceDataSource =  get(),
-        )
-    }
-
-    viewModel {
-        SearchViewModel(
-            getPagingBookmarksUseCase = get(),
-            settingsPreferenceDataSource = get(),
         )
     }
 

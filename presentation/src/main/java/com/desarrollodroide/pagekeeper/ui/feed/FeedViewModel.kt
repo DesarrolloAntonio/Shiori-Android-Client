@@ -24,6 +24,8 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -103,6 +105,30 @@ class FeedViewModel(
     val bookmarkToUpdateCache = mutableStateOf<Bookmark?>(null)
     val showOnlyHiddenTag = MutableStateFlow<Boolean>(false)
     val selectedOptionIndex = mutableStateOf(0)
+
+    // The app bar's field writes straight into this and the feed below it re-queries, the way the
+    // web does it. There is no separate search screen any more.
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun clearSearch() {
+        _searchQuery.value = ""
+    }
+
+    /**
+     * Waits for a pause in typing before re-querying, but clears immediately.
+     *
+     * A uniform debounce would leave the filtered feed on screen for another second after the
+     * field is emptied, which reads as the clear button having missed.
+     */
+    @OptIn(FlowPreview::class)
+    private fun debouncedSearchQuery() = _searchQuery
+        .debounce { query -> if (query.isEmpty()) 0L else SEARCH_DEBOUNCE_MS }
+        .distinctUntilChanged()
     private var isInitialized = false
 
     val useTwoPaneLayout: StateFlow<Boolean> = settingsPreferenceDataSource.useTwoPaneLayoutFlow
@@ -135,13 +161,15 @@ class FeedViewModel(
             combine(
                 selectedTags,
                 showOnlyHiddenTag,
-                tagToHide
-            ) { selectedTags, showOnlyHidden, hiddenTag ->
-                Triple(selectedTags, showOnlyHidden, hiddenTag)
-            }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag) ->
+                tagToHide,
+                debouncedSearchQuery()
+            ) { selectedTags, showOnlyHidden, hiddenTag, query ->
+                FeedQuery(selectedTags, showOnlyHidden, hiddenTag, query)
+            }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag, query) ->
                 getLocalPagingBookmarksUseCase.invoke(
                     serverUrl = _serverUrl.value,
                     xSession = settingsPreferenceDataSource.getSession(),
+                    searchText = query,
                     tags = if (showOnlyHidden) emptyList() else selectedTags,
                     showOnlyHiddenTag = showOnlyHidden,
                     tagToHide = hiddenTag
@@ -500,4 +528,16 @@ class FeedViewModel(
             _currentBookmark.value = bookmarkDatabase.getBookmarkById(id)?.toDomainModel()
         }
     }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MS = 300L
+    }
 }
+
+/** The four things that decide which bookmarks the feed shows. */
+private data class FeedQuery(
+    val selectedTags: List<Tag>,
+    val showOnlyHiddenTag: Boolean,
+    val tagToHide: Tag?,
+    val searchText: String,
+)

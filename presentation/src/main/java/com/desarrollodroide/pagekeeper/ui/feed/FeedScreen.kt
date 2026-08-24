@@ -59,7 +59,6 @@ fun FeedScreen(
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: MutableState<Boolean>,
-    isSearchBarVisible: MutableState<Boolean>,
     setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -94,9 +93,6 @@ fun FeedScreen(
     val isCompactView by feedViewModel.compactView.collectAsState()
 
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
     val sheetStateCategories = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
@@ -280,29 +276,6 @@ fun FeedScreen(
             ),
             showDialog = feedViewModel.showEpubOptionsDialog
         )
-    }
-
-    if (isSearchBarVisible.value) {
-        val scope = rememberCoroutineScope()
-        ModalBottomSheet(
-            modifier = Modifier.fillMaxSize(),
-            shape = BottomSheetDefaults.ExpandedShape,
-            onDismissRequest = {
-                isSearchBarVisible.value = false
-            },
-            sheetState = sheetState,
-            dragHandle = null
-        ) {
-            SearchBar(
-                onBookmarkClick =  actions.onBookmarkSelect,
-                onDismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        isSearchBarVisible.value = false
-                    }
-                }
-            )
-        }
     }
 
     if (isCategoriesVisible.value) {
