@@ -117,6 +117,9 @@ dependencies {
     androidTestImplementation (platform(libs.compose.bom))
     androidTestImplementation (libs.compose.ui.test.junit4)
     androidTestImplementation (libs.androidx.test.ext.junit)
+    // Stands in for a Shiori server so the image pipeline's cache behaviour can be observed.
+    androidTestImplementation (libs.okhttp3.mockwebserver)
+    androidTestImplementation (libs.kotlin.coroutines.test)
     // ui-test-manifest supplies the empty ComponentActivity that createComposeRule() launches;
     // without it the tests fail with ActivityNotFoundException.
     debugImplementation (libs.compose.ui.test.manifest)
@@ -128,6 +131,9 @@ dependencies {
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.coil.compose)
     implementation (libs.coil.network.okhttp)
+    // Coil's own cache strategy ignores HTTP caching headers entirely: without this the disk
+    // cache is served blind and no conditional request is ever made.
+    implementation (libs.coil.network.cache.control)
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.

@@ -161,36 +161,6 @@ fun appModule() = module {
 
     single { ThemeManagerImpl(get()) as ThemeManager }
 
-    single {
-        ImageLoader.Builder(get<Context>())
-            // coil3 has no okHttpClient {}. The network layer is a fetcher component, and the
-            // okhttp one has to be added explicitly or nothing over http loads at all.
-            .components {
-                add(OkHttpNetworkFetcherFactory(callFactory = {
-                    OkHttpClient.Builder()
-                        .retryOnConnectionFailure(true)
-                        .addInterceptor { chain ->
-                            val request = chain.request()
-                            val response = chain.proceed(request)
-                            if (!response.isSuccessful) {
-                                Log.e("BookmarkImageView", "HTTP error: ${response.code}")
-                            }
-                            val newCacheControl = "public, max-age=31536000"
-                            response.newBuilder()
-                                .header("Cache-Control", newCacheControl)
-                                .build()
-                        }
-                        .build()
-                }))
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    // okio Path, not File.
-                    .directory(get<Context>().cacheDir.resolve("image_cache").toOkioPath())
-                    .maxSizeBytes(250L * 1024 * 1024) // 250MB
-                    .build()
-            }
-            .build()
-    }
+    single { buildImageLoader(get<Context>()) }
 
 }
