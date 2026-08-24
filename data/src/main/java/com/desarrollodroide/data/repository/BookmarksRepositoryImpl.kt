@@ -11,6 +11,7 @@ import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
@@ -40,6 +41,7 @@ class BookmarksRepositoryImpl(
     private val apiService: RetrofitNetwork,
     private val bookmarksDao: BookmarksDao,
     private val tagDao: TagDao,
+    private val bookmarkHtmlDao: BookmarkHtmlDao,
     private val errorHandler: ErrorHandler
 ) : BookmarksRepository {
 
@@ -187,6 +189,7 @@ class BookmarksRepositoryImpl(
             if (seenIds.isNotEmpty()) {
                 bookmarksDao.deleteBookmarksNotIn(seenIds)
                 bookmarksDao.deleteOrphanedTagCrossRefs()
+                bookmarkHtmlDao.deleteOrphanedHtml()
             }
             Log.d(TAG, "Sync completed with ${seenIds.size} bookmarks")
             emit(SyncStatus.Completed(seenIds.size))
@@ -370,6 +373,7 @@ class BookmarksRepositoryImpl(
         bookmarksDao.deleteAll()
         bookmarksDao.clearBookmarkTagCrossRefs()
         tagDao.deleteAllTags()
+        bookmarkHtmlDao.deleteAll()
     }
 
     override fun getBookmarkReadableContent(

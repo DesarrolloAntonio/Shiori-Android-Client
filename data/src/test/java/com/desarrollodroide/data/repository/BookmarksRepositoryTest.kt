@@ -24,6 +24,7 @@ import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
@@ -51,6 +52,9 @@ class BookmarksRepositoryTest {
     private lateinit var tagDao: TagDao
 
     @Mock
+    private lateinit var bookmarkHtmlDao: BookmarkHtmlDao
+
+    @Mock
     private lateinit var errorHandler: ErrorHandler
 
     private lateinit var bookmarksRepository: BookmarksRepositoryImpl
@@ -58,7 +62,7 @@ class BookmarksRepositoryTest {
     @BeforeEach
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, tagDao, errorHandler)
+        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, tagDao, bookmarkHtmlDao, errorHandler)
     }
 
     @Test
@@ -238,5 +242,20 @@ class BookmarksRepositoryTest {
         verify(bookmarksDao).insertPageWithTags(anyList())
         verify(bookmarksDao, never()).deleteBookmarksNotIn(anyList())
         verify(bookmarksDao, never()).deleteAll()
+    }
+
+    /**
+     * Logout has to empty every table, not most of them. Tags were left behind once already; the
+     * cached article text was left behind after that, and it is the worst one to leave, because
+     * the offline fallback looks it up by bookmark id with nothing tying the row to an account.
+     */
+    @Test
+    fun `logout clears every local table including the cached article text`() = runTest {
+        bookmarksRepository.deleteAllLocalBookmarks()
+
+        verify(bookmarksDao).deleteAll()
+        verify(bookmarksDao).clearBookmarkTagCrossRefs()
+        verify(tagDao).deleteAllTags()
+        verify(bookmarkHtmlDao).deleteAll()
     }
 }

@@ -243,6 +243,7 @@ class ShioriApiContractTest {
             apiService = api,
             bookmarksDao = org.mockito.Mockito.mock(com.desarrollodroide.data.local.room.dao.BookmarksDao::class.java),
             tagDao = org.mockito.Mockito.mock(com.desarrollodroide.data.local.room.dao.TagDao::class.java),
+            bookmarkHtmlDao = org.mockito.Mockito.mock(com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao::class.java),
             errorHandler = errorHandler,
         ).updateBookmarkCacheV1(
             token = "tok",
