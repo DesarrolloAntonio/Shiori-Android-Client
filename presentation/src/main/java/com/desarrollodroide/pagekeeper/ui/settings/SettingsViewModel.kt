@@ -18,6 +18,7 @@ import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
+import com.desarrollodroide.pagekeeper.extensions.clearCache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -132,17 +133,34 @@ class SettingsViewModel(
             ).collect { result ->
                 when (result) {
                     is Result.Error -> {
+                        clearImageCachesOnLogout()
                         _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
                     }
                     is Result.Loading -> {
                         _settingsUiState.isLoading(true)
                     }
                     is Result.Success -> {
+                        clearImageCachesOnLogout()
                         _settingsUiState.success(result.data)
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Thumbnails belong to whoever was signed in. The database is cleared on the way out, so
+     * leaving these means the next account inherits the previous one's pictures, and they are
+     * keyed by url rather than by account.
+     *
+     * Runs on the error branch as well, because the use case wipes local data whether or not the
+     * server could be reached: a logout that fails to call the server still signs you out here.
+     * It runs before the state is published, since success is what sends the app to the login
+     * screen.
+     */
+    private suspend fun clearImageCachesOnLogout() {
+        imageLoader.clearCache()
+        updateCacheSize()
     }
 
     private fun loadSettings() {
