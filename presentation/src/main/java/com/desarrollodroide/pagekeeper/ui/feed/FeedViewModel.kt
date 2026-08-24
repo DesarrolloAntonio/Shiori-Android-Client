@@ -81,6 +81,7 @@ class FeedViewModel(
     val currentBookmark = _currentBookmark.asStateFlow()
 
     private var tagsJob: Job? = null
+    private var syncJob: Job? = null
     // Read from DataStore in a coroutine but consumed from composition, so these have to be
     // observable. As plain vars the first frame saw empty strings and never recomposed: the feed's
     // images are built from serverUrl and carry the bearer token, so a cold start that rendered
@@ -203,9 +204,13 @@ class FeedViewModel(
             if (_tagsState.value.data.isNullOrEmpty()) {
                 getRemoteTags()
             }
+            // An empty database means this is the first run against this account. Only the
+            // timestamp is special about it: the sync itself is the same one every later start
+            // does, so it is started once, below. Calling it here as well started a second full
+            // paginated walk of the server, concurrently with the first, at the exact moment the
+            // library is largest to fetch.
             if (bookmarkDatabase.isEmpty()) {
                 settingsPreferenceDataSource.setCurrentTimeStamp()
-                retrieveAllRemoteBookmarks()
             }
             refreshFeed()
         }
@@ -227,9 +232,21 @@ class FeedViewModel(
         }
     }
 
+    /**
+     * Walks every page of the server and writes them as they arrive.
+     *
+     * A sync already in flight is left to finish rather than joined by a second one. Pull to
+     * refresh, editing a bookmark, adding tags to a selection and the initial load all land here,
+     * and each one walks the whole library, so overlapping calls mean duplicate requests and two
+     * writers on the same tables.
+     */
     private fun retrieveAllRemoteBookmarks() {
+        if (syncJob?.isActive == true) {
+            Log.v(TAG, "Sync already running, not starting another")
+            return
+        }
         Log.v(TAG, "Syncing bookmarks")
-        viewModelScope.launch {
+        syncJob = viewModelScope.launch {
             getAllRemoteBookmarksUseCase.invoke(
                 serverUrl = _serverUrl.value,
                 xSession = settingsPreferenceDataSource.getSession()
@@ -274,9 +291,7 @@ class FeedViewModel(
     }
 
     fun refreshFeed() {
-        viewModelScope.launch {
-            retrieveAllRemoteBookmarks()
-        }
+        retrieveAllRemoteBookmarks()
     }
 
     fun getRemoteTags() {

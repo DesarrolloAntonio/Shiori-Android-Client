@@ -7,6 +7,14 @@ android {
     namespace = "com.desarrollodroide.pagekeeper"
     compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
+    testOptions {
+        unitTests {
+            // View models log with android.util.Log, a stub that throws in JVM tests. Returning
+            // defaults lets them be tested off a device.
+            isReturnDefaultValues = true
+        }
+    }
+
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
         minSdk = (findProperty("minSdkVersion") as String).toInt()
