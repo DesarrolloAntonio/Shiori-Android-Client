@@ -27,6 +27,9 @@ fun ClickableCategoriesView(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
+        // The card reserves exactly one chip row. Wrapping onto a second would push the card past
+        // its neighbours in the grid row, which is the raggedness this is meant to avoid.
+        maxLines = 1,
     ) {
         uniqueCategories.forEach { category ->
             AssistChip(

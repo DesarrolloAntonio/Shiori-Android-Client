@@ -2,6 +2,7 @@ package com.desarrollodroide.pagekeeper.ui.feed.item
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -75,24 +76,29 @@ fun FullBookmarkView(
             CompositionLocalProvider(
                 LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
             ) {
+                // Fixed line counts, not "up to". A grid row is as tall as its tallest card, so
+                // a card whose title runs to one line and whose excerpt runs to two just ends
+                // higher than its neighbour and leaves a hole, with the action rows at different
+                // levels. Reserving the lines costs a little blank space on short entries and
+                // makes every card in a row end together.
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = bookmark.title.ifEmpty { bookmark.url },
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     overflow = TextOverflow.Ellipsis,
+                    minLines = 2,
                     maxLines = 2
                 )
-                if (bookmark.excerpt.isNotEmpty()) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = bookmark.excerpt,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 3
-                    )
-                }
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = bookmark.excerpt,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    overflow = TextOverflow.Ellipsis,
+                    minLines = 3,
+                    maxLines = 3
+                )
             }
             Text(
                 text = bookmark.modified,
@@ -100,11 +106,16 @@ fun FullBookmarkView(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-            if (bookmark.tags.isNotEmpty()) {
-                ClickableCategoriesView(
-                    uniqueCategories = bookmark.tags,
-                    onClickCategory = actions.onClickCategory
-                )
+            // The slot is always there, tags or not, and it is one chip row tall. Chips that do
+            // not fit are dropped rather than wrapping onto a second row, which would make the
+            // card taller than its neighbours again.
+            Box(modifier = Modifier.height(TagRowHeight)) {
+                if (bookmark.tags.isNotEmpty()) {
+                    ClickableCategoriesView(
+                        uniqueCategories = bookmark.tags,
+                        onClickCategory = actions.onClickCategory
+                    )
+                }
             }
             ButtonsView(getBookmark = getBookmark, actions = actions)
         }
@@ -113,3 +124,6 @@ fun FullBookmarkView(
 
 /** Hero image height. Fixed so a card is the same shape on a phone and in a half width pane. */
 private val HeroImageHeight = 200.dp
+
+/** One AssistChip tall. Reserved whether or not the bookmark has tags, so cards stay level. */
+private val TagRowHeight = 32.dp
