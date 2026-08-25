@@ -49,7 +49,12 @@ fun networkingModule() = module {
         Retrofit.Builder()
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://google.com") //generic url
+            // Never used: all 17 endpoints pass an absolute @Url built from the server the user
+            // configured. Retrofit demands a base url anyway, so this is a reserved .invalid host
+            // that cannot resolve. It used to be google.com, which meant a bug that left the
+            // server url empty sent the user's requests to a stranger and read the reply as if it
+            // were Shiori's. An unresolvable host fails loudly instead.
+            .baseUrl("https://server-url-not-set.invalid/")
             .client(get())
             .build()
     } // retrofit
