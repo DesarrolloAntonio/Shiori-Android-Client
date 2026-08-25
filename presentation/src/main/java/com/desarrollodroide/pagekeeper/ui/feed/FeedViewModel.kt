@@ -302,6 +302,27 @@ class FeedViewModel(
         retrieveAllRemoteBookmarks()
     }
 
+    /**
+     * Brings one bookmark up to date without touching the rest.
+     *
+     * What the pending banner offers. A full sync would walk every page of the server to learn
+     * about a single card; this is one request. Room is the source of truth for the feed, so
+     * writing the fresh row is all that is needed for the card to redraw.
+     */
+    fun refreshBookmark(bookmark: Bookmark) {
+        viewModelScope.launch {
+            runCatching {
+                bookmarksRepository.refreshBookmark(
+                    xSession = _xSessionId.value,
+                    serverUrl = _serverUrl.value,
+                    bookmark = bookmark,
+                )
+            }.onFailure {
+                Log.e(TAG, "Could not refresh bookmark ${bookmark.id}", it)
+            }
+        }
+    }
+
     fun getRemoteTags() {
         tagsJob?.cancel()
         tagsJob =  viewModelScope.launch {

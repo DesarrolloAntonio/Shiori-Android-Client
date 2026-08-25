@@ -129,6 +129,9 @@ fun FeedScreen(
             feedViewModel.bookmarkToUpdateCache.value = bookmark
             feedViewModel.showSyncDialog.value = true
         },
+        onRefreshBookmark = { bookmark ->
+            feedViewModel.refreshBookmark(bookmark)
+        },
         onClearError = {
             feedViewModel.resetData()
         },
@@ -399,4 +402,6 @@ data class FeedActions(
     val onClearError: () -> Unit,
     val onCategoriesSelectedChanged: (List<Tag>) -> Unit,
     val onToggleSelection: (Bookmark) -> Unit = {},
+    /** Re-fetch one bookmark rather than the whole library; the pending banner's action. */
+    val onRefreshBookmark: (Bookmark) -> Unit = {},
 )

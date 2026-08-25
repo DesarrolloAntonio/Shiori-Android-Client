@@ -42,7 +42,7 @@ fun FullBookmarkView(
 
     Column {
         if (bookmark.isPendingServerProcessing) {
-            PendingSyncBanner()
+            PendingSyncBanner(onRefresh = { actions.onClickRefresh(getBookmark) })
         }
         if (bookmark.imageURL.isNotEmpty()) {
             // A fixed height rather than an aspect ratio. Variable height heroes made the feed

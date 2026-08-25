@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.mockito.Mockito.*
 import retrofit2.Response
@@ -271,6 +272,58 @@ class BookmarksRepositoryTest {
 
         verify(bookmarksDao).updateBookmarkWithTags(any())
         verify(bookmarksDao, never()).updateBookmark(any())
+    }
+
+    /**
+     * Refreshing one bookmark asks for that one url, not for every page.
+     *
+     * The pending banner used to say pull to refresh, which walks the whole library: on ten
+     * thousand bookmarks, 334 requests to find out about one card.
+     */
+    @Test
+    fun `refreshing a bookmark asks the server for just that url`() = runTest {
+        val fresh = BookmarkDTO(
+            7, "http://a.com/x", "Scraped title", "an excerpt", "", 1, "2023-01-01", "2023-01-02",
+            "/thumb/7", true, true, true, listOf(), true, true
+        )
+        val other = fresh.copy(id = 8, url = "http://a.com/x/other")
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = listOf(other, fresh))))
+
+        val result = bookmarksRepository.refreshBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = fresh.toDomainModel().copy(id = 1_787_646_812),
+        )
+
+        assertEquals(7, result?.id)
+        // keyword is a substring match, so the response can carry more than the one asked for.
+        verify(apiService).getPagingBookmarks(
+            anyString(),
+            check { url -> assertTrue(url.contains("keyword=")) },
+        )
+        // The local row carried a temporary id; an update keyed on it would have matched nothing.
+        verify(bookmarksDao).deleteBookmarkById(1_787_646_812)
+        verify(bookmarksDao).insertPageWithTags(anyList())
+    }
+
+    /** A url the server does not know about is not an error, it just has nothing to say. */
+    @Test
+    fun `refreshing a bookmark the server does not have returns null`() = runTest {
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = emptyList())))
+
+        val result = bookmarksRepository.refreshBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = BookmarkDTO(
+                1, "http://gone.example", "", "", "", 1, "", "", "",
+                false, false, false, listOf(), false, false
+            ).toDomainModel(),
+        )
+
+        assertNull(result)
+        verify(bookmarksDao, never()).insertPageWithTags(anyList())
     }
 
     /**

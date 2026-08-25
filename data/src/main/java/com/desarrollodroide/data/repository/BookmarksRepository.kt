@@ -21,6 +21,20 @@ interface BookmarksRepository {
     bookmark: Bookmark
   ): Bookmark
 
+  /**
+   * Re-fetches one bookmark rather than walking every page of the server.
+   *
+   * The list endpoint takes a keyword, so asking for the bookmark's own url costs a single
+   * request. A full sync for one card meant a request per thirty bookmarks in the library.
+   *
+   * Returns null when the server does not know that url.
+   */
+  suspend fun refreshBookmark(
+    xSession: String,
+    serverUrl: String,
+    bookmark: Bookmark
+  ): Bookmark?
+
   suspend fun deleteBookmark(
     xSession: String,
     serverUrl: String,

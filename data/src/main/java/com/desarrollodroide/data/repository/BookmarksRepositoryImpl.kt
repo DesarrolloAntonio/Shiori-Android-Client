@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import retrofit2.Response
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -226,6 +227,43 @@ class BookmarksRepositoryImpl(
         } else {
             throw IllegalStateException("Error adding bookmark: ${response.errorBody()?.string()}")
         }
+    }
+
+    /**
+     * Re-fetches one bookmark instead of the whole library.
+     *
+     * The pending banner used to say "pull to refresh", and pull to refresh walks every page: on a
+     * library of ten thousand that is 334 requests to find out about one card. The list endpoint
+     * accepts a keyword, so asking for the bookmark's own url is a single request.
+     *
+     * The row is replaced rather than updated, because a bookmark whose create has just landed
+     * carries a temporary id locally and the server's real one remotely; an update keyed on the
+     * old id would match nothing.
+     */
+    override suspend fun refreshBookmark(
+        xSession: String,
+        serverUrl: String,
+        bookmark: Bookmark
+    ): Bookmark? {
+        val response = apiService.getPagingBookmarks(
+            xSessionId = xSession,
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks" +
+                "?keyword=${URLEncoder.encode(bookmark.url, "UTF-8")}"
+        )
+        if (!response.isSuccessful) {
+            throw IllegalStateException("Could not refresh bookmark: ${response.code()}")
+        }
+        // keyword is a substring match, so the response can hold more than the one asked for.
+        val match = response.body()?.resolvedBookmarks()
+            ?.firstOrNull { it.url == bookmark.url }
+            ?: return null
+
+        val entity = match.toEntityModel()
+        if (entity.id != bookmark.id) {
+            bookmarksDao.deleteBookmarkById(bookmark.id)
+        }
+        bookmarksDao.insertPageWithTags(listOf(entity))
+        return entity.toDomainModel()
     }
 
     /**

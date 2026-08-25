@@ -5,20 +5,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Shown while a bookmark has nothing the server was able to scrape: no content, no image, no
+ * excerpt. Usually that just means Shiori has not finished fetching the page yet.
+ *
+ * The action re-fetches this one bookmark, not the whole library. It used to read "pull to refresh
+ * to update", which asked the user to walk every page of the server on the off chance that one
+ * card had changed — and for a long while did not even work, because the feed never re-presented
+ * what the refresh had written.
+ */
 @Composable
-fun PendingSyncBanner(modifier: Modifier = Modifier) {
+fun PendingSyncBanner(
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Unit)? = null,
+) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -43,10 +58,22 @@ fun PendingSyncBanner(modifier: Modifier = Modifier) {
                     style = MaterialTheme.typography.labelLarge,
                 )
                 Text(
-                    text = "Pull to refresh to update",
+                    text = "Still being fetched by the server",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
                 )
+            }
+            if (onRefresh != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = onRefresh) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text("Check")
+                }
             }
         }
     }

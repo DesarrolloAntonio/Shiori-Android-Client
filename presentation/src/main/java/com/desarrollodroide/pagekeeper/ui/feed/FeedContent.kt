@@ -160,6 +160,7 @@ fun FeedContent(
                             onClickBookmark = { getBookmark -> actions.onBookmarkSelect(getBookmark()) },
                             onClickEpub = { getBookmark -> actions.onBookmarkEpub(getBookmark()) },
                             onClickSync = { getBookmark -> actions.onClickSync(getBookmark()) },
+                            onClickRefresh = { getBookmark -> actions.onRefreshBookmark(getBookmark()) },
                             onClickCategory = { },
                             onToggleSelection = { actions.onToggleSelection(bookmark) },
                         ),

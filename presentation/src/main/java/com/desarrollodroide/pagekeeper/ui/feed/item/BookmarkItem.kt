@@ -27,6 +27,8 @@ data class BookmarkActions(
     val onClickEpub: (GetBookmark) -> Unit,
     val onClickSync: (GetBookmark) -> Unit,
     val onToggleSelection: (Int) -> Unit = {},
+    /** Re-fetch just this bookmark; what the pending banner offers. */
+    val onClickRefresh: (GetBookmark) -> Unit = {},
 )
 
 typealias GetBookmark = () -> Bookmark
