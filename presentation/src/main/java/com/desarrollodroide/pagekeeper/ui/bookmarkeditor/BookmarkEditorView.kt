@@ -35,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
@@ -79,8 +78,8 @@ enum class BookmarkEditorType { ADD, ADD_MANUALLY, EDIT }
  * mostly borders, and a border round every control says nothing about which one matters.
  *
  * Everything that is a button looks like one. The tag add is a tonal button rather than bare text,
- * and the bottom bar holds a real pair above the navigation bar rather than jammed against the
- * bottom edge of the screen.
+ * and the bottom bar holds the one action this screen exists for, above the navigation bar rather
+ * than jammed against the bottom edge of the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,8 +109,6 @@ fun BookmarkEditorView(
     // Not just "not blank". Sending something unfetchable gets a 502 with an empty body, which
     // surfaced as a bookmark stuck pending in the feed and nothing on screen to explain it.
     val canSave = !isManual || isPlausibleBookmarkUrl(url)
-    val canClear = !isEdit &&
-        (assignedTags.value.isNotEmpty() || newTag.value.isNotBlank() || url.isNotBlank())
 
     fun addTypedTag() {
         val normalizedName = newTag.value.lowercase().trim()
@@ -153,39 +150,23 @@ fun BookmarkEditorView(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Row(
+                    // One button, full width. A Clear beside it took half the bar to offer
+                    // throwing away what you had just typed, which is not worth equal weight with
+                    // saving, and in edit mode it was permanently disabled: a greyed control that
+                    // never does anything is worse than no control. Back already discards.
+                    Button(
+                        onClick = { saveBookmark(bookmarkEditorType) },
+                        enabled = canSave,
                         modifier = Modifier
                             .widthIn(max = ContentMaxWidth)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            .fillMaxWidth()
+                            .height(ActionButtonHeight),
+                        shape = MaterialTheme.shapes.large,
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                if (isManual) onUrlChange("")
-                                newTag.value = ""
-                                assignedTags.value = emptyList()
-                            },
-                            enabled = canClear,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(ActionButtonHeight),
-                            shape = MaterialTheme.shapes.large,
-                        ) {
-                            Text("Clear")
-                        }
-                        Button(
-                            onClick = { saveBookmark(bookmarkEditorType) },
-                            enabled = canSave,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(ActionButtonHeight),
-                            shape = MaterialTheme.shapes.large,
-                        ) {
-                            Text(
-                                text = if (isEdit) "Save" else "Add",
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                        Text(
+                            text = if (isEdit) "Save" else "Add bookmark",
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
                 }
             }
