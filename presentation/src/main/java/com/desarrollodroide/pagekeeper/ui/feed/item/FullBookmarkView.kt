@@ -44,7 +44,19 @@ fun FullBookmarkView(
         if (bookmark.isPendingServerProcessing) {
             PendingSyncBanner(onRefresh = { actions.onClickRefresh(getBookmark) })
         }
-        if (bookmark.imageURL.isNotEmpty()) {
+        if (bookmark.imageURL.isEmpty()) {
+            // The server had no thumbnail. The slot is filled anyway, both so an image-less card
+            // is not 200dp shorter than the one beside it and so the feed does not look like it
+            // failed to load something.
+            BookmarkImagePlaceholder(
+                url = bookmark.url,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+                    .height(HeroImageHeight)
+                    .clip(MaterialTheme.shapes.medium),
+            )
+        } else {
             // A fixed height rather than an aspect ratio. Variable height heroes made the feed
             // jump around as each image resolved, and heightIn + aspectRatio only looked like a
             // fix: past about 430dp of card width the two cannot both be satisfied, the image
