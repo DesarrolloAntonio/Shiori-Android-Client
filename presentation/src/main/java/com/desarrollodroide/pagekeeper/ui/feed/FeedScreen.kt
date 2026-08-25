@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -170,6 +171,8 @@ fun FeedScreen(
             feedViewModel.bookmarkSelected.value?.let {
                 setShowTopBar(false)
                 BookmarkEditorScreen(
+                    // Already inside the home scaffold's padded content.
+                    windowInsets = WindowInsets(0),
                     pageTitle = "Edit",
                     bookmarkEditorType = BookmarkEditorType.EDIT,
                     bookmark = it,

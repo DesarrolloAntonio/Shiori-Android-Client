@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -27,7 +29,8 @@ fun BookmarkEditorScreen(
     onBack: () -> Unit,
     updateBookmark: (Bookmark) -> Unit,
     showToast: (String) -> Unit = {},
-    startMainActivity: () -> Unit = {}
+    startMainActivity: () -> Unit = {},
+    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     val bookmarkViewModel = koinViewModel<BookmarkViewModel>()
     // Rotating or unfolding recreates the activity. Without rememberSaveable the user loses
@@ -76,6 +79,7 @@ fun BookmarkEditorScreen(
     }
 
     BookmarkEditorView(
+        windowInsets = windowInsets,
         title = pageTitle,
         url = currentUrl,
         bookmarkEditorType = bookmarkEditorType,

@@ -7,21 +7,30 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
+import com.desarrollodroide.pagekeeper.ComposeSetup
+import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.MainActivity
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class BookmarkEditorActivity : ComponentActivity() {
 
     private val bookmarkViewModel: BookmarkViewModel by viewModel()
+
+    // The editor used to call ShioriTheme directly, which defaults to dynamic colour and the
+    // system's dark mode. So it took its palette from the wallpaper and ignored the theme the user
+    // had chosen in settings: the same app, a different colour scheme, depending on which screen
+    // you were looking at. ComposeSetup is what MainActivity uses.
+    private val themeManager: ThemeManager by inject()
 
     companion object {
         const val EXTRA_MODE = "extra_mode"
@@ -35,6 +44,10 @@ class BookmarkEditorActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Same as MainActivity. targetSdk 35 makes edge to edge mandatory anyway, so the only
+        // question is whether the app knows it: without this the system bars still overlap the
+        // content but the theme's bar colours are never applied.
+        enableEdgeToEdge()
 
         val mode = intent.getStringExtra(EXTRA_MODE)
         if (mode == BookmarkEditorType.ADD_MANUALLY.name) {
@@ -81,7 +94,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                     }
                 } else {
                     setContent {
-                        ShioriTheme {
+                        ComposeSetup(themeManager = themeManager) {
                             NotSessionScreen(
                                 onClickLogin = {
                                     startMainActivity()
@@ -99,11 +112,12 @@ class BookmarkEditorActivity : ComponentActivity() {
 
     private fun setupBookmarkEditor(type: BookmarkEditorType, url: String, title: String) {
         setContent {
-            ShioriTheme {
+            ComposeSetup(themeManager = themeManager) {
+                // Was inverseOnSurface, which is a text colour, not a background one. It tinted
+                // the whole screen lavender and matched nothing else in the app.
                 Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.inverseOnSurface)
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surface,
                 ) {
                     val makeArchivePublic = bookmarkViewModel.makeArchivePublic
                     val createEbook = bookmarkViewModel.createEbook

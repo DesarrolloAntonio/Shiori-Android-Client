@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.after
 import org.mockito.kotlin.never
+import org.mockito.kotlin.timeout
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 
@@ -100,8 +102,7 @@ class SettingsViewModelLogoutTest {
         viewModel().logout()
         testScheduler.advanceUntilIdle()
 
-        verify(diskCache).clear()
-        verify(memoryCache).clear()
+        verifyCachesCleared()
     }
 
     /**
@@ -119,8 +120,7 @@ class SettingsViewModelLogoutTest {
         viewModel().logout()
         testScheduler.advanceUntilIdle()
 
-        verify(diskCache).clear()
-        verify(memoryCache).clear()
+        verifyCachesCleared()
     }
 
     @Test
@@ -128,7 +128,23 @@ class SettingsViewModelLogoutTest {
         viewModel()
         testScheduler.advanceUntilIdle()
 
-        verify(diskCache, never()).clear()
+        // after(), not never() on its own: the clearing runs off the test scheduler, so an
+        // immediate never() would pass simply by checking too early.
+        verify(diskCache, after(TIMEOUT_MS).never()).clear()
         verify(memoryCache, never()).clear()
+    }
+
+    /**
+     * ImageLoader.clearCache switches to Dispatchers.IO, which the test scheduler does not drive,
+     * so advanceUntilIdle returns before the caches have actually been touched. Verifying straight
+     * afterwards made this pass or fail depending on which thread got there first.
+     */
+    private fun verifyCachesCleared() {
+        verify(diskCache, timeout(TIMEOUT_MS)).clear()
+        verify(memoryCache, timeout(TIMEOUT_MS)).clear()
+    }
+
+    private companion object {
+        const val TIMEOUT_MS = 2_000L
     }
 }
