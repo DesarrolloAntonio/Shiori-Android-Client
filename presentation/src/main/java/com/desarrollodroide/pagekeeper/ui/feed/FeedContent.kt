@@ -206,14 +206,17 @@ fun FeedContent(
             derivedStateOf { gridState.firstVisibleItemIndex > 0 }
         }
 
-        // Offset above the scaffold's add fab, which owns the bottom end corner. Without the
-        // offset this sat underneath it at identical coordinates: composed, invisible and
-        // impossible to tap. Small, so the primary action stays the prominent one.
+        // Bottom start, not bottom end. A card's action row is right aligned, so at the end
+        // corner this button lands on top of a card's delete icon every time one scrolls past:
+        // the two overlap, the delete pokes out from behind the button, and aiming at the button
+        // means aiming a few pixels from deleting a bookmark. The start corner only ever covers
+        // card text, which has nothing to hit. It also gets it out from under the add fab, which
+        // is what the old 88dp offset was working around.
         AnimatedVisibility(
             visible = showScrollToTopButton,
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 88.dp),
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = 16.dp),
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut()
         ) {
