@@ -90,7 +90,8 @@ fun BookmarkEditorScreen(
             when (bookmarkEditorType) {
                 BookmarkEditorType.ADD, BookmarkEditorType.ADD_MANUALLY -> {
                     bookmarkViewModel.saveBookmark(
-                        url = currentUrl,
+                        // google.es is not something the server can fetch; https://google.es is.
+                        url = normalizeBookmarkUrl(currentUrl),
                         title = bookmark.title,
                         tags = assignedTags.value,
                         createArchive = localCreateArchive,

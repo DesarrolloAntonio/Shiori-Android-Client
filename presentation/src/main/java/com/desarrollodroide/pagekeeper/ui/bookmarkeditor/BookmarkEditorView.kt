@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,7 +97,9 @@ fun BookmarkEditorView(
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     val isManual = bookmarkEditorType == BookmarkEditorType.ADD_MANUALLY
-    val canSave = !isManual || url.isNotBlank()
+    // Not just "not blank". Sending something unfetchable gets a 502 with an empty body, which
+    // surfaced as a bookmark stuck pending in the feed and nothing on screen to explain it.
+    val canSave = !isManual || isPlausibleBookmarkUrl(url)
 
     fun addTypedTag() {
         val normalizedName = newTag.value.lowercase().trim()
@@ -169,9 +175,24 @@ fun BookmarkEditorView(
                         value = url,
                         onValueChange = onUrlChange,
                         label = { Text("URL") },
-                        placeholder = { Text("https://") },
+                        placeholder = { Text("example.com") },
+                        supportingText = {
+                            Text(
+                                if (url.isNotBlank() && !canSave) "That does not look like a link"
+                                else "https:// is added if you leave it out"
+                            )
+                        },
+                        isError = url.isNotBlank() && !canSave,
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
+                        // Without these the keyboard capitalises and autocorrects: typing
+                        // google.es actually sent Google.es.
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            capitalization = KeyboardCapitalization.None,
+                            autoCorrectEnabled = false,
+                            imeAction = ImeAction.Done,
+                        ),
                     )
                 } else {
                     // The shared url is not editable here, so it reads as a label rather than
