@@ -177,10 +177,14 @@ fun FeedScreen(
                         setShowTopBar(true)
                         feedViewModel.showBookmarkEditorScreen.value = false
                     },
-                    updateBookmark = { bookMark ->
+                    // No sync here. editBookmark writes the server's own response into Room
+                    // before returning, and the feed is a Room pager, so the card repaints on its
+                    // own. Refreshing meant walking every page of the server to be told what the
+                    // app had just written: 334 requests to save an edit, on a library of ten
+                    // thousand.
+                    updateBookmark = {
                         setShowTopBar(true)
                         feedViewModel.showBookmarkEditorScreen.value = false
-                        feedViewModel.refreshFeed()
                     }
                 )
             }

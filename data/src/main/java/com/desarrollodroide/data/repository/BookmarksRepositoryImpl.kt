@@ -286,7 +286,12 @@ class BookmarksRepositoryImpl(
                     hasEbook = bookmark.hasEbook,
                     createEbook = bookmark.createEbook
                 )
-                bookmarksDao.updateBookmark(updatedEntity)
+                // WithTags, because an edit can change them. The plain update only writes the
+                // bookmark row and leaves bookmark_tag_cross_ref as it was, so tag filtering went
+                // on using the old tags. It looked fine only because the caller then ran a full
+                // sync, whose insertPageWithTags rebuilds that table: a whole walk of the server
+                // papering over a stale write two lines away.
+                bookmarksDao.updateBookmarkWithTags(updatedEntity)
                 return updatedEntity.toDomainModel()
             }
             throw IllegalStateException("Response body is null")
@@ -314,7 +319,7 @@ class BookmarksRepositoryImpl(
             throw IllegalStateException("${response.errorBody()?.string()}")
         }
         val updated = response.body()?.message.orEmpty()
-        updated.forEach { dto -> bookmarksDao.updateBookmark(dto.toEntityModel()) }
+        updated.forEach { dto -> bookmarksDao.updateBookmarkWithTags(dto.toEntityModel()) }
         return updated.map { it.toDomainModel() }
     }
 

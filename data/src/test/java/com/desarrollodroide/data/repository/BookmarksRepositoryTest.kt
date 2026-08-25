@@ -19,11 +19,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.mockito.Mockito.*
 import retrofit2.Response
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
+import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
@@ -242,6 +244,33 @@ class BookmarksRepositoryTest {
         verify(bookmarksDao).insertPageWithTags(anyList())
         verify(bookmarksDao, never()).deleteBookmarksNotIn(anyList())
         verify(bookmarksDao, never()).deleteAll()
+    }
+
+    /**
+     * Editing a bookmark can change its tags, so the write has to replace the cross references.
+     *
+     * The plain update only writes the bookmark row. Tag filtering reads
+     * bookmark_tag_cross_ref, so it went on using the tags the bookmark used to have, and the
+     * caller papered over it by running a full sync afterwards — a walk of every page of the
+     * server to repair a write two lines away. That sync is gone, so this has to be right.
+     */
+    @Test
+    fun `editing a bookmark replaces its tag cross references`() = runTest {
+        val edited = BookmarkDTO(
+            1, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
+            true, true, true, listOf(), true, true
+        )
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = edited)))
+
+        bookmarksRepository.editBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = edited.toDomainModel(),
+        )
+
+        verify(bookmarksDao).updateBookmarkWithTags(any())
+        verify(bookmarksDao, never()).updateBookmark(any())
     }
 
     /**

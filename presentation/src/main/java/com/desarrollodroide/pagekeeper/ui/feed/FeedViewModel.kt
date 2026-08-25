@@ -416,8 +416,11 @@ class FeedViewModel(
                         tagIds = (bookmark.tags.map { it.id } + newTagIds).distinct(),
                     )
                 }
+                // The tag list still has to come back from the server, because tags typed here
+                // may not have existed before. The bookmarks themselves do not: the bulk endpoint
+                // returns each updated bookmark and those are written to Room as they arrive, so
+                // a full sync would only re-fetch what was just stored.
                 getRemoteTags()
-                refreshFeed()
             }.onFailure {
                 Log.e(TAG, "Could not add tags to the selection", it)
                 _bookmarksUiState.error(errorMessage = it.message ?: "Could not add tags")

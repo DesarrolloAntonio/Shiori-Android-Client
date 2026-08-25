@@ -157,6 +157,50 @@ class BookmarksDaoTest {
         )
     }
 
+    /**
+     * The reason editing a bookmark used to be followed by a full sync.
+     *
+     * A plain update writes the bookmark row and nothing else, so bookmark_tag_cross_ref keeps the
+     * tags the bookmark had before. Tag filtering reads that table, so the bookmark went on being
+     * filed under a tag it no longer has. The full sync afterwards rebuilt the table and hid it.
+     */
+    @Test
+    fun plainUpdateLeavesTagCrossRefsStale() = runBlocking {
+        val other = Tag(id = 2, name = "Other Tag")
+        bookmarksDao.insertAllWithTags(listOf(bookmark.copy(tags = listOf(tag))))
+
+        bookmarksDao.updateBookmark(bookmark.copy(tags = listOf(other)))
+
+        assertEquals(
+            "a plain update does not touch the cross reference table",
+            listOf(bookmark.id),
+            bookmarkIdsForTag(tag.id)
+        )
+        assertTrue(bookmarkIdsForTag(other.id).isEmpty())
+    }
+
+    @Test
+    fun updateWithTagsReplacesTheCrossRefs() = runBlocking {
+        val other = Tag(id = 2, name = "Other Tag")
+        bookmarksDao.insertAllWithTags(listOf(bookmark.copy(tags = listOf(tag))))
+
+        bookmarksDao.updateBookmarkWithTags(bookmark.copy(tags = listOf(other)))
+
+        assertTrue(
+            "the old tag must stop matching once it has been removed",
+            bookmarkIdsForTag(tag.id).isEmpty()
+        )
+        assertEquals(listOf(bookmark.id), bookmarkIdsForTag(other.id))
+    }
+
+    private suspend fun bookmarkIdsForTag(tagId: Int): List<Int> {
+        val loadResult = bookmarksDao.getPagingBookmarksByTags(listOf(tagId)).load(
+            PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false)
+        )
+        assertTrue(loadResult is PagingSource.LoadResult.Page)
+        return (loadResult as PagingSource.LoadResult.Page).data.map { it.id }
+    }
+
     private suspend fun searchIds(query: String): List<Int> {
         val loadResult = bookmarksDao.getPagingBookmarksWithoutTags(query).load(
             PagingSource.LoadParams.Refresh(
