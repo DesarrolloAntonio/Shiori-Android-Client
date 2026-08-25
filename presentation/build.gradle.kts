@@ -45,10 +45,24 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
         debug {
             isDebuggable = true
+        }
+        // Release's shrinking and obfuscation, signed with the debug key so it can actually be
+        // installed. The release keys only exist in CI, and R8 breaks reflection at runtime rather
+        // than at build time, so there has to be a way to run the shrunk app on a device.
+        create("minified") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
         }
     }
 
