@@ -80,7 +80,11 @@ fun FullBookmarkView(
             modifier = Modifier.padding(
                 start = 16.dp,
                 end = 16.dp,
-                top = if (bookmark.imageURL.isNotEmpty()) 4.dp else 16.dp,
+                // Always 4dp. This used to open up to 16dp when there was no image, because back
+                // then there was no hero at all and the title would otherwise start against the
+                // card's edge. There is always a hero now, so the wider gap just made a card with
+                // a placeholder 12dp taller than the one beside it.
+                top = 4.dp,
                 bottom = 8.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -88,29 +92,29 @@ fun FullBookmarkView(
             CompositionLocalProvider(
                 LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
             ) {
-                // Fixed line counts, not "up to". A grid row is as tall as its tallest card, so
-                // a card whose title runs to one line and whose excerpt runs to two just ends
-                // higher than its neighbour and leaves a hole, with the action rows at different
-                // levels. Reserving the lines costs a little blank space on short entries and
-                // makes every card in a row end together.
+                // Nothing here reserves space it is not using. The feed is a staggered grid, so
+                // a card has no neighbour to line up with: every line held open for symmetry was
+                // simply blank. Between them the title's second line, three excerpt lines and an
+                // empty tag row came to about 130dp of nothing on a bookmark with no excerpt and
+                // no tags, which is what a freshly added link is.
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = bookmark.title.ifEmpty { bookmark.url },
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     overflow = TextOverflow.Ellipsis,
-                    minLines = 2,
                     maxLines = 2
                 )
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = bookmark.excerpt,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    overflow = TextOverflow.Ellipsis,
-                    minLines = 3,
-                    maxLines = 3
-                )
+                if (bookmark.excerpt.isNotEmpty()) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = bookmark.excerpt,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 3
+                    )
+                }
             }
             Text(
                 text = bookmark.modified,
@@ -118,11 +122,11 @@ fun FullBookmarkView(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-            // The slot is always there, tags or not, and it is one chip row tall. Chips that do
-            // not fit are dropped rather than wrapping onto a second row, which would make the
-            // card taller than its neighbours again.
-            Box(modifier = Modifier.height(TagRowHeight)) {
-                if (bookmark.tags.isNotEmpty()) {
+            // One chip row when there are tags, nothing at all when there are not. Reserving the
+            // row on every card added 32dp of blank to most of them. Chips that do not fit are
+            // still dropped rather than wrapping onto a second row.
+            if (bookmark.tags.isNotEmpty()) {
+                Box(modifier = Modifier.height(TagRowHeight)) {
                     ClickableCategoriesView(
                         uniqueCategories = bookmark.tags,
                         onClickCategory = actions.onClickCategory

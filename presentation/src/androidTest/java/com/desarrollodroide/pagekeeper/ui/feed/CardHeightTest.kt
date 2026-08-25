@@ -10,7 +10,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -30,12 +31,12 @@ import org.junit.runner.RunWith
 import kotlin.math.abs
 
 /**
- * Card heights inside a row of the feed grid.
+ * Card heights in the feed.
  *
- * Cards carry a variable amount of content — one, two or three lines of excerpt, none or several
- * rows of tags — so left them to their natural size they end at different heights and the action
- * rows sit at different levels. A grid row is as tall as its tallest card either way, so the short
- * one just leaves a hole underneath it.
+ * The feed is a staggered grid, so cards are meant to differ: each is as tall as its own content
+ * and the columns pack. What must not differ is a card that happens to have no thumbnail, which
+ * used to draw no hero at all and come out 200dp short. The placeholder fills that slot, and this
+ * pins it down.
  */
 @RunWith(AndroidJUnit4::class)
 class CardHeightTest {
@@ -43,22 +44,18 @@ class CardHeightTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private val tall = Bookmark.mock().copy(
+    // Identical but for the thumbnail, which is the whole point: one gets an image, the other
+    // gets the placeholder, and they have to come out the same height.
+    private val withImage = Bookmark.mock().copy(
         id = 1,
         imageURL = "/bookmark/1/thumb",
         title = "A title long enough to wrap onto a second line in a narrow column",
         excerpt = "An excerpt with enough words in it to run to three full lines of body text, " +
             "which is the most the card will show before it starts to ellipsise the rest away.",
-        tags = listOf(Tag(1, "android"), Tag(2, "compose"), Tag(3, "design")),
+        tags = listOf(Tag(1, "android"), Tag(2, "compose")),
     )
 
-    private val short = Bookmark.mock().copy(
-        id = 2,
-        imageURL = "/bookmark/2/thumb",
-        title = "Short",
-        excerpt = "",
-        tags = emptyList(),
-    )
+    private val withoutImage = withImage.copy(id = 2, imageURL = "")
 
     private val noActions = BookmarkActions(
         onClickEdit = { },
@@ -72,7 +69,7 @@ class CardHeightTest {
     )
 
     @Test
-    fun cardsInTheSameRowAreTheSameHeight() {
+    fun aCardWithNoThumbnailIsNotShorterThanOneWithIt() {
         rule.setContent {
             ShioriTheme {
                 LazyVerticalGrid(
@@ -84,7 +81,7 @@ class CardHeightTest {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(listOf(tall, short)) { bookmark ->
+                    items(listOf(withImage, withoutImage)) { bookmark ->
                         androidx.compose.foundation.layout.Box(
                             modifier = Modifier.testTag("card")
                         ) {
@@ -115,7 +112,7 @@ class CardHeightTest {
 
         val difference = abs(heights[0].value - heights[1].value)
         assertEquals(
-            "cards in a row must end at the same height, but they differ by ${difference}dp " +
+            "a missing thumbnail must not shorten the card: they differ by ${difference}dp " +
                 "(${heights[0]} vs ${heights[1]})",
             0f,
             difference,
@@ -132,7 +129,7 @@ class CardHeightTest {
      * real to divide up, and the text and the action row disappeared off the card entirely.
      */
     @Test
-    fun equalisingHeightsKeepsTheContent() {
+    fun theCardKeepsItsContent() {
         rule.setContent {
             ShioriTheme {
                 LazyVerticalGrid(
@@ -144,7 +141,7 @@ class CardHeightTest {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(listOf(tall, short)) { bookmark ->
+                    items(listOf(withImage, withoutImage)) { bookmark ->
                         androidx.compose.foundation.layout.Box(
                             modifier = Modifier.testTag("card")
                         ) {
@@ -163,8 +160,7 @@ class CardHeightTest {
         }
         rule.waitForIdle()
 
-        rule.onNodeWithText("Short").assertIsDisplayed()
-        rule.onNodeWithText(tall.title).assertIsDisplayed()
+        rule.onAllNodesWithText(withImage.title).assertCountEquals(2)
         assertEquals(
             "every card keeps its action row",
             2,

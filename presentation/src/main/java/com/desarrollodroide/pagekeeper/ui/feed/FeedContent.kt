@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Bookmark
@@ -74,7 +74,7 @@ fun FeedContent(
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
-    val gridState = rememberLazyGridState()
+    val gridState = rememberLazyStaggeredGridState()
     val pullToRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(bookmarksPagingItems.loadState.refresh) {
@@ -125,12 +125,20 @@ fun FeedContent(
         // one, but a landscape phone, a tablet or an unfolded foldable gets two or three instead
         // of one card stretched across the whole width, which was unreadable and let a single
         // item fill the entire viewport.
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 340.dp),
+        //
+        // Staggered, not a plain grid. Cards carry a variable amount of text, and a plain grid
+        // makes a line as tall as its tallest card while giving the others no way to fill it:
+        // fillMaxHeight on an item is a no op there, because the line measures its children with
+        // an unbounded height. So the short card stopped early and left its neighbour's edge
+        // hanging. The alternatives were padding every card out to a common height, which cost
+        // 130dp of blank on a bookmark with no excerpt and no tags. Here each card is as tall as
+        // its own content and the columns simply pack, so there is no line to be level with.
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(minSize = 340.dp),
             state = gridState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(
@@ -170,7 +178,7 @@ fun FeedContent(
             bookmarksPagingItems.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
-                        item(span = { GridItemSpan(maxLineSpan) }) { PageLoader(modifier = Modifier.fillMaxWidth()) }
+                        item(span = StaggeredGridItemSpan.FullLine) { PageLoader(modifier = Modifier.fillMaxWidth()) }
                     }
 
                     loadState.refresh is LoadState.Error -> {
@@ -178,7 +186,7 @@ fun FeedContent(
                         if (error.error.localizedMessage == SESSION_HAS_BEEN_EXPIRED) {
                             actions.goToLogin()
                         } else {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
+                            item(span = StaggeredGridItemSpan.FullLine) {
                                 ErrorMessage(
                                     modifier = Modifier.fillMaxWidth(),
                                     message = error.error.localizedMessage ?: "Unknown error",
@@ -188,12 +196,12 @@ fun FeedContent(
                     }
 
                     loadState.append is LoadState.Loading -> {
-                        item(span = { GridItemSpan(maxLineSpan) }) { LoadingNextPageItem() }
+                        item(span = StaggeredGridItemSpan.FullLine) { LoadingNextPageItem() }
                     }
 
                     loadState.append is LoadState.Error -> {
                         val error = loadState.append as LoadState.Error
-                        item(span = { GridItemSpan(maxLineSpan) }) {
+                        item(span = StaggeredGridItemSpan.FullLine) {
                             ErrorMessage(
                                 message = error.error.localizedMessage ?: "Unknown error",
                                 onClickRetry = { retry() })
@@ -201,7 +209,7 @@ fun FeedContent(
                     }
                 }
             }
-            item(span = { GridItemSpan(maxLineSpan) }) { Spacer(modifier = Modifier.height(88.dp)) }
+            item(span = StaggeredGridItemSpan.FullLine) { Spacer(modifier = Modifier.height(88.dp)) }
         }
 
         val showScrollToTopButton by remember {
