@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -206,17 +207,19 @@ fun FeedContent(
             derivedStateOf { gridState.firstVisibleItemIndex > 0 }
         }
 
-        // Bottom start, not bottom end. A card's action row is right aligned, so at the end
-        // corner this button lands on top of a card's delete icon every time one scrolls past:
-        // the two overlap, the delete pokes out from behind the button, and aiming at the button
-        // means aiming a few pixels from deleting a bookmark. The start corner only ever covers
-        // card text, which has nothing to hit. It also gets it out from under the add fab, which
-        // is what the old 88dp offset was working around.
+        // Bottom end, above the scaffold's add fab. Without the offset it sat underneath that fab
+        // at identical coordinates: composed, invisible and impossible to tap.
+        //
+        // A card's action row is right aligned, so this corner is also where a card's delete icon
+        // passes as the feed scrolls, and the two end up a few pixels apart. zIndex keeps this
+        // button above the grid for hit testing as well as drawing, so a tap on it cannot reach
+        // the card underneath.
         AnimatedVisibility(
             visible = showScrollToTopButton,
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = 16.dp),
+                .align(Alignment.BottomEnd)
+                .zIndex(1f)
+                .padding(end = 16.dp, bottom = 88.dp),
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut()
         ) {
