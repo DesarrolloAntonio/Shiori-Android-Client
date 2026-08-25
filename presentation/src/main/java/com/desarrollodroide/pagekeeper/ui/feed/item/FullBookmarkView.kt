@@ -30,7 +30,9 @@ fun FullBookmarkView(
     serverURL: String,
     xSessionId: String,
     token: String,
-    actions: BookmarkActions
+    actions: BookmarkActions,
+    isRefreshing: Boolean = false,
+    hasSettledEmpty: Boolean = false,
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
     val isRtl by remember {
@@ -41,8 +43,13 @@ fun FullBookmarkView(
     }
 
     Column {
-        if (bookmark.isPendingServerProcessing) {
-            PendingSyncBanner(onRefresh = { actions.onClickRefresh(getBookmark) })
+        // hasSettledEmpty: the server has already been asked and had nothing. Saying it is
+        // still being fetched after that would be the aaaa.pd banner all over again.
+        if (bookmark.isPendingServerProcessing && !hasSettledEmpty) {
+            PendingSyncBanner(
+                onRefresh = { actions.onClickRefresh(getBookmark) },
+                isRefreshing = isRefreshing,
+            )
         }
         if (bookmark.imageURL.isEmpty()) {
             // The server had no thumbnail. The slot is filled anyway, both so an image-less card

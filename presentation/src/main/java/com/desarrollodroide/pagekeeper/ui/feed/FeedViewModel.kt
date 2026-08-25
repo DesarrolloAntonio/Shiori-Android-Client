@@ -310,17 +310,64 @@ class FeedViewModel(
      * writing the fresh row is all that is needed for the card to redraw.
      */
     fun refreshBookmark(bookmark: Bookmark) {
+        if (bookmark.id in _refreshingBookmarks.value) return
         viewModelScope.launch {
-            runCatching {
-                bookmarksRepository.refreshBookmark(
-                    xSession = _xSessionId.value,
-                    serverUrl = _serverUrl.value,
-                    bookmark = bookmark,
-                )
-            }.onFailure {
-                Log.e(TAG, "Could not refresh bookmark ${bookmark.id}", it)
+            _refreshingBookmarks.update { it + bookmark.id }
+            try {
+                // Three outcomes, and the two that change nothing on screen have to say so or
+                // the button reads as dead: the server could not be reached, the server has
+                // nothing new yet, or the card updates on its own from Room.
+                runCatching {
+                    bookmarksRepository.refreshBookmark(
+                        xSession = _xSessionId.value,
+                        serverUrl = _serverUrl.value,
+                        bookmark = bookmark,
+                    )
+                }.onSuccess { refreshed ->
+                    when {
+                        refreshed == null ->
+                            _transientMessage.value = "The server does not have this bookmark yet"
+
+                        // Asked, and the server has it with nothing on it. That is as much as can
+                        // ever be learned: it may be mid scrape or it may be a page it can never
+                        // read, and nothing in the response distinguishes them. Stop offering to
+                        // ask again, so the banner cannot sit there for ever the way it did on
+                        // https://aaaa.pd. A sync that later brings real metadata clears the card
+                        // on its own.
+                        refreshed.isPendingServerProcessing -> {
+                            _settledEmptyBookmarks.update { it + bookmark.id }
+                            _transientMessage.value = "The server has nothing for this one"
+                        }
+                    }
+                }.onFailure {
+                    Log.e(TAG, "Could not refresh bookmark ${bookmark.id}", it)
+                    _transientMessage.value = "Could not reach the server"
+                }
+            } finally {
+                _refreshingBookmarks.update { it - bookmark.id }
             }
         }
+    }
+
+    /** Bookmarks with a check in flight, so their banner can show it is doing something. */
+    private val _refreshingBookmarks = MutableStateFlow<Set<Int>>(emptySet())
+    val refreshingBookmarks: StateFlow<Set<Int>> = _refreshingBookmarks.asStateFlow()
+
+    /**
+     * Bookmarks the server has already been asked about and had nothing for.
+     *
+     * Their banner comes down: there is nothing more to ask. Kept for the session rather than
+     * stored, because a later sync that brings real metadata settles it properly and a restart
+     * costs one more tap at worst.
+     */
+    private val _settledEmptyBookmarks = MutableStateFlow<Set<Int>>(emptySet())
+    val settledEmptyBookmarks: StateFlow<Set<Int>> = _settledEmptyBookmarks.asStateFlow()
+
+    private val _transientMessage = MutableStateFlow<String?>(null)
+    val transientMessage: StateFlow<String?> = _transientMessage.asStateFlow()
+
+    fun consumeTransientMessage() {
+        _transientMessage.value = null
     }
 
     fun getRemoteTags() {

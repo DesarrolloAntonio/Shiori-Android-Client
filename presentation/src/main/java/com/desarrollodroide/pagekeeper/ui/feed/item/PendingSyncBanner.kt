@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 fun PendingSyncBanner(
     modifier: Modifier = Modifier,
     onRefresh: (() -> Unit)? = null,
+    isRefreshing: Boolean = false,
 ) {
     Surface(
         modifier = modifier
@@ -65,14 +67,26 @@ fun PendingSyncBanner(
             }
             if (onRefresh != null) {
                 Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                // The request takes well under a second against a nearby server, which is exactly
+                // long enough for a tap with no feedback to read as a dead button.
+                if (isRefreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                            .size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Text("Check")
+                } else {
+                    TextButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text("Check")
+                    }
                 }
             }
         }

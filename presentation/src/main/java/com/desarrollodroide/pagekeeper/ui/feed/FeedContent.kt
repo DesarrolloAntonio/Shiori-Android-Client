@@ -71,6 +71,8 @@ fun FeedContent(
     tagToHide: Tag?,
     showOnlyHiddenTag: Boolean,
     selectedIds: Set<Int> = emptySet(),
+    refreshingIds: Set<Int> = emptySet(),
+    settledIds: Set<Int> = emptySet(),
 ) {
     val refreshCoroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -161,6 +163,8 @@ fun FeedContent(
                         viewType = viewType,
                         isSelected = bookmark.id in selectedIds,
                         isSelectionMode = selectedIds.isNotEmpty(),
+                        isRefreshing = bookmark.id in refreshingIds,
+                        hasSettledEmpty = bookmark.id in settledIds,
                         actions = BookmarkActions(
                             onClickEdit = { getBookmark -> actions.onEditBookmark(getBookmark()) },
                             onClickDelete = { getBookmark -> actions.onDeleteBookmark(getBookmark()) },

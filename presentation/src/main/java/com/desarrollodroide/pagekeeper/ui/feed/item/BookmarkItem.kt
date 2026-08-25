@@ -50,6 +50,8 @@ fun BookmarkItem(
     viewType: BookmarkViewType,
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
+    isRefreshing: Boolean = false,
+    hasSettledEmpty: Boolean = false,
 ) {
     Card(
         modifier = Modifier
@@ -89,7 +91,9 @@ fun BookmarkItem(
                 serverURL = serverURL,
                 xSessionId = xSessionId,
                 token = token,
-                actions = actions
+                actions = actions,
+                isRefreshing = isRefreshing,
+                hasSettledEmpty = hasSettledEmpty,
             )
 
             BookmarkViewType.SMALL -> SmallBookmarkView(

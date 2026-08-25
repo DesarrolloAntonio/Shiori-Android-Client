@@ -29,10 +29,22 @@ class BookmarkPendingStateTest {
         assertTrue(bookmark(id = 1_756_000_000).isPendingServerProcessing)
     }
 
+    /**
+     * A bookmark with nothing on it reads as pending, whether the server is still working or
+     * never will be. The two cannot be told apart from the data — Shiori does not touch
+     * modified_at when it scrapes, 79 of 82 scraped bookmarks on a live server still had it equal
+     * to created_at — so the flag says what is true, that there is nothing to show, and the
+     * screen's Check is what settles which of the two it is.
+     */
     @Test
-    fun `a bookmark the server has not scraped yet is pending`() {
+    fun `a bookmark with nothing on it is pending`() {
         assertTrue(
-            bookmark(excerpt = "", imageURL = "", hasContent = false).isPendingServerProcessing
+            bookmark(
+                title = "https://aaaa.pd",
+                excerpt = "",
+                imageURL = "",
+                hasContent = false,
+            ).isPendingServerProcessing
         )
     }
 

@@ -16,6 +16,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -63,6 +64,13 @@ fun FeedScreen(
     setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
+    val transientMessage by feedViewModel.transientMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(transientMessage) {
+        transientMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            feedViewModel.consumeTransientMessage()
+        }
+    }
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
@@ -99,6 +107,8 @@ fun FeedScreen(
     )
 
     val selectedBookmarks by feedViewModel.selectedBookmarks.collectAsStateWithLifecycle()
+    val refreshingIds by feedViewModel.refreshingBookmarks.collectAsStateWithLifecycle()
+    val settledIds by feedViewModel.settledEmptyBookmarks.collectAsStateWithLifecycle()
 
     val actions = FeedActions(
         goToLogin = {
@@ -160,6 +170,8 @@ fun FeedScreen(
         viewType = if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL,
         bookmarksPagingItems = bookmarksPagingItems,
         selectedIds = selectedBookmarks.map { it.id }.toSet(),
+        refreshingIds = refreshingIds,
+        settledIds = settledIds,
         tagToHide = tagToHide,
         showOnlyHiddenTag = showOnlyHiddenTag
     )
@@ -341,6 +353,8 @@ internal fun FeedView(
     tagToHide: Tag?,
     showOnlyHiddenTag: Boolean,
     selectedIds: Set<Int> = emptySet(),
+    refreshingIds: Set<Int> = emptySet(),
+    settledIds: Set<Int> = emptySet(),
 ) {
     // itemCount alone is not enough to decide the screen is empty. On a cold start the pager has
     // not emitted yet, so the count is 0 while the first load is still running, and the feed used
@@ -364,6 +378,8 @@ internal fun FeedView(
                     tagToHide = tagToHide,
                     showOnlyHiddenTag = showOnlyHiddenTag,
                     selectedIds = selectedIds,
+                    refreshingIds = refreshingIds,
+                    settledIds = settledIds,
                 )
             }
         }

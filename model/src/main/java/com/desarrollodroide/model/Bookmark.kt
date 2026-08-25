@@ -27,16 +27,22 @@ data class Bookmark (
      * - The server received it but hasn't finished processing content (no content, no image, no excerpt)
      */
     /**
-     * Whether the server still has work to do on this bookmark.
+     * Whether the server has nothing for this bookmark yet.
      *
-     * Two signals, both of which clear on their own:
-     *  - the id is still the locally generated one, so the create has not reached the server;
-     *  - the server returned it with no content, image or excerpt, so it has not scraped it yet.
+     * Either the create has not been synced, or the server returned it with no content, image or
+     * excerpt. Both mean the same thing to the reader: there is nothing to show but the url.
      *
-     * A third check used to treat "the title looks like a URL" as pending. That is not a pending
-     * state, it is what the server stores permanently when a page has no title it can read, so
-     * those bookmarks displayed "Pending server processing, pull to refresh" forever and
-     * refreshing never cleared it. A freshly created bookmark is already covered by the other two.
+     * What this deliberately does not claim is that the server is still working on it. It cannot
+     * know. Shiori does not touch modified_at when it scrapes — of 82 fully scraped bookmarks on
+     * a live server, 79 still had modified_at equal to created_at — so "not scraped yet" and
+     * "nothing to scrape" are indistinguishable from the data alone. https://aaaa.pd is saved and
+     * complete and will never have any of the three, because .pd is not a real tld.
+     *
+     * Asking is what settles it, which is why the card's banner carries a Check. Once the server
+     * has answered and still has nothing, the screen stops offering it; see FeedViewModel.
+     *
+     * A third check used to treat "the title looks like a url" as pending. That is not a pending
+     * state either, it is what the server stores when a page has no readable title.
      */
     val isPendingServerProcessing: Boolean
         get() = isTemporaryId ||
