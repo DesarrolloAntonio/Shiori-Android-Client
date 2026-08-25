@@ -88,7 +88,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.model.SyncOperationType
@@ -147,7 +146,6 @@ fun HomeScreen(
     val navController = rememberNavController()
     val isCategoriesVisible = remember { mutableStateOf(false) }
     val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
-    val hasBookmarks = feedViewModel.bookmarksState.collectAsLazyPagingItems().itemCount > 0
     val searchQuery by feedViewModel.searchQuery.collectAsState()
     val selectedTags by feedViewModel.selectedTags.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()

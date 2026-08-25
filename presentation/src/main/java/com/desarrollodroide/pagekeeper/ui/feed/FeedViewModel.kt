@@ -11,6 +11,7 @@ import com.desarrollodroide.pagekeeper.ui.components.idle
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.mapper.toProtoEntity
 import com.desarrollodroide.network.model.SessionDTO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -71,8 +72,6 @@ class FeedViewModel(
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
     val downloadUiState = _downloadUiState.asStateFlow()
-    private val _bookmarksState: MutableStateFlow<PagingData<Bookmark>> = MutableStateFlow(value = PagingData.empty())
-    val bookmarksState: MutableStateFlow<PagingData<Bookmark>> get() = _bookmarksState
 
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
@@ -148,6 +147,38 @@ class FeedViewModel(
         allTags.filter { it.id.toString() in selectedIds }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /**
+     * The feed, straight from Room.
+     *
+     * A cold flow, not a MutableStateFlow that a collector pushes into. PagingData is a single
+     * shot stream: parked in a StateFlow, the copy the screen is presenting is the one it keeps,
+     * and a later one never takes over. That is what left a bookmark showing "pending server
+     * processing" after its create had already succeeded and the row had been replaced with the
+     * server's real id. Pull to refresh did not clear it either; only relaunching did, because
+     * that built a new collector.
+     *
+     * serverUrl is part of the query rather than read inside it: the images are built from it and
+     * it arrives from DataStore after the first frame, so the query has to run again when it does.
+     */
+    val bookmarksState: Flow<PagingData<Bookmark>> = combine(
+        selectedTags,
+        showOnlyHiddenTag,
+        tagToHide,
+        debouncedSearchQuery(),
+        _serverUrl,
+    ) { selectedTags, showOnlyHidden, hiddenTag, query, serverUrl ->
+        FeedQuery(selectedTags, showOnlyHidden, hiddenTag, query, serverUrl)
+    }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag, query, serverUrl) ->
+        getLocalPagingBookmarksUseCase.invoke(
+            serverUrl = serverUrl,
+            xSession = settingsPreferenceDataSource.getSession(),
+            searchText = query,
+            tags = if (showOnlyHidden) emptyList() else selectedTags,
+            showOnlyHiddenTag = showOnlyHidden,
+            tagToHide = hiddenTag
+        )
+    }.cachedIn(viewModelScope)
+
 
 
     suspend fun initializeIfNeeded() {
@@ -158,29 +189,6 @@ class FeedViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            combine(
-                selectedTags,
-                showOnlyHiddenTag,
-                tagToHide,
-                debouncedSearchQuery()
-            ) { selectedTags, showOnlyHidden, hiddenTag, query ->
-                FeedQuery(selectedTags, showOnlyHidden, hiddenTag, query)
-            }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag, query) ->
-                getLocalPagingBookmarksUseCase.invoke(
-                    serverUrl = _serverUrl.value,
-                    xSession = settingsPreferenceDataSource.getSession(),
-                    searchText = query,
-                    tags = if (showOnlyHidden) emptyList() else selectedTags,
-                    showOnlyHiddenTag = showOnlyHidden,
-                    tagToHide = hiddenTag
-                )
-            }.cachedIn(viewModelScope)
-                .collect { pagingData ->
-                    _bookmarksState.value = pagingData
-                }
-        }
-
         viewModelScope.launch {
             getTagsUseCase.getLocalTags()
                 .distinctUntilChanged()
@@ -558,4 +566,5 @@ private data class FeedQuery(
     val showOnlyHiddenTag: Boolean,
     val tagToHide: Tag?,
     val searchText: String,
+    val serverUrl: String,
 )
