@@ -28,25 +28,6 @@ class LoginViewModel(
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-    // Oracle
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("https://shiori.desarrollodroide.es/")
-
-    // v1.6
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
-
-    // Synology
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
-
-    // localhost
-//    var userName = mutableStateOf("shiori")
-//    var password = mutableStateOf("gopher")
-//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")
