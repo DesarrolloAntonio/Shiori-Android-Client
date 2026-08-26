@@ -1,62 +1,74 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.pagekeeper.R
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.foundation.Image
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.material.icons.outlined.Sell
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.material3.Surface
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.layout.height
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.runtime.remember
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.statusBars
 
 /**
  * Search app bar.
@@ -223,6 +235,49 @@ fun TopBar(
 }
 
 /** Icon button that carries a count badge, animated in and out. */
+/**
+ * App bar while bookmarks are selected.
+ *
+ * Replaces the search bar rather than sitting beside it, so it is obvious that the buttons act on
+ * the selection and not on the feed.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SelectionTopBar(
+    selectedCount: Int,
+    onClose: () -> Unit,
+    onDelete: () -> Unit,
+    onUpdateCache: () -> Unit,
+    onAddTags: () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(text = "$selectedCount selected") },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = "Cancel selection")
+            }
+        },
+        actions = {
+            IconButton(onClick = onAddTags) {
+                Icon(Icons.Outlined.Sell, contentDescription = "Add tags to selected")
+            }
+            IconButton(onClick = onUpdateCache) {
+                Icon(Icons.Outlined.CloudUpload, contentDescription = "Update selected")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Delete selected",
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+    )
+}
+
 @Composable
 private fun BadgedIconButton(
     onClick: () -> Unit,
