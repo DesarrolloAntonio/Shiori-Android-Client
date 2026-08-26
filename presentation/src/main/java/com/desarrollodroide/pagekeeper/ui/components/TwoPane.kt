@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -29,8 +30,22 @@ val TwoPaneMinWidth: Dp = 840.dp
 /**
  * Width of the list pane. Fixed, not half the window: the list is a column of cards and stops
  * gaining anything past roughly one card, while the article always reads better with more room.
+ *
+ * 340dp is what the feed's own grid already calls one card, so the pane holds exactly one column
+ * and every dp beyond that was going to the list without the list doing anything with it.
  */
-val ListPaneWidth: Dp = 400.dp
+val ListPaneWidth: Dp = 340.dp
+
+/**
+ * Whether the feed is drawing inside the two-pane list rather than owning the window.
+ *
+ * A local rather than a parameter because it would otherwise be threaded through five signatures
+ * between the navigation graph and the card, every one of which would pass it straight down.
+ *
+ * It settles one thing that only the layout above knows: the card drops its excerpt, because the
+ * article that excerpt summarises is open in the next pane.
+ */
+val LocalFeedInListPane = staticCompositionLocalOf { false }
 
 /**
  * Whether the feed and an article should sit side by side.

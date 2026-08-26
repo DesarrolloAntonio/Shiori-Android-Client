@@ -175,39 +175,6 @@ fun FeedScreen(
         tagToHide = tagToHide,
         showOnlyHiddenTag = showOnlyHiddenTag
     )
-    if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures { }
-                }
-        ) {
-            feedViewModel.bookmarkSelected.value?.let {
-                setShowTopBar(false)
-                BookmarkEditorScreen(
-                    // Already inside the home scaffold's padded content.
-                    windowInsets = WindowInsets(0),
-                    pageTitle = "Edit",
-                    bookmarkEditorType = BookmarkEditorType.EDIT,
-                    bookmark = it,
-                    onBack = {
-                        setShowTopBar(true)
-                        feedViewModel.showBookmarkEditorScreen.value = false
-                    },
-                    // No sync here. editBookmark writes the server's own response into Room
-                    // before returning, and the feed is a Room pager, so the card repaints on its
-                    // own. Refreshing meant walking every page of the server to be told what the
-                    // app had just written: 334 requests to save an edit, on a library of ten
-                    // thousand.
-                    updateBookmark = {
-                        setShowTopBar(true)
-                        feedViewModel.showBookmarkEditorScreen.value = false
-                    }
-                )
-            }
-        }
-    }
     if (feedViewModel.showDeleteConfirmationDialog.value && feedViewModel.bookmarkToDelete.value != null) {
         ConfirmDialog(
             title = "Confirmation",

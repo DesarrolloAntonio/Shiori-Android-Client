@@ -2,6 +2,7 @@ package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -35,7 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import com.desarrollodroide.pagekeeper.ui.components.shouldSplitFormIntoTwoColumns
 import androidx.compose.material3.Scaffold
+import com.desarrollodroide.pagekeeper.ui.components.shouldSplitFormIntoTwoColumns
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
@@ -172,171 +175,213 @@ fun BookmarkEditorView(
             }
         },
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            Column(
-                // Capped and centred: on a tablet or an unfolded foldable the fields otherwise ran
-                // the whole 2000px. Scrollable because the tag list grows and a landscape phone
-                // with the keyboard up has very little height left.
-                modifier = Modifier
-                    .widthIn(max = ContentMaxWidth)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                Section(title = "Link") {
-                    if (isManual) {
-                        FilledField(
-                            value = url,
-                            onValueChange = onUrlChange,
-                            placeholder = "example.com",
-                            leadingIcon = Icons.Outlined.Link,
-                            isError = url.isNotBlank() && !canSave,
-                            supportingText = if (url.isNotBlank() && !canSave) {
-                                "That does not look like a link"
-                            } else {
-                                "https:// is added if you leave it out"
-                            },
-                            // Without these the keyboard capitalises and autocorrects: typing
-                            // google.es actually sent Google.es.
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Uri,
-                                capitalization = KeyboardCapitalization.None,
-                                autoCorrectEnabled = false,
-                                imeAction = ImeAction.Done,
-                            ),
-                        )
-                    } else {
-                        // The shared url cannot be edited here, so it reads as the link it is
-                        // rather than pretending to be a field.
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.medium,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Link,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = url,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    maxLines = 3,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Section(title = "Options") {
-                    // One surface around all of them, so they read as a group rather than as loose
-                    // rows floating on the page.
+        // Declared once, laid out two ways below.
+        val linkSection: @Composable () -> Unit = {
+            Section(title = "Link") {
+                if (isManual) {
+                    FilledField(
+                        value = url,
+                        onValueChange = onUrlChange,
+                        placeholder = "example.com",
+                        leadingIcon = Icons.Outlined.Link,
+                        isError = url.isNotBlank() && !canSave,
+                        supportingText = if (url.isNotBlank() && !canSave) {
+                            "That does not look like a link"
+                        } else {
+                            "https:// is added if you leave it out"
+                        },
+                        // Without these the keyboard capitalises and autocorrects: typing
+                        // google.es actually sent Google.es.
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            capitalization = KeyboardCapitalization.None,
+                            autoCorrectEnabled = false,
+                            imeAction = ImeAction.Done,
+                        ),
+                    )
+                } else {
+                    // The shared url cannot be edited here, so it reads as the link it is
+                    // rather than pretending to be a field.
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ) {
-                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                            if (!isEdit) {
-                                SwitchOption(
-                                    title = "Create archive",
-                                    subtitle = "Keep an offline copy of the page",
-                                    icon = Icons.Outlined.Archive,
-                                    checked = createArchive,
-                                    onCheckedChange = onCreateArchiveChanged,
-                                )
-                                SwitchOption(
-                                    title = "Create ebook",
-                                    subtitle = "Also save it as an epub",
-                                    icon = Icons.Outlined.MenuBook,
-                                    checked = createEbook,
-                                    onCheckedChange = onCreateEbookChanged,
-                                )
-                            }
-                            SwitchOption(
-                                title = "Public",
-                                subtitle = "Anyone with the link can read it",
-                                icon = Icons.Outlined.Public,
-                                checked = makeArchivePublic,
-                                onCheckedChange = onMakeArchivePublicChanged,
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Link,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = url,
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
                 }
-
-                Section(title = "Tags") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        FilledField(
-                            value = newTag.value,
-                            onValueChange = { newTag.value = it },
-                            placeholder = "New tag",
-                            leadingIcon = Icons.AutoMirrored.Outlined.Label,
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.None,
-                                autoCorrectEnabled = false,
-                                imeAction = ImeAction.Done,
-                            ),
-                        )
-                        // A tonal button: as bare text beside a field it did not read as something
-                        // you press.
-                        FilledTonalButton(
-                            onClick = ::addTypedTag,
-                            enabled = newTag.value.isNotBlank(),
-                            shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier.height(FieldHeight),
-                        ) {
-                            Text("Add")
+            }
+        }
+        val optionsSection: @Composable () -> Unit = {
+            Section(title = "Options") {
+                // One surface around all of them, so they read as a group rather than as loose
+                // rows floating on the page.
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        if (!isEdit) {
+                            SwitchOption(
+                                title = "Create archive",
+                                subtitle = "Keep an offline copy of the page",
+                                icon = Icons.Outlined.Archive,
+                                checked = createArchive,
+                                onCheckedChange = onCreateArchiveChanged,
+                            )
+                            SwitchOption(
+                                title = "Create ebook",
+                                subtitle = "Also save it as an epub",
+                                icon = Icons.Outlined.MenuBook,
+                                checked = createEbook,
+                                onCheckedChange = onCreateEbookChanged,
+                            )
                         }
-                    }
-
-                    if (assignedTags.value.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        RemovableTagsView(
-                            tags = assignedTags.value,
-                            onRemove = { removed ->
-                                assignedTags.value = assignedTags.value.filter { it != removed }
-                            },
-                        )
-                    }
-
-                    val suggestions = availableTags.value.filter { it !in assignedTags.value }
-                    if (suggestions.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Suggestions",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TagsSelectorView(
-                            availableTags = suggestions,
-                            onTagSelected = {
-                                if (!assignedTags.value.contains(it)) {
-                                    assignedTags.value = assignedTags.value + it
-                                }
-                            }
+                        SwitchOption(
+                            title = "Public",
+                            subtitle = "Anyone with the link can read it",
+                            icon = Icons.Outlined.Public,
+                            checked = makeArchivePublic,
+                            onCheckedChange = onMakeArchivePublicChanged,
                         )
                     }
                 }
+            }
+        }
+        val tagsSection: @Composable () -> Unit = {
+            Section(title = "Tags") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    FilledField(
+                        value = newTag.value,
+                        onValueChange = { newTag.value = it },
+                        placeholder = "New tag",
+                        leadingIcon = Icons.AutoMirrored.Outlined.Label,
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.None,
+                            autoCorrectEnabled = false,
+                            imeAction = ImeAction.Done,
+                        ),
+                    )
+                    // A tonal button: as bare text beside a field it did not read as something
+                    // you press.
+                    FilledTonalButton(
+                        onClick = ::addTypedTag,
+                        enabled = newTag.value.isNotBlank(),
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.height(FieldHeight),
+                    ) {
+                        Text("Add")
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                if (assignedTags.value.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RemovableTagsView(
+                        tags = assignedTags.value,
+                        onRemove = { removed ->
+                            assignedTags.value = assignedTags.value.filter { it != removed }
+                        },
+                    )
+                }
+
+                val suggestions = availableTags.value.filter { it !in assignedTags.value }
+                if (suggestions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Suggestions",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TagsSelectorView(
+                        availableTags = suggestions,
+                        onTagSelected = {
+                            if (!assignedTags.value.contains(it)) {
+                                assignedTags.value = assignedTags.value + it
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            if (shouldSplitFormIntoTwoColumns(maxWidth, maxHeight)) {
+                // A tablet in landscape has about 540dp of height and 960dp of width. One tall
+                // column put two thirds of the width to no use at all and still could not fit the
+                // form: Tags was cut in half by the save bar and everything below it was off
+                // screen. Two columns spend the width instead of the height.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    // 16dp rather than the 24dp the single column uses. At 540dp of height the
+                    // three add-time switches came to about 20dp more than the column had, and a
+                    // card clipped by the save bar looks broken even though it scrolls.
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        linkSection()
+                        optionsSection()
+                    }
+                    // Tags gets its own column because it is the half that grows: assigned chips
+                    // and suggestions have no fixed height, and the other two do.
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        tagsSection()
+                    }
+                }
+            } else {
+                Column(
+                    // Capped and centred: on a tablet or an unfolded foldable the fields otherwise
+                    // ran the whole 2000px. Scrollable because the tag list grows and a landscape
+                    // phone with the keyboard up has very little height left.
+                    modifier = Modifier
+                        .widthIn(max = ContentMaxWidth)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    linkSection()
+                    optionsSection()
+                    tagsSection()
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }

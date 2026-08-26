@@ -25,6 +25,8 @@ import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.FormMaxWidth
+import com.desarrollodroide.pagekeeper.ui.components.LockPortraitOnPhone
+import com.desarrollodroide.pagekeeper.ui.components.shouldPlaceBrandingBeside
 import com.desarrollodroide.model.User
 import androidx.compose.runtime.getValue
 import com.desarrollodroide.data.helpers.SHIORI_GITHUB_URL
@@ -36,6 +38,8 @@ fun LoginScreen(
     loginViewModel: LoginViewModel,
     onSuccess: (User) -> Unit,
 ) {
+    LockPortraitOnPhone()
+
     val loginUiState: UiState<User> by loginViewModel.userUiState.collectAsStateWithLifecycle()
     val livenessUiState: UiState<LivenessResponse> by loginViewModel.livenessUiState.collectAsStateWithLifecycle()
     val serverAvailabilityUiState: UiState<LivenessResponse> by loginViewModel.serverAvailabilityUiState.collectAsStateWithLifecycle()
@@ -184,85 +188,180 @@ private fun ContentViews(
                 .height(150.dp)
                 .align(Alignment.BottomCenter)
         )
-        Column(
+        // The insets go here rather than inside the scroll, so that the height the layout decision
+        // is made against is the height the content can actually use. The wave above is deliberately
+        // outside them: it is decoration and belongs edge to edge.
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                // The form used to sit in a fixed-height Box, so on short screens (or with the
-                // keyboard up) the login button went off-screen with no way to reach it.
-                .verticalScroll(rememberScrollState())
                 .imePadding()
                 .safeDrawingPadding()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_logo),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.height(110.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Welcome back",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = "Sign in to your Shiori server",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Surface(
-                // widthIn before fillMaxWidth. The other way round, fillMaxWidth pins the width
-                // to the parent's max and there is nothing left for widthIn to clamp.
+            val availableHeight = maxHeight
+            val brandingBeside = shouldPlaceBrandingBeside(maxWidth, availableHeight)
+
+            val form: @Composable (Modifier) -> Unit = { formModifier ->
+                LoginFormCard(
+                    modifier = formModifier,
+                    serverUrl = serverUrl,
+                    urlErrorState = urlErrorState,
+                    user = user,
+                    userErrorState = userErrorState,
+                    password = password,
+                    passwordErrorState = passwordErrorState,
+                    isTestingServer = isTestingServer,
+                    onClickLoginButton = onClickLoginButton,
+                    onClickTestButton = onClickTestButton,
+                    checked = checked,
+                    onCheckedRememberSessionChange = onCheckedRememberSessionChange,
+                    serverAvailabilityUiState = serverAvailabilityUiState,
+                    serverVersion = serverVersion,
+                    resetServerAvailabilityState = resetServerAvailabilityState,
+                )
+            }
+
+            Box(
                 modifier = Modifier
-                    .widthIn(max = FormMaxWidth)
-                    .fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ServerUrlTextField(
-                        serverUrl = serverUrl,
-                        serverErrorState = urlErrorState,
-                        serverAvailabilityUiState = serverAvailabilityUiState,
-                        serverVersion = serverVersion,
-                        resetServerAvailabilityState = resetServerAvailabilityState,
-                        onClick = onClickTestButton,
-                        isTestingServer = isTestingServer
-                    )
-                    UserTextField(
-                        user = user,
-                        userErrorState = userErrorState
-                    )
-                    PasswordTextField(
-                        password = password,
-                        passwordErrorState = passwordErrorState
-                    )
-                    RememberSessionSection(
-                        checked = checked,
-                        onCheckedChange = onCheckedRememberSessionChange
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    LoginButton(
-                        user = user,
-                        userErrorState = userErrorState,
-                        password = password,
-                        passwordErrorState = passwordErrorState,
-                        onClickLoginButton = onClickLoginButton,
-                        serverErrorState = urlErrorState
-                    )
+                if (brandingBeside) {
+                    Row(
+                        // heightIn against the viewport is what lets this be centred when it fits
+                        // and scroll when it does not. A scrollable child is measured with an
+                        // unbounded height, so without a floor there is no spare space for an
+                        // arrangement to centre anything in and the content pins to the top.
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = availableHeight)
+                            .padding(horizontal = 32.dp, vertical = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(
+                            modifier = Modifier.widthIn(max = FormMaxWidth),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            LoginBranding()
+                            Spacer(modifier = Modifier.height(24.dp))
+                            LinkableText(
+                                text = "Server Setup Guide",
+                                url = SHIORI_GITHUB_URL
+                            )
+                        }
+                        form(Modifier.widthIn(max = FormMaxWidth))
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = availableHeight)
+                            .padding(horizontal = 24.dp, vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        LoginBranding()
+                        Spacer(modifier = Modifier.height(24.dp))
+                        form(
+                            Modifier
+                                .widthIn(max = FormMaxWidth)
+                                .fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        LinkableText(
+                            text = "Server Setup Guide",
+                            url = SHIORI_GITHUB_URL
+                        )
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            LinkableText(
-                text = "Server Setup Guide",
-                url = SHIORI_GITHUB_URL
+        }
+    }
+}
+
+@Composable
+private fun LoginBranding() {
+    Image(
+        painter = painterResource(id = R.drawable.ic_logo),
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
+        modifier = Modifier.height(110.dp)
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = "Welcome back",
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    Text(
+        text = "Sign in to your Shiori server",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun LoginFormCard(
+    modifier: Modifier,
+    serverUrl: MutableState<String>,
+    urlErrorState: MutableState<Boolean>,
+    user: MutableState<String>,
+    userErrorState: MutableState<Boolean>,
+    password: MutableState<String>,
+    passwordErrorState: MutableState<Boolean>,
+    isTestingServer: Boolean,
+    onClickLoginButton: () -> Unit,
+    onClickTestButton: () -> Unit,
+    checked: MutableState<Boolean>,
+    onCheckedRememberSessionChange: (Boolean) -> Unit,
+    serverAvailabilityUiState: UiState<LivenessResponse>,
+    serverVersion: String,
+    resetServerAvailabilityState: () -> Unit
+) {
+    Surface(
+        // widthIn before fillMaxWidth. The other way round, fillMaxWidth pins the width
+        // to the parent's max and there is nothing left for widthIn to clamp.
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ServerUrlTextField(
+                serverUrl = serverUrl,
+                serverErrorState = urlErrorState,
+                serverAvailabilityUiState = serverAvailabilityUiState,
+                serverVersion = serverVersion,
+                resetServerAvailabilityState = resetServerAvailabilityState,
+                onClick = onClickTestButton,
+                isTestingServer = isTestingServer
+            )
+            UserTextField(
+                user = user,
+                userErrorState = userErrorState
+            )
+            PasswordTextField(
+                password = password,
+                passwordErrorState = passwordErrorState
+            )
+            // Remember me is a control, not a fourth field, and at the column's 8dp it read as
+            // one more row of the password field. The extra spacer either side sets it apart
+            // without turning the card into a list of loosely related things.
+            Spacer(modifier = Modifier.height(8.dp))
+            RememberSessionSection(
+                checked = checked,
+                onCheckedChange = onCheckedRememberSessionChange
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LoginButton(
+                user = user,
+                userErrorState = userErrorState,
+                password = password,
+                passwordErrorState = passwordErrorState,
+                onClickLoginButton = onClickLoginButton,
+                serverErrorState = urlErrorState
             )
         }
     }

@@ -1,6 +1,9 @@
 package com.desarrollodroide.pagekeeper.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.WindowInsets
@@ -120,7 +124,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.components.TwoPaneEmptyDetail
+import androidx.compose.runtime.CompositionLocalProvider
+import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
+import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.material3.ScaffoldDefaults
 import com.desarrollodroide.pagekeeper.ui.components.ListPaneWidth
+import com.desarrollodroide.pagekeeper.ui.components.LocalFeedInListPane
 import com.desarrollodroide.pagekeeper.ui.components.shouldUseTwoPanes
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.CloudUpload
@@ -216,6 +227,37 @@ fun HomeScreen(
 
             val pendingJobsCount by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
             val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
+            val useTwoPaneLayout by feedViewModel.useTwoPaneLayout.collectAsStateWithLifecycle()
+            // Which bookmark the detail pane is showing. Only the id is kept: Bookmark is not
+            // parcelable, and the feed view model can resolve it again after a rotation.
+            var openBookmarkId by rememberSaveable { mutableStateOf<Int?>(null) }
+
+            // Measured rather than taken from a window size class, so the same decision can be
+            // driven from a test by handing the composable a width. It sits outside the scaffold
+            // because the fab slot needs the answer too: in two panes the add button belongs to
+            // the list, not to the window, and the scaffold would otherwise put it over the
+            // article.
+            BoxWithConstraints {
+            val twoPanes = shouldUseTwoPanes(useTwoPaneLayout, maxWidth)
+            // Editing is a mode, not a view: it takes the window rather than a pane. Inside the
+            // feed it inherited whatever width the feed had, which in two panes is the 340dp list
+            // column with the other two thirds showing "Nothing open" beside it. Up here it also
+            // gets the editor's own two column layout on a short window, which a 620dp pane is too
+            // narrow to trigger and too short to do without.
+            val editingBookmark = feedViewModel.bookmarkSelected.value
+            val editorOpen = editingBookmark != null && feedViewModel.showBookmarkEditorScreen.value
+            val addBookmarkFab: @Composable () -> Unit = {
+                AnimatedVisibility(showTopBar) {
+                    FloatingActionButton(
+                        onClick = onAddManuallyClick,
+                        shape = MaterialTheme.shapes.large,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add bookmark")
+                    }
+                }
+            }
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.surface,
                 topBar = {
@@ -250,31 +292,11 @@ fun HomeScreen(
                         )
                     }
                 },
-                floatingActionButton = {
-                    AnimatedVisibility(showTopBar) {
-                        FloatingActionButton(
-                            onClick = onAddManuallyClick,
-                            shape = MaterialTheme.shapes.large,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add bookmark")
-                        }
-                    }
-                }
+                floatingActionButton = { if (!twoPanes) addBookmarkFab() }
             ) { paddingValues ->
-                val useTwoPaneLayout by feedViewModel.useTwoPaneLayout.collectAsStateWithLifecycle()
-                // Which bookmark the detail pane is showing. Only the id is kept: Bookmark is not
-                // parcelable, and the feed view model can resolve it again after a rotation.
-                var openBookmarkId by rememberSaveable { mutableStateOf<Int?>(null) }
-
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier.padding(paddingValues)
                 ) {
-                    // Measured rather than taken from a window size class, so the same decision can
-                    // be driven from a test by handing the composable a width.
-                    val twoPanes = shouldUseTwoPanes(useTwoPaneLayout, maxWidth)
-
                     val feed: @Composable (Modifier) -> Unit = { _ ->
                         FeedScreen(
                             feedViewModel = feedViewModel,
@@ -297,26 +319,87 @@ fun HomeScreen(
                         )
                     }
 
-                    if (twoPanes) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            Box(modifier = Modifier.width(ListPaneWidth)) { feed(Modifier) }
-                            VerticalDivider()
-                            Box(modifier = Modifier.weight(1f)) {
-                                TwoPaneDetail(
-                                    bookmarkId = openBookmarkId,
-                                    feedViewModel = feedViewModel,
-                                    openUrlInBrowser = openUrlInBrowser,
-                                    onClose = { openBookmarkId = null },
-                                )
+                    when {
+                        twoPanes -> {
+                            Row(modifier = Modifier.fillMaxSize()) {
+                                Box(modifier = Modifier.width(ListPaneWidth)) {
+                                    CompositionLocalProvider(LocalFeedInListPane provides true) {
+                                        feed(Modifier)
+                                    }
+                                    // Both floating buttons belong to the feed, so in two panes they
+                                    // move into the list with it. Left in the scaffold, the add button
+                                    // sat at the bottom of the window, which is on top of the article.
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(16.dp)
+                                    ) {
+                                        addBookmarkFab()
+                                    }
+                                }
+                                VerticalDivider()
+                                Box(modifier = Modifier.weight(1f)) {
+                                    TwoPaneDetail(
+                                        bookmarkId = openBookmarkId,
+                                        feedViewModel = feedViewModel,
+                                        openUrlInBrowser = openUrlInBrowser,
+                                        onClose = { openBookmarkId = null },
+                                    )
+                                }
                             }
                         }
-                    } else {
-                        // The pane can only have been opened on a wider window. Drop it, or the
-                        // selection would come back on the next rotation into landscape.
-                        LaunchedEffect(twoPanes) { openBookmarkId = null }
-                        feed(Modifier)
+
+                        else -> {
+                            // The pane can only have been opened on a wider window. Drop it, or
+                            // the selection would come back on the next rotation into landscape.
+                            LaunchedEffect(twoPanes) { openBookmarkId = null }
+                            feed(Modifier)
+                        }
                     }
                 }
+            }
+            // Over the scaffold, not inside its content. Inside, hiding the feed's app bar
+            // animated the content padding away underneath the editor: it slid up to the status
+            // bar over the course of the animation and then dropped back when its own app bar
+            // laid out. Nothing behind it moves now, because nothing behind it is relaid out.
+            // Opening it is a transition, not a state change appearing out of nowhere. The + is
+            // an activity, so the system animates it in; this is a composable in the same
+            // window and gets nothing for free. Reading the bookmark rather than the flag is
+            // deliberate: bookmarkSelected outlives the flag, so the exit still has something
+            // to draw on the way out.
+            AnimatedVisibility(
+                visible = editorOpen,
+                enter = fadeIn(tween(220)) + slideInVertically(tween(220, easing = FastOutSlowInEasing)) { it / 12 },
+                exit = fadeOut(tween(180)) + slideOutVertically(tween(180, easing = FastOutSlowInEasing)) { it / 12 },
+            ) {
+                editingBookmark ?: return@AnimatedVisibility
+                // Swallows taps so nothing behind it reacts, the same as when it lived in
+                // the feed.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) { detectTapGestures { } }
+                ) {
+                    BookmarkEditorScreen(
+                        // Already inside the home scaffold's padded content.
+                        // systemBars, not WindowInsets(0): the editor is no longer inside the
+                        // scaffold's padded content, so it has to inset itself. Its app bar
+                        // takes the top from this same value, and at zero it drew "Edit"
+                        // across the clock.
+                        windowInsets = WindowInsets.systemBars,
+                        pageTitle = "Edit",
+                        bookmarkEditorType = BookmarkEditorType.EDIT,
+                        bookmark = editingBookmark,
+                        onBack = { feedViewModel.showBookmarkEditorScreen.value = false },
+                        // No sync here. editBookmark writes the server's own response into
+                        // Room before returning, and the feed is a Room pager, so the card
+                        // repaints on its own. Refreshing meant walking every page of the
+                        // server to be told what the app had just written: 334 requests to
+                        // save an edit, on a library of ten thousand.
+                        updateBookmark = { feedViewModel.showBookmarkEditorScreen.value = false },
+                    )
+                }
+            }
             }
         }
         composable(NavItem.SettingsNavItem.route) {
@@ -802,6 +885,7 @@ private fun TwoPaneDetail(
                 bookmarkDate = it.modified,
                 bookmarkTitle = it.title,
                 isRtl = it.title.isRTLText() || it.excerpt.isRTLText(),
+                embeddedInPane = true,
             )
         }
     }

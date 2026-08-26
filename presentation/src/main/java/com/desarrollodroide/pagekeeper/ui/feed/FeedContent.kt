@@ -223,6 +223,12 @@ fun FeedContent(
         // Bottom end, above the scaffold's add fab. Without the offset it sat underneath that fab
         // at identical coordinates: composed, invisible and impossible to tap.
         //
+        // The add fab moves into the list pane along with the feed in two panes, so this offset
+        // is real clearance in both layouts and the two buttons read as one stack in the corner.
+        // While the fab stayed behind in the scaffold, at the bottom of the window and therefore
+        // over the article, this was 88dp of nothing and left the button hovering in the middle of
+        // the list against a card's action row.
+        //
         // A card's action row is right aligned, so this corner is also where a card's delete icon
         // passes as the feed scrolls, and the two end up a few pixels apart. zIndex keeps this
         // button above the grid for hit testing as well as drawing, so a tap on it cannot reach
@@ -236,13 +242,15 @@ fun FeedContent(
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut()
         ) {
+            // Same shape and colour as the add fab below it, one size down. As a muted square
+            // next to a solid circle it read as something that had landed on the card behind it
+            // rather than as the other half of a pair.
             SmallFloatingActionButton(
                 onClick = {
                     coroutineScope.launch { gridState.animateScrollToItem(0) }
                 },
-                shape = MaterialTheme.shapes.medium,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             ) {
                 Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
             }

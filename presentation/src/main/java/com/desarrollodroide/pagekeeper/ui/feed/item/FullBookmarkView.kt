@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
+import com.desarrollodroide.pagekeeper.ui.components.LocalFeedInListPane
 
 @Composable
 fun FullBookmarkView(
@@ -112,7 +113,10 @@ fun FullBookmarkView(
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2
                 )
-                if (bookmark.excerpt.isNotEmpty()) {
+                // No excerpt beside an open article: the pane on the right is showing the same
+                // text in full, so in the list it is three lines of duplication in the narrowest
+                // column on screen.
+                if (bookmark.excerpt.isNotEmpty() && !LocalFeedInListPane.current) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
                         text = bookmark.excerpt,
