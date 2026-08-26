@@ -56,23 +56,22 @@ reached again.
 
 ### Phone
 
-|                                                            |                                                                    |                                                          |                                                              |                                                                    |
-|:----------------------------------------------------------:|:------------------------------------------------------------------:|:--------------------------------------------------------:|:------------------------------------------------------------:|:------------------------------------------------------------------:|
-| ![Bookmarks](images/screenshots/phone-feed.png)            | ![Settings](images/screenshots/phone-settings.png)                 | ![Tags](images/screenshots/phone-tags.png)               | ![Editing a bookmark](images/screenshots/phone-editor.png)   | ![Bookmarks in dark mode](images/screenshots/phone-feed-dark.png)  |
-| Bookmarks                                                  | Settings                                                           | Tags                                                     | Editing a bookmark                                           | Dark mode                                                          |
+| | | | | |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="images/screenshots/phone-feed.png" alt="Bookmarks" width="170"> | <img src="images/screenshots/phone-settings.png" alt="Settings" width="170"> | <img src="images/screenshots/phone-tags.png" alt="Tags" width="170"> | <img src="images/screenshots/phone-editor.png" alt="Editing a bookmark" width="170"> | <img src="images/screenshots/phone-feed-dark.png" alt="Bookmarks in dark mode" width="170"> |
+| Bookmarks | Settings | Tags | Editing a bookmark | Dark mode |
 
 ### Tablet and foldable
 
 The list is a staggered grid that takes as many columns as the window can hold: one on a phone,
 two on an unfolded foldable, three on a tablet.
 
-|                                                                  |                                                                            |
-|:----------------------------------------------------------------:|:--------------------------------------------------------------------------:|
-| ![Tablet](images/screenshots/tablet.png)                         | ![Tablet in dark mode](images/screenshots/tablet-dark.png)                 |
-| Tablet                                                           | Tablet, dark mode                                                          |
-| ![Foldable](images/screenshots/foldable.png)                     | ![Foldable in dark mode](images/screenshots/foldable-dark.png)             |
-| Unfolded foldable                                                | Unfolded foldable, dark mode                                               |
-
+| | |
+|:-:|:-:|
+| <img src="images/screenshots/tablet.png" alt="Tablet" width="440"> | <img src="images/screenshots/tablet-dark.png" alt="Tablet in dark mode" width="440"> |
+| Tablet | Tablet, dark mode |
+| <img src="images/screenshots/foldable.png" alt="Unfolded foldable" width="440"> | <img src="images/screenshots/foldable-dark.png" alt="Unfolded foldable in dark mode" width="440"> |
+| Unfolded foldable | Unfolded foldable, dark mode |
 
 ## Features
 
