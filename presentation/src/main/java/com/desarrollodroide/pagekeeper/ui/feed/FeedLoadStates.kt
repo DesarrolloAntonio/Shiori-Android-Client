@@ -17,8 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+/*
+ * What the feed shows in place of bookmarks: loading the first page, loading the next one, and
+ * failing at either. All three are emitted as full line items by FeedContent, its only caller.
+ *
+ * Not in item/, which is the bookmark card and its parts. None of these is a bookmark.
+ */
+
 /**
- * Full-screen loader for the first page.
+ * Loader for the first page: a full width row, which is the whole grid while it is the only item
+ * in it.
  *
  * [ContainedLoadingIndicator] is the Expressive replacement for a bare spinner: it morphs through
  * a sequence of shapes inside a tonal container instead of rotating a stroke.
