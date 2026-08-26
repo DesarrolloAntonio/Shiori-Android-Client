@@ -132,7 +132,7 @@ fun SyncJobsBottomSheetContent(
 
 @Preview(showBackground = true)
 @Composable
-fun SyncJobsBottomSheetContentPreview() {
+private fun SyncJobsBottomSheetContentPreview() {
     SyncJobsBottomSheetContent(
         pendingJobs = listOf(
             PendingJob(operationType = SyncOperationType.CREATE, state = "Pending", bookmarkId = 1, "Bookmark 1"),

@@ -499,7 +499,7 @@ private val ActionButtonHeight = 52.dp
 
 @Preview(showBackground = true)
 @Composable
-fun BookmarkEditorPreview() {
+private fun BookmarkEditorPreview() {
     val tag1 = Tag(id = 1, name = "android", selected = true, nBookmarks = 0)
     val tag2 = Tag(id = 2, name = "compose", selected = false, nBookmarks = 0)
     val assignedTags = remember { mutableStateOf(listOf(tag1)) }

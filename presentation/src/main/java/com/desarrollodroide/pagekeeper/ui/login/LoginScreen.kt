@@ -397,7 +397,7 @@ private fun LoginContentSample() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
 @Composable
-fun DefaultPreview() {
+private fun LoginScreenPreview() {
     LoginContentSample()
 }
 
@@ -420,7 +420,7 @@ fun DefaultPreview() {
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 @Composable
-fun LandscapeTabletPreview() {
+private fun LandscapeTabletPreview() {
     LoginContentSample()
 }
 
@@ -437,6 +437,6 @@ fun LandscapeTabletPreview() {
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 @Composable
-fun ShortLandscapeTabletPreview() {
+private fun ShortLandscapeTabletPreview() {
     LoginContentSample()
 }

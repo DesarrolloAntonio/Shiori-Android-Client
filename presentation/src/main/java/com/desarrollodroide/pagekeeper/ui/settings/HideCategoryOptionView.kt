@@ -108,7 +108,7 @@ fun HideCategoryOptionView(
 
 @Preview(showBackground = true)
 @Composable
-fun SortAndFilterScreenPreview() {
+private fun HideCategoryOptionViewPreview() {
     val regionOptions =
             listOf(
                 Tag(id = 1, name = "Northern Europe"), Tag(id = 2, name = "Western Europe"),

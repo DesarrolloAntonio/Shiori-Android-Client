@@ -123,7 +123,7 @@ private fun PaneTopSection(
 @RequiresApi(Build.VERSION_CODES.N)
 @Preview(showBackground = true)
 @Composable
-fun TopSectionPreview() {
+private fun TopSectionPreview() {
     MaterialTheme {
         TopSection(
             title = "A Developer’s Roadmap to Predictive Back (Views)",
