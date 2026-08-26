@@ -56,10 +56,12 @@ reached again.
 
 ### Phone
 
-| | | | | |
-|:-:|:-:|:-:|:-:|:-:|
-| <img src="images/screenshots/phone-feed.png" alt="Bookmarks" width="170"> | <img src="images/screenshots/phone-settings.png" alt="Settings" width="170"> | <img src="images/screenshots/phone-tags.png" alt="Tags" width="170"> | <img src="images/screenshots/phone-editor.png" alt="Editing a bookmark" width="170"> | <img src="images/screenshots/phone-feed-dark.png" alt="Bookmarks in dark mode" width="170"> |
-| Bookmarks | Settings | Tags | Editing a bookmark | Dark mode |
+| | | | |
+|:-:|:-:|:-:|:-:|
+| <img src="images/screenshots/phone-feed.png" alt="The bookmark list" width="160"> | <img src="images/screenshots/phone-compact.png" alt="The bookmark list in compact view" width="160"> | <img src="images/screenshots/phone-tags.png" alt="Tag management" width="160"> | <img src="images/screenshots/phone-editor.png" alt="Editing a bookmark" width="160"> |
+| Bookmarks | Compact | Tags | Editor |
+| <img src="images/screenshots/phone-feed-dark.png" alt="The bookmark list in dark mode" width="160"> | <img src="images/screenshots/phone-compact-dark.png" alt="Compact view in dark mode" width="160"> | <img src="images/screenshots/phone-settings.png" alt="Settings" width="160"> | <img src="images/screenshots/phone-settings-dark.png" alt="Settings in dark mode" width="160"> |
+| Bookmarks, dark | Compact, dark | Settings | Settings, dark |
 
 ### Tablet and foldable
 
@@ -68,9 +70,9 @@ two on an unfolded foldable, three on a tablet.
 
 | | |
 |:-:|:-:|
-| <img src="images/screenshots/tablet.png" alt="Tablet" width="440"> | <img src="images/screenshots/tablet-dark.png" alt="Tablet in dark mode" width="440"> |
+| <img src="images/screenshots/tablet.png" alt="Tablet" width="400"> | <img src="images/screenshots/tablet-dark.png" alt="Tablet in dark mode" width="400"> |
 | Tablet | Tablet, dark mode |
-| <img src="images/screenshots/foldable.png" alt="Unfolded foldable" width="440"> | <img src="images/screenshots/foldable-dark.png" alt="Unfolded foldable in dark mode" width="440"> |
+| <img src="images/screenshots/foldable.png" alt="Unfolded foldable" width="400"> | <img src="images/screenshots/foldable-dark.png" alt="Unfolded foldable in dark mode" width="400"> |
 | Unfolded foldable | Unfolded foldable, dark mode |
 
 ## Features
