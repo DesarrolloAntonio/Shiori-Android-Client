@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,7 +68,7 @@ fun SettingsScreen(
     BackHandler {
         onBack()
     }
-    val settingsUiState by settingsViewModel.settingsUiState.collectAsStateWithLifecycle()
+    val logoutUiState by settingsViewModel.logoutUiState.collectAsStateWithLifecycle()
     val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
     val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
@@ -113,7 +112,7 @@ fun SettingsScreen(
             contentAlignment = Alignment.TopCenter,
         ) {
             SettingsContent(
-                settingsUiState = settingsUiState,
+                logoutUiState = logoutUiState,
                 tagsUiState = tagsUiState,
                 onLogout = { settingsViewModel.logout() },
                 goToLogin = {
@@ -166,7 +165,7 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsContent(
-    settingsUiState: UiState<String>,
+    logoutUiState: UiState<String>,
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: Boolean,
@@ -197,26 +196,24 @@ fun SettingsContent(
     onClearCache: () -> Unit,
     serverVersion: String,
     serverUrl: String,
-    ) {
+) {
     val context = LocalContext.current
-    if (settingsUiState.isLoading) {
+    // The only operation this state tracks is the logout. Null data is the resting state, not an
+    // absent screen: it means nobody has pressed Log out yet. Data means the server said goodbye,
+    // so the session is gone and there is nothing left here to show.
+    if (logoutUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
-        Log.v("SettingsContent!!", "settingsUiState.isLoading")
     }
-    if (!settingsUiState.error.isNullOrEmpty()) {
+    if (!logoutUiState.error.isNullOrEmpty()) {
         ErrorDialog(
             title = "Error",
-            content = settingsUiState.error,
+            content = logoutUiState.error,
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
                 goToLogin()
             }
         )
-        Log.v("SettingsContent!!", settingsUiState.error)
-    } else if (settingsUiState.data == null) {
-        Log.v("SettingsContent!!", "settingsUiState.data is null")
-    } else {
-        Log.v("SettingsContent!!", "settingsUiState.data is not null")
+    } else if (logoutUiState.data != null) {
         LaunchedEffect(Unit) {
             goToLogin()
         }
@@ -356,9 +353,9 @@ data class Item(
 
 @Preview(showBackground = true)
 @Composable
-fun SettingsScreenPreview() {
+private fun SettingsScreenPreview() {
     SettingsContent(
-        settingsUiState = UiState(isLoading = false),
+        logoutUiState = UiState(isLoading = false),
         makeArchivePublic = false,
         onMakeArchivePublicChanged = {},
         createEbook = false,
