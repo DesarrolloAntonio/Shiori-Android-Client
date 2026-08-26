@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="images/page_keeper_logo.png" width="120" alt="EhViewer">
+  <img src="images/page_keeper_logo.png" width="120" alt="Shiori">
   <br>Shiori<br>
 </h1>
 
@@ -25,11 +25,13 @@
   <h3>
     <a href="#description">Description</a>
     <span> | </span>
-    <a href="#screenshot">Screenshot</a>
+    <a href="#screenshots">Screenshots</a>
     <span> | </span>
     <a href="#features">Features</a>
     <span> | </span>
     <a href="#technologies-used">Technologies Used</a>
+    <span> | </span>
+    <a href="#development-status">Development Status</a>
     <span> | </span>
     <a href="#download">Download</a>
     <span> | </span>
@@ -61,9 +63,9 @@ Shiori is built using a variety of modern and robust technologies to ensure scal
 - **Use Cases**: Defining clear business logic.
 - **Repository Pattern**: For efficient data handling and abstraction.
 - **Protobuf (Proto)**: For efficient data serialization.
-- 
-## Development Status ⚠️
-Please note that Shiori is currently under development. While we strive to provide a stable experience, you may encounter bugs or incomplete features. We encourage users to:
+
+## Development Status
+⚠️ Please note that Shiori is currently under development. While we strive to provide a stable experience, you may encounter bugs or incomplete features. We encourage users to:
 - Report any issues you find on our [GitHub Issues page](https://github.com/DesarrolloAntonio/Shiori-Android-Client/issues)
 - Be aware that some features might be unstable or work in progress
 - Expect regular updates as we continue to improve the application
