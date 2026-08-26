@@ -349,3 +349,18 @@ private fun TopBarWithPendingPreview() {
         )
     }
 }
+
+/** The other state of the same slot, so the two can be compared side by side in the preview pane. */
+@Preview(name = "Selection bar", showBackground = true)
+@Composable
+private fun SelectionTopBarPreview() {
+    ShioriTheme {
+        SelectionTopBar(
+            selectedCount = 3,
+            onClose = { },
+            onDelete = { },
+            onUpdateCache = { },
+            onAddTags = { },
+        )
+    }
+}
