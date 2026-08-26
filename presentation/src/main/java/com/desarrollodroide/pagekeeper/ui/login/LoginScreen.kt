@@ -367,10 +367,9 @@ private fun LoginFormCard(
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
+/** The form filled in, so the previews show it at the size it actually occupies. */
 @Composable
-fun DefaultPreview() {
+private fun LoginContentSample() {
     ShioriTheme(
         dynamicColor = false
     ) {
@@ -393,4 +392,51 @@ fun DefaultPreview() {
             resetServerAvailabilityState = {}
         )
     }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
+@Composable
+fun DefaultPreview() {
+    LoginContentSample()
+}
+
+/**
+ * A tablet in landscape: 960x600dp, the Pixel Tablet on its side.
+ *
+ * This is the layout the branding-beside-the-form rule exists for. Stacked, the form wants about
+ * 680dp of height and the button ends up under the gesture bar.
+ */
+@Preview(
+    name = "Landscape tablet",
+    device = "spec:width=960dp,height=600dp,dpi=320",
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+)
+@Preview(
+    name = "Landscape tablet, dark",
+    device = "spec:width=960dp,height=600dp,dpi=320",
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun LandscapeTabletPreview() {
+    LoginContentSample()
+}
+
+/**
+ * The tightest real case: a 16:9 tablet, 960x540dp.
+ *
+ * Sixty fewer dp of height than the one above, which was enough to leave only the top edge of the
+ * Log in button on screen before the layout split.
+ */
+@Preview(
+    name = "Short landscape tablet",
+    device = "spec:width=960dp,height=540dp,dpi=320",
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun ShortLandscapeTabletPreview() {
+    LoginContentSample()
 }
