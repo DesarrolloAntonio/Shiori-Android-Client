@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
@@ -207,8 +208,30 @@ fun FeedContent(
             item(span = StaggeredGridItemSpan.FullLine) { Spacer(modifier = Modifier.height(88.dp)) }
         }
 
+        // Whether the last movement was towards the top of the list. Kept in state rather than
+        // derived, because it is a fact about a gesture that has already happened: once the scroll
+        // stops the value has to stay, or the button would vanish under the finger that was
+        // reaching for it.
+        var scrollingUp by remember { mutableStateOf(false) }
+        LaunchedEffect(gridState) {
+            var previousIndex = gridState.firstVisibleItemIndex
+            var previousOffset = gridState.firstVisibleItemScrollOffset
+            snapshotFlow {
+                gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
+            }.collect { (index, offset) ->
+                scrollingUp = movedTowardsTop(index, offset, previousIndex, previousOffset)
+                previousIndex = index
+                previousOffset = offset
+            }
+        }
+
+        // Being scrolled off the first item is only half of it. Shown on the way down as well, this
+        // button rides the whole descent stacked under the add fab, and in the 340dp list pane of
+        // the two pane layout the pair covers about a third of a card to offer something nobody
+        // reading forwards has asked for. Wanting to go back up is a deliberate move, and it is
+        // enough of a signal to put the button there.
         val showScrollToTopButton by remember {
-            derivedStateOf { gridState.firstVisibleItemIndex > 0 }
+            derivedStateOf { gridState.firstVisibleItemIndex > 0 && scrollingUp }
         }
 
         // Bottom end, above the scaffold's add fab. Without the offset it sat underneath that fab
@@ -248,3 +271,21 @@ fun FeedContent(
         }
     }
 }
+
+/**
+ * Whether a grid moved towards the top of the list between two readings of its scroll position.
+ *
+ * The index alone cannot answer it: most scrolling happens inside one item, where the index does
+ * not change at all and only the offset into it does. And the offset alone cannot answer it
+ * either, because it resets to near zero every time the index changes, so a fall in the offset
+ * across an item boundary is not movement upwards.
+ *
+ * Standing still counts as not moving up. The caller keeps the previous answer until the grid
+ * moves again, so the button does not disappear the moment a scroll ends.
+ */
+internal fun movedTowardsTop(
+    index: Int,
+    offset: Int,
+    previousIndex: Int,
+    previousOffset: Int,
+): Boolean = if (index != previousIndex) index < previousIndex else offset < previousOffset
