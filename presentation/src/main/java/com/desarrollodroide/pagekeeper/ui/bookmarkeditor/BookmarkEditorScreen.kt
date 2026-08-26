@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -57,11 +56,9 @@ fun BookmarkEditorScreen(
         onBack()
     }
     if (bookmarkUiState.isLoading) {
-        Log.v("BookmarkEditorScreen", "isLoading")
         InfiniteProgressDialog(onDismissRequest = {})
     }
     if (!bookmarkUiState.error.isNullOrEmpty()) {
-        Log.v("BookmarkEditorScreen", "Error")
         ConfirmDialog(
             icon = Icons.Default.Error,
             title = "Error",

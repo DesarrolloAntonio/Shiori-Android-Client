@@ -3,7 +3,6 @@ package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -58,14 +57,8 @@ class BookmarkEditorActivity : ComponentActivity() {
         var title = ""
         intent?.let { intent ->
             if (intent.action == Intent.ACTION_SEND) {
-                intent.extras?.keySet()?.forEach { key ->
-                    val value = intent.extras?.get(key)
-                    Log.v("Intent Extra", "$key: $value")
-                }
                 sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
-                Log.v("Shared link", sharedUrl)
                 title = intent.getStringExtra(Intent.EXTRA_TITLE) ?: sharedUrl
-                Log.v("Shared title", title)
             } else {
                 Toast.makeText(this, "Invalid shared link", Toast.LENGTH_LONG).show()
                 finish()

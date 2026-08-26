@@ -3,7 +3,6 @@ package com.desarrollodroide.pagekeeper
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -65,7 +64,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.v("MainActivity", "onResume")
         // TODO: sync when endpoint is available
     }
 }
