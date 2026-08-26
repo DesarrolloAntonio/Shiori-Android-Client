@@ -11,7 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.desarrollodroide.pagekeeper.ui.home.TopBar
+import com.desarrollodroide.pagekeeper.ui.feed.TopBar
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
