@@ -43,10 +43,25 @@
 Shiori is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust [Shiori platform](https://github.com/go-shiori/shiori), Shiori offers a seamless experience across all devices.
 
 ## Screenshots
-|                                                      |                                                      |                                                      |                                                      |
-|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|:----------------------------------------------------:|
-| ![Screenshot 1](images/screenshots/Screenshot_1.png) | ![Screenshot 2](images/screenshots/Screenshot_2.png) | ![Screenshot 3](images/screenshots/Screenshot_3.png) | ![Screenshot 4](images/screenshots/Screenshot_4.png) |
-| ![Screenshot 5](images/screenshots/Screenshot_5.png) | ![Screenshot 6](images/screenshots/Screenshot_6.png) | ![Screenshot 7](images/screenshots/Screenshot_7.png) | ![Screenshot 8](images/screenshots/Screenshot_8.png) |
+
+### Phone
+
+|                                                            |                                                                    |                                                          |                                                              |                                                                    |
+|:----------------------------------------------------------:|:------------------------------------------------------------------:|:--------------------------------------------------------:|:------------------------------------------------------------:|:------------------------------------------------------------------:|
+| ![Bookmarks](images/screenshots/phone-feed.png)            | ![Settings](images/screenshots/phone-settings.png)                 | ![Tags](images/screenshots/phone-tags.png)               | ![Editing a bookmark](images/screenshots/phone-editor.png)   | ![Bookmarks in dark mode](images/screenshots/phone-feed-dark.png)  |
+| Bookmarks                                                  | Settings                                                           | Tags                                                     | Editing a bookmark                                           | Dark mode                                                          |
+
+### Tablet and foldable
+
+The list is a staggered grid that takes as many columns as the window can hold: one on a phone,
+two on an unfolded foldable, three on a tablet.
+
+|                                                                  |                                                                            |
+|:----------------------------------------------------------------:|:--------------------------------------------------------------------------:|
+| ![Tablet](images/screenshots/tablet.png)                         | ![Tablet in dark mode](images/screenshots/tablet-dark.png)                 |
+| Tablet                                                           | Tablet, dark mode                                                          |
+| ![Foldable](images/screenshots/foldable.png)                     | ![Foldable in dark mode](images/screenshots/foldable-dark.png)             |
+| Unfolded foldable                                                | Unfolded foldable, dark mode                                               |
 
 
 ## Features
