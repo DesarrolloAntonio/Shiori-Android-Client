@@ -38,7 +38,6 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import com.desarrollodroide.pagekeeper.ui.components.shouldSplitFormIntoTwoColumns
 import androidx.compose.material3.Scaffold
-import com.desarrollodroide.pagekeeper.ui.components.shouldSplitFormIntoTwoColumns
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip

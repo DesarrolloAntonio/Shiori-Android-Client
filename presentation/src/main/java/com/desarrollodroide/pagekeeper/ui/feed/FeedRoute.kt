@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -19,28 +18,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.CloudUpload
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
@@ -55,17 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
-import com.desarrollodroide.pagekeeper.extensions.isRTLText
-import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
@@ -73,23 +55,8 @@ import com.desarrollodroide.pagekeeper.ui.components.ListPaneWidth
 import com.desarrollodroide.pagekeeper.ui.components.LocalFeedInListPane
 import com.desarrollodroide.pagekeeper.ui.components.UpdateCacheDialog
 import com.desarrollodroide.pagekeeper.ui.components.shouldUseTwoPanes
-import com.desarrollodroide.pagekeeper.ui.feed.AddTagsToSelectionDialog
-import com.desarrollodroide.pagekeeper.ui.feed.FeedScreen
-import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
-import com.desarrollodroide.pagekeeper.ui.feed.SelectionTopBar
-import com.desarrollodroide.pagekeeper.ui.feed.SyncJobsBottomSheetContent
-import com.desarrollodroide.pagekeeper.ui.feed.TopBar
-import com.desarrollodroide.pagekeeper.ui.feed.TwoPaneDetail
-import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
-import com.desarrollodroide.pagekeeper.ui.settings.PrivacyPolicyScreen
-import com.desarrollodroide.pagekeeper.ui.settings.SettingsScreen
-import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
-import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
-import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
-import com.desarrollodroide.pagekeeper.ui.tags.TagsScreen
 import java.io.File
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * The feed and everything that belongs to it: its app bar, its selection mode, the sync sheet, the

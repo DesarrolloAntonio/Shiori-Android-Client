@@ -1,9 +1,5 @@
 package com.desarrollodroide.data.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingSource
-import androidx.paging.map
 import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,7 +20,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
-import com.desarrollodroide.data.repository.SyncStatus
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
@@ -32,11 +27,8 @@ import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.model.Bookmark
-import com.desarrollodroide.model.Tag
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.mockito.kotlin.anyOrNull

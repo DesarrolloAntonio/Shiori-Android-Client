@@ -9,7 +9,6 @@ import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
-import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.model.TagDTO
 import com.desarrollodroide.network.model.TagsDTO
 import retrofit2.Response

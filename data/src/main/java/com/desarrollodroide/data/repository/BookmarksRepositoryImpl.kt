@@ -13,17 +13,13 @@ import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
-import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
 import com.desarrollodroide.network.model.BulkAddTagsPayloadDTO
-import com.desarrollodroide.network.model.TagNameDTO
-import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarksDTO
-import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource

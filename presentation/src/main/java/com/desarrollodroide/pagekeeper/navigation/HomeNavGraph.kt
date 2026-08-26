@@ -8,7 +8,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.desarrollodroide.data.helpers.SHIORI_ANDROID_CLIENT_GITHUB_URL
-import com.desarrollodroide.pagekeeper.navigation.NavItem
 import com.desarrollodroide.pagekeeper.ui.feed.FeedRoute
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.PrivacyPolicyScreen
@@ -22,7 +21,6 @@ import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.*
 
 /**

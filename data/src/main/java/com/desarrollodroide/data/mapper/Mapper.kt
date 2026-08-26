@@ -2,7 +2,6 @@ package com.desarrollodroide.data.mapper
 
 import com.desarrollodroide.data.UserPreferences
 import com.desarrollodroide.data.helpers.AddTagDTOAdapter
-import com.desarrollodroide.data.helpers.TagTypeAdapter
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.*

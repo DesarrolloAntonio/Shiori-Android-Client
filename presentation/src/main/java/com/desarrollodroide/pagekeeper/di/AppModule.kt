@@ -1,11 +1,6 @@
 package com.desarrollodroide.pagekeeper.di
 
 import android.content.Context
-import android.util.Log
-import coil3.ImageLoader
-import coil3.disk.DiskCache
-import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import okio.Path.Companion.toOkioPath
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.helpers.ThemeManagerImpl
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -28,7 +23,6 @@ import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
-import okhttp3.OkHttpClient
 import org.koin.dsl.module
 
 fun appModule() = module {

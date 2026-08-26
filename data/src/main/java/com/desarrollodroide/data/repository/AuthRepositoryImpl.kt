@@ -8,7 +8,6 @@ import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.User
 import com.desarrollodroide.network.model.LoginRequestPayload
 import com.desarrollodroide.network.model.LoginResponseDTO
-import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork

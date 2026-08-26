@@ -4,8 +4,6 @@ import com.desarrollodroide.common.result.ErrorHandler
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.model.Account
 import com.desarrollodroide.model.User
-import com.desarrollodroide.network.model.AccountDTO
-import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

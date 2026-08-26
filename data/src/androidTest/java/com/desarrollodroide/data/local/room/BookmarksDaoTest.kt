@@ -6,7 +6,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.database.BookmarksDatabase
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
-import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.Tag
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
