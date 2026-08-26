@@ -68,16 +68,16 @@ class ReadableContentViewModel(
                 .collect() { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v( "ReadableContent","Error getting bookmark readable content: ${result.error?.message}")
+                            Log.v(TAG, "Error getting bookmark readable content: ${result.error?.message}")
                             getLocalHtmlContent(bookmarkId)
                         }
                         is Result.Loading -> {
-                            Log.v(  "ReadableContent","Loading, getting bookmark readable content...")
+                            Log.v(TAG, "Loading, getting bookmark readable content...")
                             _readableContentState.isLoading(true)
                         }
 
                         is Result.Success -> {
-                            Log.v("ReadableContent", "Get bookmark readable content successfully.")
+                            Log.v(TAG, "Get bookmark readable content successfully.")
                             result.data?.let {
                                 _readableContentState.success(it.message)
                                 saveHtmlContent(
@@ -110,4 +110,7 @@ class ReadableContentViewModel(
         }
     }
 
+    private companion object {
+        const val TAG = "ReadableContentViewModel"
+    }
 }

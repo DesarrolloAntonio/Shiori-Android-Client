@@ -66,7 +66,6 @@ class FeedViewModel(
 
     ) : ViewModel() {
 
-    private val TAG = "FeedViewModel"
     private val _bookmarksUiState = MutableStateFlow(UiState<List<Bookmark>>(idle = true))
     val bookmarksUiState = _bookmarksUiState.asStateFlow()
     private val _downloadUiState = MutableStateFlow(UiState<File>(idle = true))
@@ -192,7 +191,7 @@ class FeedViewModel(
             getTagsUseCase.getLocalTags()
                 .distinctUntilChanged()
                 .collect { localTags ->
-                    Log.d("FeedViewModel", "Tags updated: ${localTags.size}")
+                    Log.d(TAG, "Tags updated: ${localTags.size}")
                     if (localTags.isNotEmpty()) {
                         _tagsState.success(localTags)
                     } else {
@@ -229,7 +228,7 @@ class FeedViewModel(
             getTagsUseCase.getLocalTags()
                 .distinctUntilChanged()
                 .collect { localTags ->
-                    Log.d("FeedViewModel", "Tags updated: ${localTags.size}")
+                    Log.d(TAG, "Tags updated: ${localTags.size}")
                     if (localTags.isNotEmpty()) {
                         _tagsState.success(localTags)
                     } else {
@@ -380,14 +379,14 @@ class FeedViewModel(
                 .collect() { result ->
                 when (result) {
                     is Result.Error -> {
-                        Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
+                        Log.v(TAG, "Error getting tags: ${result.error?.message}")
                     }
                     is Result.Loading -> {
-                        Log.v("FeedViewModel", "Loading, updating tags from cache...")
+                        Log.v(TAG, "Loading, updating tags from cache...")
                         _tagsState.success(result.data)
                     }
                     is Result.Success -> {
-                        Log.v("FeedViewModel", "Tags loaded successfully.")
+                        Log.v(TAG, "Tags loaded successfully.")
                         _tagsState.success(result.data)
                     }
                 }
@@ -558,7 +557,7 @@ class FeedViewModel(
                     deleteBookmark(bookmark = bookmark)
                     // TODO
                 } else if (result is Result.Error){
-                    Log.v("FeedViewModel","Error deleting local bookmark: ${result.error?.message}")
+                    Log.v(TAG, "Error deleting local bookmark: ${result.error?.message}")
                     _bookmarksUiState.error(
                         errorMessage = result.error?.message ?: "Unknown error"
                     )
@@ -623,6 +622,7 @@ class FeedViewModel(
     }
 
     private companion object {
+        const val TAG = "FeedViewModel"
         const val SEARCH_DEBOUNCE_MS = 300L
     }
 }

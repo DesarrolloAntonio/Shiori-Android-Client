@@ -36,8 +36,8 @@ class SettingsViewModel(
     private val imageLoader: ImageLoader,
     ) : ViewModel() {
 
-    private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
-    val settingsUiState = _settingsUiState.asStateFlow()
+    private val _logoutUiState = MutableStateFlow(UiState<String>(isLoading = false))
+    val logoutUiState = _logoutUiState.asStateFlow()
 
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
@@ -134,14 +134,14 @@ class SettingsViewModel(
                 when (result) {
                     is Result.Error -> {
                         clearImageCachesOnLogout()
-                        _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
+                        _logoutUiState.error(errorMessage = result.error?.throwable?.message?: "")
                     }
                     is Result.Loading -> {
-                        _settingsUiState.isLoading(true)
+                        _logoutUiState.isLoading(true)
                     }
                     is Result.Success -> {
                         clearImageCachesOnLogout()
-                        _settingsUiState.success(result.data)
+                        _logoutUiState.success(result.data)
                     }
                 }
             }
@@ -183,14 +183,14 @@ class SettingsViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
+                            Log.v(TAG, "Error getting tags: ${result.error?.message}")
                         }
                         is Result.Loading -> {
-                            Log.v("FeedViewModel", "Loading, updating tags from cache...")
+                            Log.v(TAG, "Loading, updating tags from cache...")
                             _tagsState.isLoading(true)
                         }
                         is Result.Success -> {
-                            Log.v("FeedViewModel", "Tags loaded successfully.")
+                            Log.v(TAG, "Tags loaded successfully.")
                             _tagsState.success(result.data)
                         }
                     }
@@ -234,5 +234,8 @@ class SettingsViewModel(
 
     fun getServerVersion(): String = _serverVersion.value
 
+    private companion object {
+        const val TAG = "SettingsViewModel"
+    }
 }
 

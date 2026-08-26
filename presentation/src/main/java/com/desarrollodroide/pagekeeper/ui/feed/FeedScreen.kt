@@ -1,7 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.media.MediaScannerConnection
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.ui.Alignment
@@ -52,7 +50,7 @@ import java.io.File
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
-    goToReadableContent:(Bookmark) -> Unit,
+    goToReadableContent: (Bookmark) -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: MutableState<Boolean>,
@@ -73,29 +71,13 @@ fun FeedScreen(
     LaunchedEffect(feedViewModel) {
         feedViewModel.initializeIfNeeded()
     }
-    LaunchedEffect(isCategoriesVisible.value) {
-        if (isCategoriesVisible.value) {
-            // TODO remove when sync functionality is implemented
-            //feedViewModel.getTags()
-        }
-    }
 
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
 
-    LaunchedEffect(Unit) {
-        snapshotFlow { bookmarksPagingItems.itemSnapshotList.items }
-            .collect { updatedItems ->
-                Log.d("FeedScreen", "Los bookmarks se han modificado: ${updatedItems.size} items")
-            }
-    }
-
-
-
     val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
     val downloadUiState = feedViewModel.downloadUiState.collectAsState()
     val isCompactView by feedViewModel.compactView.collectAsState()
-
 
     val sheetStateCategories = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
@@ -209,7 +191,6 @@ fun FeedScreen(
                 dismissOnBackPress = false
             ),
         )
-        Log.v("bookmarksUiState", "Error")
     }
     val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
     UpdateCacheDialog(
