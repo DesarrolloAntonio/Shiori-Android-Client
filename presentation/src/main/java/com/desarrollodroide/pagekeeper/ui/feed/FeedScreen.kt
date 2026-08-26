@@ -54,7 +54,6 @@ fun FeedScreen(
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: MutableState<Boolean>,
-    setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val transientMessage by feedViewModel.transientMessage.collectAsStateWithLifecycle()

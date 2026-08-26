@@ -83,7 +83,6 @@ fun FeedRoute(
     onOpenReadableContent: (Int) -> Unit,
 ) {
     val isCategoriesVisible = remember { mutableStateOf(false) }
-    val (showTopBar, setShowTopBar) = remember { mutableStateOf(true) }
     val searchQuery by feedViewModel.searchQuery.collectAsState()
     val selectedTags by feedViewModel.selectedTags.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
@@ -166,7 +165,11 @@ fun FeedRoute(
     val editingBookmark = feedViewModel.bookmarkSelected.value
     val editorOpen = editingBookmark != null && feedViewModel.showBookmarkEditorScreen.value
     val addBookmarkFab: @Composable () -> Unit = {
-        AnimatedVisibility(showTopBar) {
+        // Not while a selection is open: the app bar has become the selection's own, and adding a
+        // bookmark is not one of the things you can do to the bookmarks you have picked. This
+        // condition replaces a showTopBar flag whose setter was lost when the editor moved out of
+        // the scaffold, leaving the fab wrapped in a visibility that was always true.
+        AnimatedVisibility(selectedBookmarks.isEmpty()) {
             FloatingActionButton(
                 onClick = onAddManuallyClick,
                 shape = MaterialTheme.shapes.large,
@@ -190,8 +193,7 @@ fun FeedRoute(
                     onUpdateCache = { showUpdateSelectedDialog.value = true },
                     onAddTags = { showAddTagsDialog.value = true },
                 )
-            } else
-            AnimatedVisibility (showTopBar) {
+            } else {
                 TopBar(
                     searchQuery = searchQuery,
                     onSearchQueryChange = feedViewModel::updateSearchQuery,
@@ -223,7 +225,6 @@ fun FeedRoute(
                     goToLogin = goToLogin,
                     openUrlInBrowser = openUrlInBrowser,
                     shareEpubFile = shareEpubFile,
-                    setShowTopBar = setShowTopBar,
                     goToReadableContent = { bookmark ->
                         if (twoPanes) {
                             openBookmarkId = bookmark.id
