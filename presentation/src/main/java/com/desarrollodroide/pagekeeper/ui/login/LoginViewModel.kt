@@ -9,6 +9,7 @@ import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.isLoading
 import com.desarrollodroide.pagekeeper.ui.components.success
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
+import com.desarrollodroide.domain.usecase.RefreshTokenUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.model.User
 import kotlinx.coroutines.flow.*
@@ -22,29 +23,11 @@ import kotlinx.coroutines.delay
 class LoginViewModel(
     private val settingsPreferenceDataSource: SettingsPreferenceDataSource,
     private val loginUseCase: SendLoginUseCase,
+    private val refreshTokenUseCase: RefreshTokenUseCase,
     private val livenessUseCase: SystemLivenessUseCase,
 ) : ViewModel() {
 
     var rememberSession = mutableStateOf(false)
-    // Oracle
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("https://shiori.desarrollodroide.es/")
-
-    // v1.6
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
-
-    // Synology
-//    var userName = mutableStateOf("Test")
-//    var password = mutableStateOf("Test")
-//    var serverUrl = mutableStateOf("http://192.168.1.68:18080/")
-
-    // localhost
-//    var userName = mutableStateOf("shiori")
-//    var password = mutableStateOf("gopher")
-//    var serverUrl = mutableStateOf("http://192.168.1.12:8080/")
 
     var serverUrl = mutableStateOf("")
     var userName = mutableStateOf("")
@@ -180,8 +163,35 @@ class LoginViewModel(
         val user = settingsPreferenceDataSource.getUser().first()
         if (user.hasSession()) {
             _userUiState.success(user)
+            renewSession(user)
         } else {
             _userUiState.success(null)
+        }
+    }
+
+    /**
+     * Renews the stored token in the background.
+     *
+     * The server issues tokens with a 30 day life and never renews them on its own, so a client
+     * that logged in once eventually holds a dead token and only finds out through a failed
+     * request. Refreshing on each start keeps an active user signed in indefinitely.
+     *
+     * Deliberately not awaited: the http client has a 30 second timeout, and blocking start up on
+     * it would leave anyone whose server is unreachable staring at an empty screen before the app
+     * they can use offline appears. A failure here changes nothing, the existing token is kept and
+     * the normal request path reports an expired session if it really is expired.
+     */
+    private fun renewSession(user: User) {
+        viewModelScope.launch {
+            val serverUrl = settingsPreferenceDataSource.getUrl()
+            if (serverUrl.isEmpty()) return@launch
+
+            refreshTokenUseCase(serverUrl = serverUrl, token = user.token)
+                .collect { result ->
+                    if (result is Result.Error) {
+                        Log.v("LoginViewModel", "Could not renew session: ${result.error?.message}")
+                    }
+                }
         }
     }
 

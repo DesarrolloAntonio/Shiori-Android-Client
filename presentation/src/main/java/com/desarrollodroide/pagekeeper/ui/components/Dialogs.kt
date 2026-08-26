@@ -5,8 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
@@ -21,13 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.desarrollodroide.pagekeeper.R
 
 @Composable
 fun SimpleDialog(
@@ -123,6 +118,7 @@ fun ConfirmDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InfiniteProgressDialog(
     title: String? = null,
@@ -134,33 +130,21 @@ fun InfiniteProgressDialog(
         properties = properties
     ) {
         Column(
-            horizontalAlignment = CenterHorizontally
+            horizontalAlignment = CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Surface(
-                modifier = Modifier.clip(CircleShape),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(dimensionResource(id = R.dimen.progressDialog_margin))
-                ) {
-                    CircularProgressIndicator(
-                        strokeWidth = dimensionResource(id = R.dimen.progressDialog_stroke),
-                        modifier = Modifier
-                            .height(dimensionResource(id = R.dimen.progressDialog_size))
-                            .width(dimensionResource(id = R.dimen.progressDialog_size))
-                    )
-
-                }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
+            // ContainedLoadingIndicator brings its own tonal container and shape-morphing
+            // animation, so the hand-rolled circular Surface around a spinner is no longer needed.
+            ContainedLoadingIndicator()
             if (title != null) {
                 Surface(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20)),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Text(
-                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 15.dp),
-                        text = title
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 20.dp),
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
             }

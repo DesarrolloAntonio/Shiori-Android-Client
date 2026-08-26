@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,12 +40,12 @@ fun PrivacyPolicyScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.Filled.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
@@ -66,7 +66,6 @@ fun PrivacyPolicyScreen(
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                         append("Privacy Policy of Shiori\n\n")
                     }
-                    append("Effective as of [Insert Date Here].\n\n")
                     append("This Privacy Policy outlines our policies and procedures on the collection, use, and disclosure of personal information. Shiori values your privacy and is committed to protecting it through our compliance with this policy. Our app is designed not to collect or store any personal data from our users, ensuring your privacy and security.\n\n")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

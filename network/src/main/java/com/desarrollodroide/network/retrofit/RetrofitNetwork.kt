@@ -1,15 +1,14 @@
 package com.desarrollodroide.network.retrofit
 
-import com.desarrollodroide.network.model.AccountDTO
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
+import com.desarrollodroide.network.model.SingleTagDTO
+import com.desarrollodroide.network.model.TagPayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.LivenessResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
-import com.desarrollodroide.network.model.SessionDTO
-import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.model.TagDTO
 import com.desarrollodroide.network.model.TagsDTO
 import retrofit2.Response
@@ -31,16 +30,15 @@ interface RetrofitNetwork {
 
     @Headers("Content-Type: application/json")
     @POST()
-    suspend fun sendLogin(
-        @Url url: String,
-        @Body jsonData: String
-    ): Response<SessionDTO>
-
-    @Headers("Content-Type: application/json")
-    @POST()
     suspend fun sendLoginV1(
         @Url url: String,
         @Body jsonData: String
+    ): Response<LoginResponseDTO>
+
+    @POST()
+    suspend fun refreshToken(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
     ): Response<LoginResponseDTO>
 
     @POST()
@@ -81,6 +79,18 @@ interface RetrofitNetwork {
         @Body body: String
     ): Response<List<BookmarkDTO>>
 
+    /**
+     * Adds tags to several bookmarks at once. Body is {"ids":[..],"tags":[{"name":".."}]} and the
+     * response is the updated bookmarks, the same shape the cache endpoint returns.
+     */
+    @Headers("Content-Type: application/json")
+    @PUT()
+    suspend fun addTagsToBookmarks(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body body: String
+    ): Response<BookmarkResponseDTO>
+
     @Headers("Content-Type: application/json")
     @PUT()
     suspend fun updateBookmarksCacheV1(
@@ -103,31 +113,27 @@ interface RetrofitNetwork {
         @Body tag: TagDTO
     ): Response<TagDTO>
 
-    // List accounts
-    @GET("/api/accounts")
-    suspend fun listAccounts(
-        @Header("X-Session-Id") xSessionId: String
-    ): Response<List<AccountDTO>>
+    @Headers("Content-Type: application/json")
+    @POST
+    suspend fun createTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body tag: TagPayloadDTO
+    ): Response<SingleTagDTO>
 
-    // Create account
-    @POST("/api/accounts")
-    suspend fun createAccount(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body account: AccountDTO
-    ): Response<AccountDTO>
+    @Headers("Content-Type: application/json")
+    @PUT
+    suspend fun updateTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body tag: TagPayloadDTO
+    ): Response<SingleTagDTO>
 
-    // Edit account
-    @PUT("/api/accounts")
-    suspend fun editAccount(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body account: AccountDTO
-    ): Response<AccountDTO>
-
-    // Delete accounts
-    @HTTP(method = "DELETE", path = "/api/accounts", hasBody = true)
-    suspend fun deleteAccounts(
-        @Header("X-Session-Id") xSessionId: String,
-        @Body accountNames: List<String>
+    // Returns 204 with no body, so there is nothing to deserialize.
+    @DELETE
+    suspend fun deleteTag(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
     ): Response<Unit>
 
     // Test system liveness
@@ -141,19 +147,5 @@ interface RetrofitNetwork {
         @Url url: String,
         @Header("Authorization") authorization: String,
     ): Response<ReadableContentResponseDTO>
-
-    @Headers("Content-Type: application/json")
-    @POST()
-    suspend fun syncBookmarks(
-        @Url url: String,
-        @Header("Authorization") authorization: String,
-        @Body body: String
-    ): Response<SyncBookmarksResponseDTO>
-
-    @GET
-    suspend fun getBookmark(
-        @Url url: String,
-        @Header("Authorization") authorization: String,
-    ): Response<SingleBookmarkResponseDTO>
 
 }

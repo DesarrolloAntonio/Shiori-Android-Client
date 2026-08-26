@@ -1,6 +1,5 @@
 plugins {
     id("com.android.library")
-    id ("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -9,20 +8,31 @@ android {
 
     defaultConfig {
         minSdk = (findProperty("minSdkVersion") as String).toInt()
-        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+dependencies {
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.junit.jupiter.api)
+}
+
+// The android-junit5 plugin drove this before. It configured the test tasks through
+// unitTestVariants, which AGP 9 removed, so it stopped discovering anything at all while still
+// applying cleanly. Every unit test here is JUnit 5 and every instrumented test is JUnit 4, so
+// plain Gradle covers it and the plugin is gone.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

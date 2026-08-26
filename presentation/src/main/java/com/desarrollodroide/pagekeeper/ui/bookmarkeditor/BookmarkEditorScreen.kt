@@ -1,21 +1,24 @@
 package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
+import com.desarrollodroide.pagekeeper.ui.components.TagListSaver
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
-import org.koin.androidx.compose.get
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun BookmarkEditorScreen(
@@ -25,19 +28,23 @@ fun BookmarkEditorScreen(
     onBack: () -> Unit,
     updateBookmark: (Bookmark) -> Unit,
     showToast: (String) -> Unit = {},
-    startMainActivity: () -> Unit = {}
+    startMainActivity: () -> Unit = {},
+    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
-    val bookmarkViewModel = get<BookmarkViewModel>()
-    val newTag = remember { mutableStateOf("") }
+    val bookmarkViewModel = koinViewModel<BookmarkViewModel>()
+    // Rotating or unfolding recreates the activity. Without rememberSaveable the user loses
+    // the url they pasted and every tag they picked, which is most of the work on this screen.
+    val newTag = rememberSaveable { mutableStateOf("") }
     val availableTags = bookmarkViewModel.availableTags.collectAsState()
     val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
-    var currentUrl by remember { mutableStateOf(bookmark.url) }
+    var currentUrl by rememberSaveable { mutableStateOf(bookmark.url) }
 
     // No need to update values in settings
-    var localCreateEbook by remember { mutableStateOf(bookmarkViewModel.createEbook) }
-    var localCreateArchive by remember { mutableStateOf(bookmarkViewModel.createArchive) }
-    val assignedTags: MutableState<List<Tag>> = remember { mutableStateOf(bookmark.tags) }
-        var localMakeArchivePublic by remember {
+    var localCreateEbook by rememberSaveable { mutableStateOf(bookmarkViewModel.createEbook) }
+    var localCreateArchive by rememberSaveable { mutableStateOf(bookmarkViewModel.createArchive) }
+    val assignedTags: MutableState<List<Tag>> =
+        rememberSaveable(stateSaver = TagListSaver) { mutableStateOf(bookmark.tags) }
+    var localMakeArchivePublic by rememberSaveable {
         mutableStateOf(
             when (bookmarkEditorType) {
                 BookmarkEditorType.ADD, BookmarkEditorType.ADD_MANUALLY -> bookmarkViewModel.makeArchivePublic
@@ -49,11 +56,9 @@ fun BookmarkEditorScreen(
         onBack()
     }
     if (bookmarkUiState.isLoading) {
-        Log.v("BookmarkEditorScreen", "isLoading")
         InfiniteProgressDialog(onDismissRequest = {})
     }
     if (!bookmarkUiState.error.isNullOrEmpty()) {
-        Log.v("BookmarkEditorScreen", "Error")
         ConfirmDialog(
             icon = Icons.Default.Error,
             title = "Error",
@@ -71,6 +76,7 @@ fun BookmarkEditorScreen(
     }
 
     BookmarkEditorView(
+        windowInsets = windowInsets,
         title = pageTitle,
         url = currentUrl,
         bookmarkEditorType = bookmarkEditorType,
@@ -81,7 +87,8 @@ fun BookmarkEditorScreen(
             when (bookmarkEditorType) {
                 BookmarkEditorType.ADD, BookmarkEditorType.ADD_MANUALLY -> {
                     bookmarkViewModel.saveBookmark(
-                        url = currentUrl,
+                        // google.es is not something the server can fetch; https://google.es is.
+                        url = normalizeBookmarkUrl(currentUrl),
                         title = bookmark.title,
                         tags = assignedTags.value,
                         createArchive = localCreateArchive,

@@ -4,8 +4,19 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--
+        allowBackup is off because the DataStore holds the session token (and, until that is
+        reworked, the password). With it on, adb backup or a Google Drive backup copies those
+        off the device.
+
+        usesCleartextTraffic stays on deliberately. Shiori is self hosted and most users point the
+        app at http://192.168.x.x or a .local name. Android's network security config can only
+        name individual hosts, not address ranges, so there is no way to permit LAN cleartext
+        while blocking it everywhere else at build time. Restricting this properly needs a runtime
+        decision per server, not a manifest change.
+    -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:usesCleartextTraffic="true"
@@ -17,10 +28,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:theme="@style/Theme.Shiori"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -31,11 +41,17 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <!--
+            Its own task affinity. This activity used to finish itself in onPause so that it could
+            not come back when the launcher icon was tapped, which also meant that pulling down the
+            notification shade, taking a call or entering split screen threw away everything the
+            user had typed. A separate task keeps it out of the main task without killing it.
+        -->
         <activity android:name=".ui.bookmarkeditor.BookmarkEditorActivity"
             android:label="Save in Shiori"
-            android:screenOrientation="portrait"
             android:exported="true"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            android:taskAffinity="${applicationId}.share"
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

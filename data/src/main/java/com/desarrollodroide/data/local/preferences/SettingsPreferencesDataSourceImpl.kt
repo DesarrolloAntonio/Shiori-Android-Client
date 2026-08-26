@@ -31,6 +31,8 @@ class SettingsPreferencesDataSourceImpl(
     private val rememberUserProtoDataStore: DataStore<RememberUserPreferences>,
     private val systemPreferences: DataStore<SystemPreferences>,
     private val hideTagDataStore: DataStore<HideTag>,
+    // Saved passwords are the only secret here that is not short lived, so they go in encrypted.
+    private val secretCipher: SecretCipher = SecretCipher(),
 
     ) : SettingsPreferenceDataSource {
 
@@ -48,7 +50,7 @@ class SettingsPreferencesDataSourceImpl(
                     id = it.id,
                     userName = it.username,
                     owner = it.owner,
-                    password = it.password,
+                    password = secretCipher.decrypt(it.password),
                     serverUrl = it.url,
                 )
             )
@@ -67,7 +69,7 @@ class SettingsPreferencesDataSourceImpl(
                         id = preference.id,
                         userName = preference.username,
                         owner = preference.owner,
-                        password = preference.password,
+                        password = secretCipher.decrypt(preference.password),
                         serverUrl = preference.url,
                     )
                 )
@@ -83,7 +85,7 @@ class SettingsPreferencesDataSourceImpl(
             protoSession.copy {
                 this.id = session.id
                 this.username = session.username
-                this.password = password
+                this.password = secretCipher.encrypt(password)
                 this.session = session.session
                 this.url = serverUrl
                 this.token = session.token
@@ -97,7 +99,7 @@ class SettingsPreferencesDataSourceImpl(
                 id = it.id,
                 userName = it.username,
                 owner = false,
-                password = it.password,
+                password = secretCipher.decrypt(it.password),
                 serverUrl = it.url,
             )
         }
@@ -112,7 +114,7 @@ class SettingsPreferencesDataSourceImpl(
                     id = preference.id,
                     userName = preference.username,
                     owner = false,
-                    password = preference.password,
+                    password = secretCipher.decrypt(preference.password),
                     serverUrl = preference.url,
                 )
             }
@@ -127,7 +129,7 @@ class SettingsPreferencesDataSourceImpl(
             protoSession.copy {
                 this.id = 1
                 this.username = userName
-                this.password = password
+                this.password = secretCipher.encrypt(password)
                 this.url = url
             }
         }
@@ -138,6 +140,20 @@ class SettingsPreferencesDataSourceImpl(
     override suspend fun getSession(): String = getUser().first().session
 
     override suspend fun getToken(): String = getUser().first().token
+
+    /**
+     * Replaces the stored credentials with a freshly issued token, leaving username, url and
+     * password alone. Both fields are written because the legacy endpoints read `session` while
+     * the v1 endpoints read `token`, and a refresh only ever returns the latter.
+     */
+    override suspend fun updateAuthToken(token: String) {
+        protoDataStore.updateData { protoSession ->
+            protoSession.copy {
+                this.session = token
+                this.token = token
+            }
+        }
+    }
 
     override suspend fun resetData() {
         saveUser(
@@ -183,6 +199,17 @@ class SettingsPreferencesDataSourceImpl(
     override suspend fun setCompactView(isCompactView: Boolean) {
         systemPreferences.updateData { preferences ->
             preferences.toBuilder().setCompactView(isCompactView).build()
+        }
+    }
+
+    override val useTwoPaneLayoutFlow: Flow<Boolean> by lazy {
+        systemPreferences.data
+            .map { it.useTwoPaneLayout }
+    }
+
+    override suspend fun setUseTwoPaneLayout(useTwoPane: Boolean) {
+        systemPreferences.updateData { preferences ->
+            preferences.toBuilder().setUseTwoPaneLayout(useTwoPane).build()
         }
     }
 

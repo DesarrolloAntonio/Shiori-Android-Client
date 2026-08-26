@@ -10,10 +10,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
-import com.desarrollodroide.pagekeeper.ui.home.HomeScreen
 import com.desarrollodroide.pagekeeper.ui.login.LoginScreen
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
-import org.koin.androidx.compose.get
+import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -28,8 +27,8 @@ fun Navigation(
 ) {
 
     val navController = rememberNavController()
-    val feedViewModel = get<FeedViewModel>()
-    val loginViewModel = get<LoginViewModel>()
+    val feedViewModel = koinViewModel<FeedViewModel>()
+    val loginViewModel = koinViewModel<LoginViewModel>()
 
     NavHost(
         navController = navController,
@@ -45,7 +44,7 @@ fun Navigation(
             )
         }
         composable(NavItem.HomeNavItem) { backStackEntry ->
-            HomeScreen(
+            HomeNavGraph(
                 feedViewModel = feedViewModel,
                 goToLogin = {
                     loginViewModel.clearState()

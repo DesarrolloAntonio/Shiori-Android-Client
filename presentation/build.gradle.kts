@@ -1,13 +1,19 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("de.mannodermaus.android-junit5")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
     namespace = "com.desarrollodroide.pagekeeper"
     compileSdk = (findProperty("compileSdkVersion") as String).toInt()
+
+    testOptions {
+        unitTests {
+            // View models log with android.util.Log, a stub that throws in JVM tests. Returning
+            // defaults lets them be tested off a device.
+            isReturnDefaultValues = true
+        }
+    }
 
     defaultConfig {
         applicationId = "com.desarrollodroide.pagekeeper"
@@ -39,10 +45,24 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
         debug {
             isDebuggable = true
+        }
+        // Release's shrinking and obfuscation, signed with the debug key so it can actually be
+        // installed. The release keys only exist in CI, and R8 breaks reflection at runtime rather
+        // than at build time, so there has to be a way to run the shrunk app on a device.
+        create("minified") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
         }
     }
 
@@ -62,35 +82,37 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
+        // AGP 9 turned these off by default and removed the gradle.properties flags that
+        // used to switch them on for every module at once.
+        buildConfig = true
+        // The staging flavor renames the app with resValue("string", "app_name", ...).
+        resValues = true
     }
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-    applicationVariants.configureEach {
-        outputs.configureEach {
-            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output?.outputFileName = "Shiori v$versionName.apk"
-        }
-    }
-
-
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+}
+
+// Names the apk after the resolved version, so the staging build lands as
+// "Shiori v1.51.02-staging.apk" rather than app-staging-debug.apk. This was
+// applicationVariants.outputs, which AGP 9 removed along with the rest of the
+// legacy variant API.
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(output.versionName.map { name -> "Shiori v$name.apk" })
+        }
     }
 }
 
@@ -110,25 +132,35 @@ dependencies {
     implementation (libs.androidx.lifecycle.runtimeCompose)
     implementation (libs.androidx.preference)
     implementation (libs.androidx.paging.compose)
-    implementation ("androidx.paging:paging-common-ktx:3.3.2")
+    implementation (libs.androidx.paging.common)
 
-    implementation (libs.compose.ui.ui)
-    implementation (libs.compose.ui.tooling.preview)
-    implementation (libs.compose.ui.tooling)
-    implementation (libs.compose.material3.material3)
-    implementation (libs.compose.material.iconsext)
-    implementation (libs.compose.runtime.livedata)
+    // Compose: the BOM pins every androidx.compose.* artifact, including Material 3 Expressive.
+    implementation (platform(libs.compose.bom))
+    androidTestImplementation (platform(libs.compose.bom))
+    androidTestImplementation (libs.compose.ui.test.junit4)
+    androidTestImplementation (libs.androidx.test.ext.junit)
+    // Stands in for a Shiori server so the image pipeline's cache behaviour can be observed.
+    androidTestImplementation (libs.okhttp3.mockwebserver)
+    androidTestImplementation (libs.kotlin.coroutines.test)
+    // ui-test-manifest supplies the empty ComponentActivity that createComposeRule() launches;
+    // without it the tests fail with ActivityNotFoundException.
+    debugImplementation (libs.compose.ui.test.manifest)
+    implementation (libs.bundles.compose)
 
     implementation (libs.bundles.retrofit)
-    implementation (libs.accompanist.permissions)
 
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.coil.compose)
+    implementation (libs.coil.network.okhttp)
+    // Coil's own cache strategy ignores HTTP caching headers entirely: without this the disk
+    // cache is served blind and no conditional request is ever made.
+    implementation (libs.coil.network.cache.control)
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
-    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher) // JUnit Jupiter Engine for running JUnit 5 tests.
     testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
     testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
@@ -137,12 +169,16 @@ dependencies {
 
 }
 
-composeCompiler {
-    enableStrongSkippingMode = true
-}
-
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+// The android-junit5 plugin drove this before. It configured the test tasks through
+// unitTestVariants, which AGP 9 removed, so it stopped discovering anything at all while still
+// applying cleanly. Every unit test here is JUnit 5 and every instrumented test is JUnit 4, so
+// plain Gradle covers it and the plugin is gone.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

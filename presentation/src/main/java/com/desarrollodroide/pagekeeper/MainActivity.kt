@@ -3,16 +3,14 @@ package com.desarrollodroide.pagekeeper
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import coil.ImageLoader
-import com.desarrollodroide.pagekeeper.extensions.logCacheDetails
 import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.navigation.Navigation
@@ -29,6 +27,10 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.N)
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Draw behind the system bars and let them take their colour from the content underneath.
+        // This replaces the old `window.statusBarColor` write in ShioriTheme, which is deprecated
+        // and a no-op from Android 15 onwards.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         //val context = this.updateLocale(Locale("iw"))
@@ -62,7 +64,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.v("MainActivity", "onResume")
         // TODO: sync when endpoint is available
     }
 }

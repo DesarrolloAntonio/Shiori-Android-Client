@@ -2,7 +2,6 @@ package com.desarrollodroide.data.mapper
 
 import com.desarrollodroide.data.UserPreferences
 import com.desarrollodroide.data.helpers.AddTagDTOAdapter
-import com.desarrollodroide.data.helpers.TagTypeAdapter
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.*
@@ -193,21 +192,6 @@ fun ReadableMessageDto.toDomainModel() = ReadableMessage(
     html = html?:""
 )
 
-
-fun SyncBookmarksResponseDTO.toDomainModel(): SyncBookmarksResponse {
-    return SyncBookmarksResponse(
-        deleted = message.deleted ?: emptyList(),
-        modified = message.modified?.toDomainModel() ?: ModifiedBookmarks(emptyList(), 0, 0)
-    )
-}
-
-fun ModifiedBookmarksDTO.toDomainModel(): ModifiedBookmarks {
-    return ModifiedBookmarks(
-        bookmarks = bookmarks?.map { it.toDomainModel() } ?: emptyList(),
-        maxPage = maxPage ?: 0,
-        page = page ?: 0
-    )
-}
 
 fun Bookmark.toAddBookmarkDTO() = BookmarkDTO(
     id = null,

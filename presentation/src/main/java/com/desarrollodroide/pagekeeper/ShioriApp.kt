@@ -1,7 +1,7 @@
 package com.desarrollodroide.pagekeeper
 
 import android.app.Application
-import coil.ImageLoader
+import coil3.ImageLoader
 import com.desarrollodroide.pagekeeper.di.presenterModule
 import com.desarrollodroide.pagekeeper.di.appModule
 import com.desarrollodroide.data.di.dataModule

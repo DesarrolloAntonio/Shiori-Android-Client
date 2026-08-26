@@ -18,8 +18,9 @@ class NetworkLoggerInterceptor : Interceptor {
         _logs.value = emptyList()
     }
 
+    /** Keeps the most recent entries only. The list used to grow for the life of the process. */
     private fun addLog(entry: NetworkLogEntry) {
-        _logs.update { currentLogs -> currentLogs + entry }
+        _logs.update { current -> (current + entry).takeLast(MAX_ENTRIES) }
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -51,7 +52,7 @@ class NetworkLoggerInterceptor : Interceptor {
                         priority = if (response.isSuccessful) "S" else "E",
                         url = request.url.toString(),
                         message = "HTTP ${response.code} (${duration}ms)\n" +
-                                response.peekBody(1024).string()
+                                response.readableBodyPreview()
                     )
                 )
             }
@@ -67,5 +68,41 @@ class NetworkLoggerInterceptor : Interceptor {
             )
             throw e
         }
+    }
+
+    /**
+     * These logs are viewable and shareable from the debug screens, so anything that identifies a
+     * session is masked before it is stored. A login or refresh response body is otherwise a
+     * working token sitting in a list the user can mail to someone.
+     */
+    private fun String.redactSecrets(): String = SECRET_PATTERNS.fold(this) { acc, regex ->
+        regex.replace(acc) { match -> "${match.groupValues[1]}\"***\"" }
+    }
+
+    /**
+     * Only text bodies are previewed. peekBody(...).string() decodes as UTF-8 whatever it is
+     * given, so an epub or an image came out as mojibake in the log.
+     */
+    private fun Response.readableBodyPreview(): String {
+        val contentType = body?.contentType()
+        val isText = contentType == null ||
+            contentType.type == "text" ||
+            contentType.subtype in TEXT_SUBTYPES
+        if (!isText) {
+            return "<${contentType} body, ${body?.contentLength() ?: -1} bytes, not logged>"
+        }
+        return runCatching { peekBody(PREVIEW_BYTES).string().redactSecrets() }
+            .getOrElse { "<body could not be read>" }
+    }
+
+    private companion object {
+        const val MAX_ENTRIES = 200
+        const val PREVIEW_BYTES = 1024L
+        val TEXT_SUBTYPES = setOf("json", "xml", "html", "plain", "x-www-form-urlencoded")
+        val SECRET_PATTERNS = listOf(
+            Regex("""("token"\s*:\s*)"[^"]*""""),
+            Regex("""("session"\s*:\s*)"[^"]*""""),
+            Regex("""("password"\s*:\s*)"[^"]*""""),
+        )
     }
 }

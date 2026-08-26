@@ -11,6 +11,7 @@ interface SettingsPreferenceDataSource {
 
     val userDataStream: Flow<User>
     val compactViewFlow: Flow<Boolean>
+    val useTwoPaneLayoutFlow: Flow<Boolean>
     val makeArchivePublicFlow: Flow<Boolean>
     val createEbookFlow: Flow<Boolean>
     val autoAddBookmarkFlow: Flow<Boolean>
@@ -34,6 +35,7 @@ interface SettingsPreferenceDataSource {
 
     suspend fun getUrl(): String
     suspend fun getSession(): String
+    suspend fun updateAuthToken(token: String)
     suspend fun getToken(): String
     suspend fun resetData()
     suspend fun resetRememberUser()
@@ -43,6 +45,7 @@ interface SettingsPreferenceDataSource {
     suspend fun setCreateEbook(newValue: Boolean)
     suspend fun setCreateArchive(newValue: Boolean)
     suspend fun setCompactView(isCompactView: Boolean)
+    suspend fun setUseTwoPaneLayout(useTwoPane: Boolean)
     suspend fun setAutoAddBookmark(isAutoAddBookmark: Boolean)
     suspend fun getCategoriesVisible(): Boolean
     suspend fun setCategoriesVisible(isCategoriesVisible: Boolean)

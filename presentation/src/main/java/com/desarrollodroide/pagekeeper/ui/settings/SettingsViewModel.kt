@@ -3,8 +3,8 @@ package com.desarrollodroide.pagekeeper.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
+import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
@@ -18,6 +18,7 @@ import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
+import com.desarrollodroide.pagekeeper.extensions.clearCache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,8 +36,8 @@ class SettingsViewModel(
     private val imageLoader: ImageLoader,
     ) : ViewModel() {
 
-    private val _settingsUiState = MutableStateFlow(UiState<String>(isLoading = false))
-    val settingsUiState = _settingsUiState.asStateFlow()
+    private val _logoutUiState = MutableStateFlow(UiState<String>(isLoading = false))
+    val logoutUiState = _logoutUiState.asStateFlow()
 
     private val _tagsState = MutableStateFlow(UiState<List<Tag>>(idle = true))
     val tagsState = _tagsState.asStateFlow()
@@ -47,10 +48,18 @@ class SettingsViewModel(
     val useDynamicColors = MutableStateFlow(false)
     val themeMode = MutableStateFlow(ThemeMode.AUTO)
     private var _token = ""
-    private var _serverVersion = ""
-    private var _serverUrl: String = ""
+    // These were plain vars written from a coroutine and read straight from composition. Compose
+    // never saw them change, so the server url and the version footer stayed blank unless some
+    // other state happened to force a recomposition after loadSettings() had finished.
+    private val _serverVersion = MutableStateFlow("")
+    val serverVersion: StateFlow<String> = _serverVersion.asStateFlow()
+    private val _serverUrl = MutableStateFlow("")
+    val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val useTwoPaneLayout: StateFlow<Boolean> = settingsPreferenceDataSource.useTwoPaneLayoutFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val makeArchivePublic: StateFlow<Boolean> = settingsPreferenceDataSource.makeArchivePublicFlow
@@ -78,6 +87,12 @@ class SettingsViewModel(
     fun setCompactView(isCompact: Boolean) {
         viewModelScope.launch {
             settingsPreferenceDataSource.setCompactView(isCompact)
+        }
+    }
+
+    fun setUseTwoPaneLayout(useTwoPane: Boolean) {
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setUseTwoPaneLayout(useTwoPane)
         }
     }
 
@@ -118,17 +133,34 @@ class SettingsViewModel(
             ).collect { result ->
                 when (result) {
                     is Result.Error -> {
-                        _settingsUiState.error(errorMessage = result.error?.throwable?.message?: "")
+                        clearImageCachesOnLogout()
+                        _logoutUiState.error(errorMessage = result.error?.throwable?.message?: "")
                     }
                     is Result.Loading -> {
-                        _settingsUiState.isLoading(true)
+                        _logoutUiState.isLoading(true)
                     }
                     is Result.Success -> {
-                        _settingsUiState.success(result.data)
+                        clearImageCachesOnLogout()
+                        _logoutUiState.success(result.data)
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Thumbnails belong to whoever was signed in. The database is cleared on the way out, so
+     * leaving these means the next account inherits the previous one's pictures, and they are
+     * keyed by url rather than by account.
+     *
+     * Runs on the error branch as well, because the use case wipes local data whether or not the
+     * server could be reached: a logout that fails to call the server still signs you out here.
+     * It runs before the state is published, since success is what sends the app to the login
+     * screen.
+     */
+    private suspend fun clearImageCachesOnLogout() {
+        imageLoader.clearCache()
+        updateCacheSize()
     }
 
     private fun loadSettings() {
@@ -136,8 +168,8 @@ class SettingsViewModel(
             useDynamicColors.value = settingsPreferenceDataSource.getUseDynamicColors()
             themeMode.value = settingsPreferenceDataSource.getThemeMode()
             _token = settingsPreferenceDataSource.getToken()
-            _serverVersion = settingsPreferenceDataSource.getServerVersion()
-            _serverUrl = settingsPreferenceDataSource.getUrl()
+            _serverVersion.value = settingsPreferenceDataSource.getServerVersion()
+            _serverUrl.value = settingsPreferenceDataSource.getUrl()
         }
     }
 
@@ -151,14 +183,14 @@ class SettingsViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            Log.v("FeedViewModel", "Error getting tags: ${result.error?.message}")
+                            Log.v(TAG, "Error getting tags: ${result.error?.message}")
                         }
                         is Result.Loading -> {
-                            Log.v("FeedViewModel", "Loading, updating tags from cache...")
+                            Log.v(TAG, "Loading, updating tags from cache...")
                             _tagsState.isLoading(true)
                         }
                         is Result.Success -> {
-                            Log.v("FeedViewModel", "Tags loaded successfully.")
+                            Log.v(TAG, "Tags loaded successfully.")
                             _tagsState.success(result.data)
                         }
                     }
@@ -198,9 +230,12 @@ class SettingsViewModel(
         }
     }
 
-    fun getServerUrl(): String = _serverUrl
+    fun getServerUrl(): String = _serverUrl.value
 
-    fun getServerVersion(): String = _serverVersion
+    fun getServerVersion(): String = _serverVersion.value
 
+    private companion object {
+        const val TAG = "SettingsViewModel"
+    }
 }
 

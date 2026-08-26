@@ -1,13 +1,11 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
-import android.content.res.Configuration
-import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,13 +18,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.removeTrailingSlash
-import com.desarrollodroide.data.helpers.BookmarkViewType
-import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
+import com.desarrollodroide.pagekeeper.ui.components.LocalFeedInListPane
 
 @Composable
 fun FullBookmarkView(
@@ -34,101 +30,126 @@ fun FullBookmarkView(
     serverURL: String,
     xSessionId: String,
     token: String,
-    actions: BookmarkActions
+    actions: BookmarkActions,
+    isRefreshing: Boolean = false,
+    hasSettledEmpty: Boolean = false,
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
-    val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
-    //val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}?lastUpdated=${bookmark.modified}" } }
-    val imageUrl by remember { derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" } }
+    val isRtl by remember {
+        derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() }
+    }
+    val imageUrl by remember {
+        derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" }
+    }
 
     Column {
-        if (bookmark.isPendingServerProcessing) {
-            PendingSyncBanner()
+        // hasSettledEmpty: the server has already been asked and had nothing. Saying it is
+        // still being fetched after that would be the aaaa.pd banner all over again.
+        if (bookmark.isPendingServerProcessing && !hasSettledEmpty) {
+            PendingSyncBanner(
+                onRefresh = { actions.onClickRefresh(getBookmark) },
+                isRefreshing = isRefreshing,
+            )
         }
-        if (bookmark.imageURL.isNotEmpty()) {
+        if (bookmark.imageURL.isEmpty()) {
+            // The server had no thumbnail. The slot is filled anyway, both so an image-less card
+            // is not 200dp shorter than the one beside it and so the feed does not look like it
+            // failed to load something.
+            BookmarkImagePlaceholder(
+                url = bookmark.url,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+                    .height(HeroImageHeight)
+                    .clip(MaterialTheme.shapes.medium),
+            )
+        } else {
+            // A fixed height rather than an aspect ratio. Variable height heroes made the feed
+            // jump around as each image resolved, and heightIn + aspectRatio only looked like a
+            // fix: past about 430dp of card width the two cannot both be satisfied, the image
+            // drew taller than the row the column had reserved for it, and the title rendered on
+            // top of the picture. That width is reachable in the two pane layout, where a single
+            // column fills half a tablet. One number, the same at every width.
             BookmarkImageView(
                 imageUrl = imageUrl,
                 xSessionId = xSessionId,
                 token = token,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.FillWidth,
+                    .padding(12.dp)
+                    .height(HeroImageHeight)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop,
                 loadAsThumbnail = false
             )
         }
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                // Always 4dp. This used to open up to 16dp when there was no image, because back
+                // then there was no hero at all and the title would otherwise start against the
+                // card's edge. There is always a hero now, so the wider gap just made a card with
+                // a placeholder 12dp taller than the one beside it.
+                top = 4.dp,
+                bottom = 8.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+            CompositionLocalProvider(
+                LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+            ) {
+                // Nothing here reserves space it is not using. The feed is a staggered grid, so
+                // a card has no neighbour to line up with: every line held open for symmetry was
+                // simply blank. Between them the title's second line, three excerpt lines and an
+                // empty tag row came to about 130dp of nothing on a bookmark with no excerpt and
+                // no tags, which is what a freshly added link is.
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = if (bookmark.title.isNullOrEmpty()) bookmark.url else bookmark.title,
+                    text = bookmark.title.ifEmpty { bookmark.url },
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2
                 )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 5.dp),
-                    text = bookmark.excerpt,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 3
-                )
+                // No excerpt beside an open article: the pane on the right is showing the same
+                // text in full, so in the list it is three lines of duplication in the narrowest
+                // column on screen.
+                if (bookmark.excerpt.isNotEmpty() && !LocalFeedInListPane.current) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = bookmark.excerpt,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 3
+                    )
+                }
             }
             Text(
-                modifier = Modifier.padding(top = 8.dp),
                 text = bookmark.modified,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.tertiary,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            ClickableCategoriesView(
-                uniqueCategories = bookmark.tags,
-                onClickCategory = actions.onClickCategory
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // One chip row when there are tags, nothing at all when there are not. Reserving the
+            // row on every card added 32dp of blank to most of them. Chips that do not fit are
+            // still dropped rather than wrapping onto a second row.
+            if (bookmark.tags.isNotEmpty()) {
+                Box(modifier = Modifier.height(TagRowHeight)) {
+                    ClickableCategoriesView(
+                        uniqueCategories = bookmark.tags,
+                        onClickCategory = actions.onClickCategory
+                    )
+                }
+            }
             ButtonsView(getBookmark = getBookmark, actions = actions)
         }
     }
 }
 
-@Preview
-@Composable
-private fun FullBookmarkViewPreview() {
-    MaterialTheme {
-        val mockBookmark = Bookmark.mock()
-        val actions = BookmarkActions(
-            onClickEdit = {},
-            onClickDelete = {},
-            onClickShare = {},
-            onClickCategory = {},
-            onClickBookmark = {},
-            onClickEpub = {},
-            onClickSync = {}
-        )
-        Column {
-            BookmarkItem(
-                getBookmark = { mockBookmark },
-                serverURL = "",
-                xSessionId = "",
-                token = "",
-                actions = actions,
-                viewType = BookmarkViewType.FULL
-            )
-            BookmarkItem(
-                getBookmark = { mockBookmark },
-                serverURL = "",
-                xSessionId = "",
-                token = "",
-                actions = actions,
-                viewType = BookmarkViewType.SMALL
-            )
-        }
-    }
-}
+/** Hero image height. Fixed so a card is the same shape on a phone and in a half width pane. */
+private val HeroImageHeight = 200.dp
+
+/** One AssistChip tall. Reserved whether or not the bookmark has tags, so cards stay level. */
+private val TagRowHeight = 32.dp

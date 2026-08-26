@@ -87,23 +87,23 @@ class SyncWorker(
                             Result.success()
                         } catch (retryException: Exception) {
                             Log.e("SyncWorker", "Error after session refresh: ${retryException.message}")
-                            Result.retry()
+                            retryOrGiveUp()
                         }
                     } else {
                         Log.e("SyncWorker", "Failed to refresh session")
-                        Result.retry()
+                        retryOrGiveUp()
                     }
                 } else if (e is BookmarkNotFoundException) {
                     Log.w("SyncWorker", "Bookmark not found, marking as success to avoid retry loop: ${e.message}")
                     Result.success()
                 } else {
                     Log.e("SyncWorker", "Error during sync: ${e.message}", e)
-                    Result.retry()
+                    retryOrGiveUp()
                 }
             }
         } catch (e: Exception) {
             Log.e("SyncWorker", "Unexpected error: ${e.message}")
-            Result.retry()
+            retryOrGiveUp()
         }
     }
 
@@ -169,6 +169,21 @@ class SyncWorker(
         return e.message?.contains(SESSION_HAS_BEEN_EXPIRED) == true
     }
 
+    /**
+     * Retry, but not for ever.
+     *
+     * WorkManager backs off exponentially and keeps a job alive across reboots, so a permanently
+     * failing operation used to retry until the user cleared the app data, waking the radio each
+     * time. Anything still failing after this many attempts is not transient.
+     */
+    private fun retryOrGiveUp(): Result =
+        if (hasRunOutOfAttempts(runAttemptCount)) {
+            Log.e("SyncWorker", "Giving up after ${runAttemptCount + 1} attempts")
+            Result.failure()
+        } else {
+            Result.retry()
+        }
+
     private suspend fun syncCreateBookmark(xSession: String, serverUrl: String, bookmarkId: Int): Bookmark {
         val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
             ?: throw BookmarkNotFoundException(bookmarkId)
@@ -206,3 +221,14 @@ class SyncWorker(
         }
     }
 }
+
+/**
+ * Whether a worker has used up its retries. `runAttemptCount` is 0 on the first run.
+ *
+ * Pulled out of the worker so the boundary can be tested without WorkManager.
+ */
+fun hasRunOutOfAttempts(runAttemptCount: Int, maxAttempts: Int = MAX_SYNC_ATTEMPTS): Boolean =
+    runAttemptCount + 1 >= maxAttempts
+
+/** Roughly ten minutes of exponential backoff before a failing operation is dropped. */
+const val MAX_SYNC_ATTEMPTS = 5

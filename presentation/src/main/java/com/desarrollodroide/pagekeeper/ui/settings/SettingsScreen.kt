@@ -1,13 +1,14 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,13 +17,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,12 +46,13 @@ import com.desarrollodroide.pagekeeper.extensions.openUrlInBrowser
 import com.desarrollodroide.pagekeeper.ui.components.ErrorDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.UiState
+import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.desarrollodroide.pagekeeper.BuildConfig
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
 import kotlinx.coroutines.flow.StateFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
@@ -58,25 +61,32 @@ fun SettingsScreen(
     onNavigateToSourceCode: () -> Unit,
     onNavigateToLogs: () -> Unit,
     onViewLastCrash: () -> Unit,
+    onNavigateToTags: () -> Unit,
     goToLogin: () -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler {
         onBack()
     }
-    val settingsUiState by settingsViewModel.settingsUiState.collectAsStateWithLifecycle()
+    val logoutUiState by settingsViewModel.logoutUiState.collectAsStateWithLifecycle()
     val tagsUiState by settingsViewModel.tagsState.collectAsStateWithLifecycle()
     val tagToHide by settingsViewModel.tagToHide.collectAsStateWithLifecycle()
     val compactView by settingsViewModel.compactView.collectAsStateWithLifecycle()
+    val useTwoPaneLayout by settingsViewModel.useTwoPaneLayout.collectAsStateWithLifecycle()
     val makeArchivePublic by settingsViewModel.makeArchivePublic.collectAsStateWithLifecycle()
     val createEbook by settingsViewModel.createEbook.collectAsStateWithLifecycle()
     val autoAddBookmark by settingsViewModel.autoAddBookmark.collectAsStateWithLifecycle()
+    val serverVersion by settingsViewModel.serverVersion.collectAsStateWithLifecycle()
+    val serverUrl by settingsViewModel.serverUrl.collectAsStateWithLifecycle()
     val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Settings", style = MaterialTheme.typography.titleLarge) },
+            LargeFlexibleTopAppBar(
+                title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -85,20 +95,24 @@ fun SettingsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
 
         Box(
             modifier = Modifier
                 .padding(paddingValues)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter,
         ) {
             SettingsContent(
-                settingsUiState = settingsUiState,
+                logoutUiState = logoutUiState,
                 tagsUiState = tagsUiState,
                 onLogout = { settingsViewModel.logout() },
                 goToLogin = {
@@ -122,6 +136,10 @@ fun SettingsScreen(
                 onCompactViewChanged = { isCompact ->
                     settingsViewModel.setCompactView(isCompact)
                 },
+                useTwoPaneLayout = useTwoPaneLayout,
+                onUseTwoPaneLayoutChanged = { useTwoPane ->
+                    settingsViewModel.setUseTwoPaneLayout(useTwoPane)
+                },
                 autoAddBookmark = autoAddBookmark,
                 onAutoAddBookmarkChanged = { isAuto ->
                     settingsViewModel.setAutoAddBookmark(isAuto)
@@ -131,14 +149,15 @@ fun SettingsScreen(
                 onNavigateToSourceCode = onNavigateToSourceCode,
                 onNavigateToLogs = onNavigateToLogs,
                 onViewLastCrash = onViewLastCrash,
+                onNavigateToTags = onNavigateToTags,
                 useDynamicColors = settingsViewModel.useDynamicColors,
                 onClickHideDialogOption = settingsViewModel::getTags,
                 onHideTagChanged = settingsViewModel::setHideTag,
                 hideTag = tagToHide,
                 cacheSize = settingsViewModel.cacheSize,
                 onClearCache = settingsViewModel::clearImageCache,
-                serverVersion = settingsViewModel.getServerVersion(),
-                serverUrl = settingsViewModel.getServerUrl()
+                serverVersion = serverVersion,
+                serverUrl = serverUrl
             )
         }
     }
@@ -146,7 +165,7 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsContent(
-    settingsUiState: UiState<String>,
+    logoutUiState: UiState<String>,
     makeArchivePublic: Boolean,
     onMakeArchivePublicChanged: (Boolean) -> Unit,
     createEbook: Boolean,
@@ -157,12 +176,15 @@ fun SettingsContent(
     onAutoAddBookmarkChanged: (Boolean) -> Unit,
     compactView: Boolean,
     onCompactViewChanged: (Boolean) -> Unit,
+    useTwoPaneLayout: Boolean,
+    onUseTwoPaneLayoutChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
     onNavigateToSourceCode: () -> Unit,
     onNavigateToTermsOfUse: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToLogs: () -> Unit,
     onViewLastCrash: () -> Unit,
+    onNavigateToTags: () -> Unit,
     themeMode: MutableStateFlow<ThemeMode>,
     goToLogin: () -> Unit,
     useDynamicColors: MutableStateFlow<Boolean>,
@@ -174,51 +196,56 @@ fun SettingsContent(
     onClearCache: () -> Unit,
     serverVersion: String,
     serverUrl: String,
-    ) {
+) {
     val context = LocalContext.current
-    if (settingsUiState.isLoading) {
+    // The only operation this state tracks is the logout. Null data is the resting state, not an
+    // absent screen: it means nobody has pressed Log out yet. Data means the server said goodbye,
+    // so the session is gone and there is nothing left here to show.
+    if (logoutUiState.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
-        Log.v("SettingsContent!!", "settingsUiState.isLoading")
     }
-    if (!settingsUiState.error.isNullOrEmpty()) {
+    if (!logoutUiState.error.isNullOrEmpty()) {
         ErrorDialog(
             title = "Error",
-            content = settingsUiState.error,
+            content = logoutUiState.error,
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
                 goToLogin()
             }
         )
-        Log.v("SettingsContent!!", settingsUiState.error)
-    } else if (settingsUiState.data == null) {
-        Log.v("SettingsContent!!", "settingsUiState.data is null")
-    } else {
-        Log.v("SettingsContent!!", "settingsUiState.data is not null")
+    } else if (logoutUiState.data != null) {
         LaunchedEffect(Unit) {
             goToLogin()
         }
     }
     LazyColumn(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        // Centred and capped: settings rows stretched the full 1280dp of a tablet otherwise.
+        modifier = Modifier
+            .widthIn(max = ContentMaxWidth)
+            .fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
             VisualSection(
                 themeMode = themeMode,
                 dynamicColors = useDynamicColors
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             FeedSection(
                 compactView = compactView,
                 onCompactViewChanged = onCompactViewChanged,
+                useTwoPaneLayout = useTwoPaneLayout,
+                onUseTwoPaneLayoutChanged = onUseTwoPaneLayoutChanged,
                 tagsUiState = tagsUiState,
                 onHideTagChanged = onHideTagChanged,
                 onClickHideDialogOption = onClickHideDialogOption,
-                hideTag = hideTag
+                hideTag = hideTag,
+                onNavigateToTags = onNavigateToTags
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             DefaultsSection(
                 makeArchivePublic = makeArchivePublic,
                 onMakeArchivePublicChanged = onMakeArchivePublicChanged,
@@ -229,22 +256,22 @@ fun SettingsContent(
                 autoAddBookmark = autoAddBookmark,
                 onAutoAddBookmarkChanged = onAutoAddBookmarkChanged
             )
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             DataSection(
                 cacheSize = cacheSize,
                 onClearCache = onClearCache
             )
-            if (BuildConfig.FLAVOR == "staging") {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(18.dp))
-                DebugSection (
+        }
+        if (BuildConfig.FLAVOR == "staging") {
+            item {
+                DebugSection(
                     onNavigateToLogs = onNavigateToLogs,
                     onViewLastCrash = onViewLastCrash
                 )
             }
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
             AccountSection(
                 serverUrl = serverUrl,
                 onLogout = onLogout,
@@ -258,63 +285,61 @@ fun SettingsContent(
                 },
                 onNavigateToSourceCode = onNavigateToSourceCode
             )
-            Spacer(modifier = Modifier.height(18.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (serverVersion.isNotEmpty()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Storage,
-                            contentDescription = "Server version",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Server v${serverVersion}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Smartphone,
-                        contentDescription = "App version",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "App v${BuildConfig.VERSION_NAME}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(18.dp))
+        }
+        item {
+            VersionFooter(serverVersion = serverVersion)
         }
     }
 }
 
+/** Server + app version, shown once at the bottom of the settings list. */
 @Composable
-private fun HorizontalDivider(){
-    HorizontalDivider(
+private fun VersionFooter(serverVersion: String) {
+    Row(
         modifier = Modifier
-            .height(1.dp)
-            .padding(horizontal = 6.dp,),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-    )
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        if (serverVersion.isNotEmpty()) {
+            VersionLabel(
+                icon = Icons.Default.Storage,
+                text = "Server v$serverVersion",
+                contentDescription = "Server version",
+            )
+        } else {
+            Spacer(modifier = Modifier.width(0.dp))
+        }
+        VersionLabel(
+            icon = Icons.Default.Smartphone,
+            text = "App v${BuildConfig.VERSION_NAME}",
+            contentDescription = "App version",
+        )
+    }
+}
+
+@Composable
+private fun VersionLabel(
+    icon: ImageVector,
+    text: String,
+    contentDescription: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 data class Item(
@@ -328,9 +353,9 @@ data class Item(
 
 @Preview(showBackground = true)
 @Composable
-fun SettingsScreenPreview() {
+private fun SettingsScreenPreview() {
     SettingsContent(
-        settingsUiState = UiState(isLoading = false),
+        logoutUiState = UiState(isLoading = false),
         makeArchivePublic = false,
         onMakeArchivePublicChanged = {},
         createEbook = false,
@@ -341,12 +366,15 @@ fun SettingsScreenPreview() {
         onAutoAddBookmarkChanged = { },
         compactView = false,
         onCompactViewChanged = {},
+        useTwoPaneLayout = false,
+        onUseTwoPaneLayoutChanged = {},
         onLogout = {},
         onNavigateToSourceCode = {},
         onNavigateToTermsOfUse = {},
         onNavigateToPrivacyPolicy = {},
         onNavigateToLogs = {},
         onViewLastCrash = {},
+        onNavigateToTags = {},
         themeMode = remember { MutableStateFlow(ThemeMode.AUTO)},
         goToLogin = {},
         useDynamicColors = remember { MutableStateFlow(false) },

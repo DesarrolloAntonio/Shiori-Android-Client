@@ -63,13 +63,16 @@ interface BookmarksDao {
 
   /**
    * Retrieves bookmarks for paging, filtered by search text and tags.
-   * @param searchText The text to search for in bookmark titles.
+   * @param searchText The text to search for in the title, excerpt or url.
    * @param tagIds The list of tag IDs to filter by.
    * @return A PagingSource of BookmarkEntity objects.
    */
   @Query("""
         SELECT * FROM bookmarks
-        WHERE (:searchText = '' OR title LIKE '%' || :searchText || '%')
+        WHERE (:searchText = ''
+            OR title LIKE '%' || :searchText || '%'
+            OR excerpt LIKE '%' || :searchText || '%'
+            OR url LIKE '%' || :searchText || '%')
         AND EXISTS (
             SELECT 1 FROM bookmark_tag_cross_ref 
             WHERE bookmark_tag_cross_ref.bookmarkId = bookmarks.id
@@ -84,12 +87,19 @@ interface BookmarksDao {
 
   /**
    * Retrieves bookmarks for paging, filtered by search text without considering tags.
-   * @param searchText The text to search for in bookmark titles.
+   *
+   * Matches the title, the excerpt and the url. Title alone was too narrow to be useful now that
+   * this backs the feed's own field: the web searches the content as well, which is not stored
+   * locally, so the url is the closest stand-in the cache has.
+   *
+   * @param searchText The text to search for in the title, excerpt or url.
    * @return A PagingSource of BookmarkEntity objects.
    */
   @Query("""
         SELECT * FROM bookmarks
         WHERE title LIKE '%' || :searchText || '%'
+           OR excerpt LIKE '%' || :searchText || '%'
+           OR url LIKE '%' || :searchText || '%'
         ORDER BY id DESC
     """)
   fun getPagingBookmarksWithoutTags(searchText: String): PagingSource<Int, BookmarkEntity>
@@ -158,6 +168,45 @@ interface BookmarksDao {
       insertBookmarkTagCrossRefs(crossRefs)
     }
   }
+
+  /**
+   * Removes cached bookmarks the server no longer returned, after a full sync has upserted
+   * everything it did return. Together with [insertPageWithTags] this replaces the old
+   * delete-everything-then-insert approach, which lost the whole cache if a sync failed part way.
+   */
+  @Query("DELETE FROM bookmarks WHERE id NOT IN (:keepIds)")
+  suspend fun deleteBookmarksNotIn(keepIds: List<Int>)
+
+  /**
+   * Appends a page of bookmarks and their tag cross references in one transaction.
+   *
+   * The counterpart to [insertAllWithTags] for paging: it keeps what is already cached instead of
+   * clearing it, which is what a second or later page needs.
+   */
+  @Transaction
+  suspend fun insertPageWithTags(bookmarks: List<BookmarkEntity>) {
+    insertAll(bookmarks)
+    bookmarks.forEach { bookmark ->
+      // The server decides what tags a bookmark has, so its cross references are replaced rather
+      // than added to. Only inserting meant a tag removed on the server stayed attached locally for
+      // ever: it survived a full pull to refresh and there was no way to get rid of it from the app.
+      deleteBookmarkTagCrossRefs(bookmark.id)
+      if (bookmark.tags.isNotEmpty()) {
+        insertBookmarkTagCrossRefs(
+          bookmark.tags.map { tag -> BookmarkTagCrossRef(bookmarkId = bookmark.id, tagId = tag.id) }
+        )
+      }
+    }
+  }
+
+  /**
+   * Drops cross references pointing at bookmarks that are no longer stored.
+   *
+   * [deleteBookmarksNotIn] removes the bookmark rows but nothing cascades to this table, so rows
+   * for deleted bookmarks piled up and kept their tags looking used.
+   */
+  @Query("DELETE FROM bookmark_tag_cross_ref WHERE bookmarkId NOT IN (SELECT id FROM bookmarks)")
+  suspend fun deleteOrphanedTagCrossRefs()
 
   /**
    * Updates an existing bookmark in the local database.

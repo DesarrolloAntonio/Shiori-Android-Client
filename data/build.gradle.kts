@@ -1,9 +1,7 @@
 plugins {
     id ("com.android.library")
-    id ("org.jetbrains.kotlin.android")
-    id ("com.google.devtools.ksp") version "2.0.0-1.0.21"
-    id ("com.google.protobuf") version "0.9.4"
-    id ("de.mannodermaus.android-junit5")
+    id ("com.google.devtools.ksp")
+    id ("com.google.protobuf") version "0.10.0"
 }
 
 android {
@@ -11,9 +9,7 @@ android {
     compileSdk = (findProperty("compileSdkVersion") as String).toInt()
 
     defaultConfig {
-        testInstrumentationRunnerArguments += mapOf("runnerBuilder" to "de.mannodermaus.junit5.AndroidJUnit5Builder")
         minSdk = (findProperty("minSdkVersion") as String).toInt()
-        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -28,11 +24,15 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "17"
+    testOptions {
+        unitTests {
+            // NetworkNoCacheResource logs with android.util.Log on its error path, which is a
+            // stub that throws in JVM tests. Returning defaults lets those branches be tested.
+            isReturnDefaultValues = true
+        }
     }
     packagingOptions {
         jniLibs {
@@ -47,7 +47,7 @@ android {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -83,11 +83,13 @@ dependencies {
 
     // Testing libraries
     testImplementation(libs.junit.jupiter) // JUnit Jupiter for unit testing with JUnit 5.
-    testRuntimeOnly(libs.junit.jupiter.engine) // JUnit Jupiter Engine for running JUnit 5 tests.
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher) // JUnit Jupiter Engine for running JUnit 5 tests.
     testImplementation(libs.junit.jupiter.api) // JUnit Jupiter API for writing tests and extensions in JUnit 5.
     testImplementation(libs.mockito.core) // Mockito for mocking objects in tests.
     testImplementation(libs.mockito.kotlin) // Kotlin extension for Mockito to better support Kotlin features.
-    testImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing Kotlin coroutines.
+    testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.okhttp3.mockwebserver) // Serves canned Shiori responses to the real Retrofit stack.
     testImplementation(libs.kotlin.test.junit5) // Kotlin Test library for JUnit 5 support.
     testImplementation(libs.androidx.paging.common) // Common Paging library for testing.
     testImplementation("app.cash.turbine:turbine:1.1.0") // Turbine for testing flows.
@@ -99,8 +101,6 @@ dependencies {
     androidTestImplementation ("androidx.test:rules:1.5.0") // Android Test Rules for defining complex test cases.
     androidTestImplementation(libs.androidx.room.testing) // Room Testing support for testing Room databases.
     androidTestImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing coroutines in Android tests.
-    androidTestImplementation("de.mannodermaus.junit5:android-test-core:1.2.2") // Android support for JUnit 5 tests.
-    androidTestRuntimeOnly("de.mannodermaus.junit5:android-test-runner:1.2.2") // JUnit 5 Runner for running Android tests with JUnit 5.
 }
 
 
@@ -112,10 +112,12 @@ protobuf {
     generateProtoTasks {
         all().forEach { task ->
             task.builtins {
-                val java by registering {
+                // register(name) rather than "by registering": the delegate form is deprecated in
+                // Gradle 9 and goes away in 10.
+                register("java") {
                     option("lite")
                 }
-                val kotlin by registering {
+                register("kotlin") {
                     option("lite")
                 }
             }
@@ -129,4 +131,12 @@ tasks.withType<Test> {
         events("passed", "failed", "skipped")
         showStandardStreams = true
     }
+}
+
+// The android-junit5 plugin drove this before. It configured the test tasks through
+// unitTestVariants, which AGP 9 removed, so it stopped discovering anything at all while still
+// applying cleanly. Every unit test here is JUnit 5 and every instrumented test is JUnit 4, so
+// plain Gradle covers it and the plugin is gone.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

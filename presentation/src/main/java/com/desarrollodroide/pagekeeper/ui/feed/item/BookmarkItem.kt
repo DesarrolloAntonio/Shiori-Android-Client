@@ -1,24 +1,22 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 
 data class BookmarkActions(
     val onClickEdit: (GetBookmark) -> Unit,
@@ -27,11 +25,21 @@ data class BookmarkActions(
     val onClickCategory: (Tag) -> Unit,
     val onClickBookmark: (GetBookmark) -> Unit,
     val onClickEpub: (GetBookmark) -> Unit,
-    val onClickSync: (GetBookmark) -> Unit
+    val onClickSync: (GetBookmark) -> Unit,
+    val onToggleSelection: (Int) -> Unit = {},
+    /** Re-fetch just this bookmark; what the pending banner offers. */
+    val onClickRefresh: (GetBookmark) -> Unit = {},
 )
 
 typealias GetBookmark = () -> Bookmark
 
+/**
+ * One bookmark in the feed, as a tonal card.
+ *
+ * The feed used to be a flat run of rows separated by hairline dividers. Cards on
+ * `surfaceContainerLow` give each bookmark its own volume, which is how M3 expresses grouping —
+ * so the dividers are gone and the separation comes from the surface tone plus the list spacing.
+ */
 @Composable
 fun BookmarkItem(
     getBookmark: GetBookmark,
@@ -39,43 +47,70 @@ fun BookmarkItem(
     xSessionId: String,
     token: String,
     actions: BookmarkActions,
-    viewType: BookmarkViewType
+    viewType: BookmarkViewType,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    isRefreshing: Boolean = false,
+    hasSettledEmpty: Boolean = false,
 ) {
-    val bookmark by remember { derivedStateOf(getBookmark) }
-    Box(modifier = Modifier
-        .padding(horizontal = 6.dp)
-        .padding(bottom = if (viewType == BookmarkViewType.FULL) 0.dp else 6.dp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            // Long press starts batch edit. Once it is running a plain tap picks bookmarks instead
+            // of opening them, otherwise selecting a second one would navigate away from the list.
+            .combinedClickable(
+                onClick = {
+                    if (isSelectionMode) {
+                        actions.onToggleSelection(getBookmark().id)
+                    } else {
+                        actions.onClickBookmark(getBookmark)
+                    }
+                },
+                onLongClick = { actions.onToggleSelection(getBookmark().id) },
+            )
+            .semantics { selected = isSelected },
+        shape = MaterialTheme.shapes.large,
+        border = if (isSelected) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            null
+        },
+        colors = CardDefaults.cardColors(
+            // Not secondaryContainer: the tag chips already use it, so on a selected card the
+            // chips lost their pill and read as loose text. The border carries the selection.
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
+        ),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { actions.onClickBookmark(getBookmark) },
-        ) {
-            when (viewType) {
-                BookmarkViewType.FULL -> FullBookmarkView(
-                    getBookmark = getBookmark,
-                    serverURL = serverURL,
-                    xSessionId = xSessionId,
-                    token = token,
-                    actions = actions
-                )
+        when (viewType) {
+            BookmarkViewType.FULL -> FullBookmarkView(
+                getBookmark = getBookmark,
+                serverURL = serverURL,
+                xSessionId = xSessionId,
+                token = token,
+                actions = actions,
+                isRefreshing = isRefreshing,
+                hasSettledEmpty = hasSettledEmpty,
+            )
 
-                BookmarkViewType.SMALL -> SmallBookmarkView(
-                    getBookmark = getBookmark,
-                    serverURL = serverURL,
-                    xSessionId = xSessionId,
-                    token = token,
-                    actions = actions
-                )
-            }
+            BookmarkViewType.SMALL -> SmallBookmarkView(
+                getBookmark = getBookmark,
+                serverURL = serverURL,
+                xSessionId = xSessionId,
+                token = token,
+                actions = actions
+            )
         }
     }
 }
 
 @Preview
 @Composable
-fun PreviewPost() {
-    MaterialTheme {
+private fun BookmarkItemPreview() {
+    ShioriTheme {
         val mockBookmark = Bookmark.mock()
         val actions = BookmarkActions(
             onClickEdit = { },

@@ -1,6 +1,5 @@
 plugins {
     id("com.android.library")
-    id ("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -9,7 +8,6 @@ android {
 
     defaultConfig {
         minSdk = (findProperty("minSdkVersion") as String).toInt()
-        targetSdk = (findProperty("targetSdkVersion") as String).toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -27,11 +25,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
@@ -47,10 +42,22 @@ dependencies {
     implementation (libs.androidx.paging.compose)
     testImplementation (libs.kotlinx.coroutines.android)
     testImplementation (libs.kotlin.coroutines.test)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+}
+
+// There is no JUnit 5 plugin: each module wires the platform itself, and a module that forgets to
+// runs zero tests without saying so.
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }

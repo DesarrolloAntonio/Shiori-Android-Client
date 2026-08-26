@@ -1,23 +1,34 @@
 package com.desarrollodroide.pagekeeper.di
 
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
+import com.desarrollodroide.pagekeeper.ui.tags.TagsViewModel
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
-import com.desarrollodroide.pagekeeper.ui.feed.SearchViewModel
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.SettingsViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogViewModel
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogViewModel
 import org.koin.dsl.module
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 
 fun presenterModule() = module {
 
     viewModel {
         LoginViewModel(
             loginUseCase = get(),
+            refreshTokenUseCase = get(),
             settingsPreferenceDataSource = get(),
             livenessUseCase = get(),
+        )
+    }
+
+    viewModel {
+        TagsViewModel(
+            getTagsUseCase = get(),
+            createTagUseCase = get(),
+            renameTagUseCase = get(),
+            deleteTagUseCase = get(),
+            settingsPreferenceDataSource = get(),
         )
     }
 
@@ -32,8 +43,9 @@ fun presenterModule() = module {
             downloadFileUseCase = get(),
             getAllRemoteBookmarksUseCase = get(),
             deleteLocalBookmarkUseCase = get(),
-            syncBookmarksUseCase = get(),
             syncManager = get(),
+            bookmarksRepository = get(),
+            tagsRepository = get(),
         )
     }
 
@@ -56,13 +68,6 @@ fun presenterModule() = module {
             editBookmarkUseCase = get(),
             userPreferences = get(),
             settingsPreferenceDataSource =  get(),
-        )
-    }
-
-    viewModel {
-        SearchViewModel(
-            getPagingBookmarksUseCase = get(),
-            settingsPreferenceDataSource = get(),
         )
     }
 

@@ -4,13 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.CloudUpload
@@ -41,9 +37,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.data.extensions.isTimestampId
 import com.desarrollodroide.data.extensions.removeTrailingSlash
-import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.pagekeeper.R
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
+
+private val ThumbnailSize = 72.dp
 
 @Composable
 fun SmallBookmarkView(
@@ -54,148 +51,136 @@ fun SmallBookmarkView(
     actions: BookmarkActions
 ) {
     val bookmark by remember { derivedStateOf(getBookmark) }
-    val imageUrl by remember { derivedStateOf {
-        "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
-    }}
-    val modifier = if (bookmark.imageURL.isNotEmpty()) Modifier.height(90.dp) else Modifier.wrapContentHeight()
-    val isArabic by remember { derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() } }
+    val imageUrl by remember {
+        derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" }
+    }
+    val isRtl by remember {
+        derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() }
+    }
 
     Column {
         if (bookmark.isPendingServerProcessing) {
             PendingSyncBanner()
         }
         Row(
-            modifier = modifier
-                .padding(vertical = 8.dp)
-                .padding(start = 8.dp)
-        ) {
-        if (bookmark.imageURL.isNotEmpty()) {
-            BookmarkImageView(
-                imageUrl = imageUrl,
-                xSessionId = xSessionId,
-                token = token,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .clip(
-                        RoundedCornerShape(8.dp)
-                    ),
-                contentScale = ContentScale.Crop,
-                loadAsThumbnail = true
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (bookmark.imageURL.isNotEmpty()) {
+                BookmarkImageView(
+                    imageUrl = imageUrl,
+                    xSessionId = xSessionId,
+                    token = token,
+                    modifier = Modifier
+                        .size(ThumbnailSize)
+                        .clip(MaterialTheme.shapes.medium),
+                    contentScale = ContentScale.Crop,
+                    loadAsThumbnail = true
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+            }
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+                CompositionLocalProvider(
+                    LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+                ) {
                     Text(
-                        text = if (bookmark.title.isNullOrEmpty()) bookmark.url else bookmark.title,
+                        text = bookmark.title.ifEmpty { bookmark.url },
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 2
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = bookmark.modified,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
                 }
             }
-            Column {
-                val expanded = remember { mutableStateOf(false) }
-                IconButton(onClick = {
-                    expanded.value = true
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "Edit",
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                }
-                DropdownMenu(
-                    modifier = Modifier
-                        .align(alignment = Alignment.End),
-                    offset = DpOffset((8).dp, 0.dp),
-                    expanded = expanded.value,
-                    onDismissRequest = { expanded.value = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickEdit(getBookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Edit,
-                                contentDescription = null
-                            )
-                        })
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickDelete(getBookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                contentDescription = null
-                            )
-                        })
-                    if (bookmark.hasEbook) {
-                        DropdownMenuItem(
-                            text = { Text("Epub") },
-                            onClick = {
-                                expanded.value = false
-                                actions.onClickEpub(getBookmark)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_book),
-                                    contentDescription = "Epub",
-                                    tint = MaterialTheme.colorScheme.secondary
-                                )
-                            })
-                    }
-                    DropdownMenuItem(
-                        text = { Text("Share") },
-                        onClick = {
-                            expanded.value = false
-                            actions.onClickShare(getBookmark)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Share,
-                                contentDescription = null
-                            )
-                        })
-                    if (!bookmark.id.isTimestampId()){
-                        DropdownMenuItem(
-                            text = { Text("Update") },
-                            onClick = {
-                                expanded.value = false
-                                actions.onClickSync(getBookmark)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.CloudUpload,
-                                    contentDescription = null
-                                )
-                            })
-                    }
-                }
-            }
+            BookmarkOverflowMenu(
+                getBookmark = getBookmark,
+                actions = actions,
+                hasEbook = bookmark.hasEbook,
+                canSync = !bookmark.id.isTimestampId(),
+            )
         }
+    }
+}
+
+@Composable
+private fun BookmarkOverflowMenu(
+    getBookmark: GetBookmark,
+    actions: BookmarkActions,
+    hasEbook: Boolean,
+    canSync: Boolean,
+) {
+    val expanded = remember { mutableStateOf(false) }
+    Column {
+        IconButton(onClick = { expanded.value = true }) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = "More actions",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        DropdownMenu(
+            modifier = Modifier.align(alignment = Alignment.End),
+            offset = DpOffset(8.dp, 0.dp),
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                onClick = {
+                    expanded.value = false
+                    actions.onClickEdit(getBookmark)
+                },
+                leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    expanded.value = false
+                    actions.onClickDelete(getBookmark)
+                },
+                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) }
+            )
+            if (hasEbook) {
+                DropdownMenuItem(
+                    text = { Text("Epub") },
+                    onClick = {
+                        expanded.value = false
+                        actions.onClickEpub(getBookmark)
+                    },
+                    leadingIcon = {
+                        Icon(painterResource(id = R.drawable.ic_book), contentDescription = null)
+                    }
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Share") },
+                onClick = {
+                    expanded.value = false
+                    actions.onClickShare(getBookmark)
+                },
+                leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) }
+            )
+            if (canSync) {
+                DropdownMenuItem(
+                    text = { Text("Update") },
+                    onClick = {
+                        expanded.value = false
+                        actions.onClickSync(getBookmark)
+                    },
+                    leadingIcon = { Icon(Icons.Outlined.CloudUpload, contentDescription = null) }
+                )
+            }
         }
     }
 }

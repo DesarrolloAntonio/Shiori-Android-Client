@@ -1,25 +1,24 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import coil.request.ImageRequest
-import okhttp3.Headers
+import coil3.request.ImageRequest
+import coil3.request.bitmapConfig
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
 import android.graphics.Bitmap
 import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalInspectionMode
-import coil.ImageLoader
-import coil.size.Size
+import coil3.ImageLoader
+import coil3.size.Size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.FilterQuality
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
-import org.koin.androidx.compose.get
+import org.koin.compose.koinInject
 
 @Composable
 fun BookmarkImageView(
@@ -38,28 +37,32 @@ fun BookmarkImageView(
         )
     } else {
         val context = LocalContext.current
-        val imageLoader = get<ImageLoader>()
+        val imageLoader = koinInject<ImageLoader>()
 
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(imageUrl)
                 .bitmapConfig(Bitmap.Config.ARGB_8888)
+                // No size() call for the full size case on purpose. It used to ask for
+                // Size.ORIGINAL, which decodes at the image's intrinsic resolution however large
+                // that is, while the view only ever showed a couple of hundred dp of it. A big
+                // server thumbnail decoded to a 164MB bitmap and Canvas refused to draw it:
+                //   RuntimeException: Canvas: trying to draw too large bitmap
+                // Leaving it unset lets Coil measure the target and downsample to it.
                 .apply {
                     if (loadAsThumbnail) {
-                        size(Size(100, 100))
-                    } else {
-                        size(Size.ORIGINAL)
+                        size(Size(THUMBNAIL_PX, THUMBNAIL_PX))
                     }
                 }
-                .headers(
-                    Headers.Builder().add("Authorization", "Bearer $token").build()
+                .httpHeaders(
+                    NetworkHeaders.Builder().add("Authorization", "Bearer $token").build()
                 )
                 .build(),
             contentDescription = "Bookmark image",
             imageLoader = imageLoader,
-            modifier = modifier
-                .heightIn(max = if (loadAsThumbnail) 100.dp else 200.dp)
-                .fillMaxWidth(),
+            // Sizing belongs to the caller. The view used to append heightIn + fillMaxWidth,
+            // which overrode the 72dp box the compact row asks for.
+            modifier = modifier,
             alignment = Alignment.Center,
             contentScale = contentScale,
             alpha = 1.0f,
@@ -70,3 +73,5 @@ fun BookmarkImageView(
     }
 }
 
+/** Decode hint for the compact row's thumbnail, in pixels, generous enough for xxhdpi. */
+private const val THUMBNAIL_PX = 240

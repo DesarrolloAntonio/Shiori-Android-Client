@@ -1,5 +1,6 @@
 package com.desarrollodroide.network.di
 
+import com.desarrollodroide.network.BuildConfig
 import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import okhttp3.OkHttpClient
@@ -33,7 +34,13 @@ fun networkingModule() = module {
             }
             .addInterceptor(get<NetworkLoggerInterceptor>())
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                // BODY prints the full request body, and the login request body is the username
+                // and password in the clear. That must never reach logcat on a release build.
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             })
             .build()
     } // client
@@ -42,7 +49,12 @@ fun networkingModule() = module {
         Retrofit.Builder()
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://google.com") //generic url
+            // Never used: all 17 endpoints pass an absolute @Url built from the server the user
+            // configured. Retrofit demands a base url anyway, so this is a reserved .invalid host
+            // that cannot resolve. It used to be google.com, which meant a bug that left the
+            // server url empty sent the user's requests to a stranger and read the reply as if it
+            // were Shiori's. An unresolvable host fails loudly instead.
+            .baseUrl("https://server-url-not-set.invalid/")
             .client(get())
             .build()
     } // retrofit

@@ -1,15 +1,20 @@
 package com.desarrollodroide.pagekeeper.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.SideEffect
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
 
 private val lightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -41,8 +46,14 @@ private val lightColors = lightColorScheme(
     surfaceTint = md_theme_light_surfaceTint,
     outlineVariant = md_theme_light_outlineVariant,
     scrim = md_theme_light_scrim,
+    surfaceDim = md_theme_light_surfaceDim,
+    surfaceBright = md_theme_light_surfaceBright,
+    surfaceContainerLowest = md_theme_light_surfaceContainerLowest,
+    surfaceContainerLow = md_theme_light_surfaceContainerLow,
+    surfaceContainer = md_theme_light_surfaceContainer,
+    surfaceContainerHigh = md_theme_light_surfaceContainerHigh,
+    surfaceContainerHighest = md_theme_light_surfaceContainerHighest,
 )
-
 
 private val darkColors = darkColorScheme(
     primary = md_theme_dark_primary,
@@ -74,15 +85,32 @@ private val darkColors = darkColorScheme(
     surfaceTint = md_theme_dark_surfaceTint,
     outlineVariant = md_theme_dark_outlineVariant,
     scrim = md_theme_dark_scrim,
+    surfaceDim = md_theme_dark_surfaceDim,
+    surfaceBright = md_theme_dark_surfaceBright,
+    surfaceContainerLowest = md_theme_dark_surfaceContainerLowest,
+    surfaceContainerLow = md_theme_dark_surfaceContainerLow,
+    surfaceContainer = md_theme_dark_surfaceContainer,
+    surfaceContainerHigh = md_theme_dark_surfaceContainerHigh,
+    surfaceContainerHighest = md_theme_dark_surfaceContainerHighest,
 )
 
+/**
+ * Material 3 Expressive theme.
+ *
+ * [MaterialExpressiveTheme] differs from plain `MaterialTheme` in that it installs the expressive
+ * [androidx.compose.material3.MotionScheme] — spring-based specs that components read for their
+ * own animations — and flags the composition as expressive so components pick their expressive
+ * defaults. Window insets / status bar handling lives in the Activity via `enableEdgeToEdge()`,
+ * not here.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShioriTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
+    val colorScheme: ColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -90,19 +118,27 @@ fun ShioriTheme(
         darkTheme -> darkColors
         else -> lightColors
     }
+
+    // The window is edge to edge, but the system bar icons still have to follow the app's theme
+    // rather than the system's. Without this, choosing Light while the device is in dark mode
+    // leaves white status bar icons on a white background. Only statusBarColor was deprecated,
+    // this controller is not.
     val view = LocalView.current
     if (!view.isInEditMode) {
+        val darkIcons = !darkTheme
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = darkIcons
+                isAppearanceLightNavigationBars = darkIcons
+            }
         }
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = shioriTypography,
         shapes = shapes,
-        content = content
+        content = content,
     )
 }

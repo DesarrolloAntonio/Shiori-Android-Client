@@ -27,3 +27,9 @@ cambios.patch
 *.aab
 *.apk
 /docs
+
+# Android Developer Verification
+**/assets/adi-registration.properties
+
+# Upstream Shiori checkout, kept locally for API reference only
+/shiori-upstream

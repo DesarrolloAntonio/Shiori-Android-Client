@@ -60,7 +60,7 @@ fun NotSessionScreen(
 
 @Preview
 @Composable
-fun NotSessionScreenPreview() {
+private fun NotSessionScreenPreview() {
     ShioriTheme {
         NotSessionScreen(
             onClickLogin = { }

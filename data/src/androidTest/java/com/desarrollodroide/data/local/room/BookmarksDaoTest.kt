@@ -6,7 +6,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.database.BookmarksDatabase
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
-import com.desarrollodroide.data.local.room.entity.TagEntity
 import com.desarrollodroide.model.Tag
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -108,6 +107,109 @@ class BookmarksDaoTest {
         )
         assertTrue(loadResult is PagingSource.LoadResult.Page)
         assertEquals(1, (loadResult as PagingSource.LoadResult.Page).data.size)
+    }
+
+    /**
+     * Search has to look past the title. It backs the feed's own field now, so a query only ever
+     * matching titles finds nothing for the words a user actually remembers about a page. The web
+     * searches the content too; that is not cached locally, so the url is the nearest stand-in.
+     */
+    @Test
+    fun pagingSearchMatchesExcerptAndUrl() = runBlocking {
+        bookmarksDao.insertAll(
+            listOf(
+                bookmark.copy(id = 1, title = "Nothing relevant", excerpt = "", url = "http://a.test"),
+                bookmark.copy(id = 2, title = "Nothing relevant", excerpt = "about coroutines", url = "http://b.test"),
+                bookmark.copy(id = 3, title = "Nothing relevant", excerpt = "", url = "http://kotlinlang.org"),
+            )
+        )
+
+        assertEquals(listOf(2), searchIds("coroutines"))
+        assertEquals(listOf(3), searchIds("kotlinlang"))
+    }
+
+    /**
+     * Search and a tag filter at once. This combination only became reachable when the app bar's
+     * field started driving the feed: the old search screen always passed an empty tag list, so
+     * the two-condition query was never actually exercised in production.
+     */
+    @Test
+    fun pagingSearchCombinesWithATagFilter() = runBlocking {
+        bookmarksDao.insertAllWithTags(
+            listOf(
+                bookmark.copy(id = 1, title = "Tagged and matching", tags = listOf(tag)),
+                bookmark.copy(id = 2, title = "Matching but untagged", tags = listOf()),
+            )
+        )
+
+        val loadResult = bookmarksDao.getPagingBookmarks(
+            searchText = "Matching",
+            tagIds = listOf(tag.id)
+        ).load(
+            PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false)
+        )
+
+        assertTrue(loadResult is PagingSource.LoadResult.Page)
+        assertEquals(
+            listOf(1),
+            (loadResult as PagingSource.LoadResult.Page).data.map { it.id }
+        )
+    }
+
+    /**
+     * The reason editing a bookmark used to be followed by a full sync.
+     *
+     * A plain update writes the bookmark row and nothing else, so bookmark_tag_cross_ref keeps the
+     * tags the bookmark had before. Tag filtering reads that table, so the bookmark went on being
+     * filed under a tag it no longer has. The full sync afterwards rebuilt the table and hid it.
+     */
+    @Test
+    fun plainUpdateLeavesTagCrossRefsStale() = runBlocking {
+        val other = Tag(id = 2, name = "Other Tag")
+        bookmarksDao.insertAllWithTags(listOf(bookmark.copy(tags = listOf(tag))))
+
+        bookmarksDao.updateBookmark(bookmark.copy(tags = listOf(other)))
+
+        assertEquals(
+            "a plain update does not touch the cross reference table",
+            listOf(bookmark.id),
+            bookmarkIdsForTag(tag.id)
+        )
+        assertTrue(bookmarkIdsForTag(other.id).isEmpty())
+    }
+
+    @Test
+    fun updateWithTagsReplacesTheCrossRefs() = runBlocking {
+        val other = Tag(id = 2, name = "Other Tag")
+        bookmarksDao.insertAllWithTags(listOf(bookmark.copy(tags = listOf(tag))))
+
+        bookmarksDao.updateBookmarkWithTags(bookmark.copy(tags = listOf(other)))
+
+        assertTrue(
+            "the old tag must stop matching once it has been removed",
+            bookmarkIdsForTag(tag.id).isEmpty()
+        )
+        assertEquals(listOf(bookmark.id), bookmarkIdsForTag(other.id))
+    }
+
+    private suspend fun bookmarkIdsForTag(tagId: Int): List<Int> {
+        val loadResult = bookmarksDao.getPagingBookmarksByTags(listOf(tagId)).load(
+            PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false)
+        )
+        assertTrue(loadResult is PagingSource.LoadResult.Page)
+        return (loadResult as PagingSource.LoadResult.Page).data.map { it.id }
+    }
+
+    private suspend fun searchIds(query: String): List<Int> {
+        val loadResult = bookmarksDao.getPagingBookmarksWithoutTags(query).load(
+            PagingSource.LoadParams.Refresh(
+                key = null,
+                loadSize = 10,
+                placeholdersEnabled = false
+            )
+        )
+        assertTrue(loadResult is PagingSource.LoadResult.Page)
+        return (loadResult as PagingSource.LoadResult.Page).data.map { it.id }
     }
 
     @Test

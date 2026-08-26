@@ -209,7 +209,7 @@ fun CategoriesView(
 
 @Preview(showBackground = true)
 @Composable
-fun SortAndFilterScreenPreview() {
+private fun CategoriesViewPreview() {
     val regionOptions = listOf(
         Tag(id = 1, name = "Northern Europe"),
         Tag(id = 2, name = "Western Europe"),
@@ -240,7 +240,7 @@ fun SortAndFilterScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun SortAndFilterScreenPreview2() {
+private fun CategoriesViewWithManyCategoriesPreview() {
     val regionOptions = (1..200).map {
         Tag(id = it, name = "Category $it")
     }

@@ -109,6 +109,8 @@ fun dataModule() = module {
     single { BookmarksRepositoryImpl(
         apiService = get(),
         bookmarksDao = get(),
+        tagDao = get(),
+        bookmarkHtmlDao = get(),
         errorHandler = get()
     ) as BookmarksRepository }
 
@@ -133,7 +135,7 @@ fun dataModule() = module {
         ) as TagsRepository
     }
 
-    single { FileRemoteDataSource() }
+    single { FileRemoteDataSource(client = get()) }
     single { ErrorHandlerImpl() as ErrorHandler }
 
     single { WorkManager.getInstance(get<Context>()) }

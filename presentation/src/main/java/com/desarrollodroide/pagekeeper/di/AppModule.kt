@@ -1,9 +1,6 @@
 package com.desarrollodroide.pagekeeper.di
 
 import android.content.Context
-import android.util.Log
-import coil.ImageLoader
-import coil.disk.DiskCache
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import com.desarrollodroide.pagekeeper.helpers.ThemeManagerImpl
 import com.desarrollodroide.data.repository.BookmarksRepository
@@ -17,14 +14,15 @@ import com.desarrollodroide.domain.usecase.GetBookmarkReadableContentUseCase
 import com.desarrollodroide.domain.usecase.GetBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
+import com.desarrollodroide.domain.usecase.CreateTagUseCase
+import com.desarrollodroide.domain.usecase.DeleteTagUseCase
+import com.desarrollodroide.domain.usecase.RefreshTokenUseCase
+import com.desarrollodroide.domain.usecase.RenameTagUseCase
 import com.desarrollodroide.domain.usecase.SendLoginUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
-import com.desarrollodroide.domain.usecase.SyncBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.SystemLivenessUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
-import com.desarrollodroide.domain.usecase.GetBookmarkByIdUseCase
-import okhttp3.OkHttpClient
 import org.koin.dsl.module
 
 fun appModule() = module {
@@ -33,6 +31,8 @@ fun appModule() = module {
         BookmarksRepositoryImpl(
             apiService = get(),
             bookmarksDao = get(),
+            tagDao = get(),
+            bookmarkHtmlDao = get(),
             errorHandler = get(),
         ) as BookmarksRepository
     }
@@ -124,8 +124,26 @@ fun appModule() = module {
     }
 
     single {
-        GetBookmarkByIdUseCase(
-            bookmarksRepository = get()
+        CreateTagUseCase(
+            tagsRepository = get()
+        )
+    }
+
+    single {
+        RenameTagUseCase(
+            tagsRepository = get()
+        )
+    }
+
+    single {
+        DeleteTagUseCase(
+            tagsRepository = get()
+        )
+    }
+
+    single {
+        RefreshTokenUseCase(
+            authRepository = get()
         )
     }
 
@@ -135,41 +153,8 @@ fun appModule() = module {
         )
     }
 
-    single {
-        SyncBookmarksUseCase(
-            bookmarksRepository = get(),
-            settingsPreferenceDataSource = get(),
-            bookmarkDatabase = get()
-        )
-    }
-
     single { ThemeManagerImpl(get()) as ThemeManager }
 
-    single {
-        ImageLoader.Builder(get<Context>())
-            .okHttpClient {
-                OkHttpClient.Builder()
-                    .retryOnConnectionFailure(true)
-                    .addInterceptor { chain ->
-                        val request = chain.request()
-                        val response = chain.proceed(request)
-                        if (!response.isSuccessful) {
-                            Log.e("BookmarkImageView", "HTTP error: ${response.code}")
-                        }
-                        val newCacheControl = "public, max-age=31536000"
-                        response.newBuilder()
-                            .header("Cache-Control", newCacheControl)
-                            .build()
-                    }
-                    .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    .directory(get<Context>().cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(250L * 1024 * 1024) // 250MB
-                    .build()
-            }
-            .build()
-    }
+    single { buildImageLoader(get<Context>()) }
 
 }

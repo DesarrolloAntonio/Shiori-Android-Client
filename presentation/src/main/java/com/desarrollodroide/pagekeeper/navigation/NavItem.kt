@@ -1,6 +1,5 @@
 package com.desarrollodroide.pagekeeper.navigation
 
-import android.net.Uri
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 
@@ -11,6 +10,7 @@ sealed class NavItem(
     data object LoginNavItem : NavItem("login")
     data object HomeNavItem : NavItem("home")
     data object SettingsNavItem : NavItem("settings")
+    data object TagsNavItem : NavItem("tags")
     data object TermsOfUseNavItem : NavItem("termsOfUse")
     data object PrivacyPolicyNavItem : NavItem("privacyPolicy")
     data object ReadableContentNavItem : NavItem("readable_content/{bookmarkId}") {

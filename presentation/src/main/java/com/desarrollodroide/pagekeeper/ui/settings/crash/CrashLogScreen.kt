@@ -13,7 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
@@ -37,7 +36,7 @@ fun CrashLogScreen(
     onBack: () -> Unit,
     onShare:(String) -> Unit
 ) {
-    val viewModel: CrashLogViewModel = getViewModel()
+    val viewModel: CrashLogViewModel = koinViewModel()
     val crashLog by viewModel.crashLog.collectAsStateWithLifecycle()
 
     BackHandler {
@@ -70,7 +69,7 @@ fun CrashLogScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )

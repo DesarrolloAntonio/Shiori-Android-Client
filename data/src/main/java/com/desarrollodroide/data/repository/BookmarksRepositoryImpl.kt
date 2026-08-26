@@ -11,20 +11,16 @@ import com.desarrollodroide.data.extensions.removeTrailingSlash
 import com.desarrollodroide.data.extensions.toJson
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
-import com.desarrollodroide.data.local.room.entity.BookmarkEntity
+import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
+import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.mapper.*
-import com.desarrollodroide.data.repository.paging.BookmarkPagingSource
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
-import com.desarrollodroide.model.SyncBookmarksRequestPayload
-import com.desarrollodroide.model.SyncBookmarksResponse
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
-import com.desarrollodroide.network.model.BookmarkDTO
+import com.desarrollodroide.network.model.BulkAddTagsPayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
-import com.desarrollodroide.network.model.SingleBookmarkResponseDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
-import com.desarrollodroide.network.model.SyncBookmarksResponseDTO
 import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
@@ -34,12 +30,15 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import retrofit2.Response
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class BookmarksRepositoryImpl(
     private val apiService: RetrofitNetwork,
     private val bookmarksDao: BookmarksDao,
+    private val tagDao: TagDao,
+    private val bookmarkHtmlDao: BookmarkHtmlDao,
     private val errorHandler: ErrorHandler
 ) : BookmarksRepository {
 
@@ -53,8 +52,9 @@ class BookmarksRepositoryImpl(
 
         override suspend fun saveRemoteData(response: BookmarksDTO) {
             response.resolvedBookmarks()?.map { it.toEntityModel() }?.let { bookmarksList ->
-                bookmarksDao.deleteAll()
-                bookmarksDao.insertAll(bookmarksList)
+                // One transaction: a crash between the delete and the insert used to leave the
+                // user with an empty cache and nothing to read offline.
+                bookmarksDao.insertAllWithTags(bookmarksList)
             }
         }
 
@@ -70,29 +70,6 @@ class BookmarksRepositoryImpl(
         override fun shouldFetch(data: List<Bookmark>?) = true
 
     }.asFlow().flowOn(Dispatchers.IO)
-
-    override fun getPagingBookmarks(
-        xSession: String,
-        serverUrl: String,
-        searchText: String,
-        tags: List<Tag>,
-        saveToLocal: Boolean
-    ): Flow<PagingData<Bookmark>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
-            pagingSourceFactory = {
-                BookmarkPagingSource(
-                    remoteDataSource = apiService,
-                    bookmarksDao = bookmarksDao,
-                    serverUrl = serverUrl,
-                    xSessionId = xSession,
-                    searchText = searchText,
-                    tags = tags,
-                    saveToLocal = saveToLocal
-                )
-            }
-        ).flow
-    }
 
     /**
      * Retrieves a paginated list of bookmarks from the local database using Room and Paging.
@@ -173,37 +150,46 @@ class BookmarksRepositoryImpl(
     ): Flow<SyncStatus> = flow {
         var currentPage = 1
         var hasNextPage = true
-        val allBookmarks = mutableListOf<BookmarkEntity>()
+        // Only ids are held across the whole sync, not entities. The previous version accumulated
+        // every bookmark in memory and wrote nothing until the last page arrived, so a large
+        // library was held twice over and a failure on any page discarded all the work.
+        val seenIds = mutableListOf<Int>()
         try {
-            Log.d(TAG, "Sync started")
             emit(SyncStatus.Started)
 
             while (hasNextPage) {
-                Log.d(TAG, "Fetching bookmarks for page $currentPage")
                 emit(SyncStatus.InProgress(currentPage))
                 val bookmarksDto = apiService.getPagingBookmarks(
                     xSessionId = xSession,
                     url = "${serverUrl.removeTrailingSlash()}/api/bookmarks?page=$currentPage"
                 )
-                Log.d(TAG, "Received response for page $currentPage with status: ${bookmarksDto.code()}")
                 if (bookmarksDto.errorBody()?.string() == SESSION_HAS_BEEN_EXPIRED) {
-                    Log.e(TAG, "Session has expired")
                     emit(SyncStatus.Error(Result.ErrorType.SessionExpired(message = SESSION_HAS_BEEN_EXPIRED)))
                     return@flow
                 }
-                val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() } ?: emptyList()
-                Log.d(TAG, "Fetched ${bookmarks.size} bookmarks for page $currentPage")
-                allBookmarks.addAll(bookmarks)
+                val bookmarks = bookmarksDto.body()?.resolvedBookmarks()?.map { it.toEntityModel() }
+                    ?: emptyList()
+
+                // Written as it arrives, so the feed fills in progressively and a sync that dies
+                // half way leaves the pages it did fetch rather than nothing.
+                bookmarksDao.insertPageWithTags(bookmarks)
+                seenIds.addAll(bookmarks.map { it.id })
+
                 hasNextPage = hasNextPage(bookmarksDto)
-                Log.d(TAG, "Has next page: $hasNextPage")
                 if (hasNextPage) {
                     currentPage++
                 }
             }
-            Log.d(TAG, "Inserting ${allBookmarks.size} bookmarks into database")
-            bookmarksDao.insertAllWithTags(allBookmarks)
-            Log.d(TAG, "Sync completed with ${allBookmarks.size} bookmarks")
-            emit(SyncStatus.Completed(allBookmarks.size))
+
+            // Prune only once every page has been accounted for. Deleting up front, as the old
+            // code did, meant a failure mid-sync left the user with an empty cache.
+            if (seenIds.isNotEmpty()) {
+                bookmarksDao.deleteBookmarksNotIn(seenIds)
+                bookmarksDao.deleteOrphanedTagCrossRefs()
+                bookmarkHtmlDao.deleteOrphanedHtml()
+            }
+            Log.d(TAG, "Sync completed with ${seenIds.size} bookmarks")
+            emit(SyncStatus.Completed(seenIds.size))
         } catch (e: Exception) {
             Log.e(TAG, "Error during sync: ${e.message}")
             emit(SyncStatus.Error(Result.ErrorType.Unknown(throwable = e)))
@@ -237,6 +223,43 @@ class BookmarksRepositoryImpl(
         } else {
             throw IllegalStateException("Error adding bookmark: ${response.errorBody()?.string()}")
         }
+    }
+
+    /**
+     * Re-fetches one bookmark instead of the whole library.
+     *
+     * The pending banner used to say "pull to refresh", and pull to refresh walks every page: on a
+     * library of ten thousand that is 334 requests to find out about one card. The list endpoint
+     * accepts a keyword, so asking for the bookmark's own url is a single request.
+     *
+     * The row is replaced rather than updated, because a bookmark whose create has just landed
+     * carries a temporary id locally and the server's real one remotely; an update keyed on the
+     * old id would match nothing.
+     */
+    override suspend fun refreshBookmark(
+        xSession: String,
+        serverUrl: String,
+        bookmark: Bookmark
+    ): Bookmark? {
+        val response = apiService.getPagingBookmarks(
+            xSessionId = xSession,
+            url = "${serverUrl.removeTrailingSlash()}/api/bookmarks" +
+                "?keyword=${URLEncoder.encode(bookmark.url, "UTF-8")}"
+        )
+        if (!response.isSuccessful) {
+            throw IllegalStateException("Could not refresh bookmark: ${response.code()}")
+        }
+        // keyword is a substring match, so the response can hold more than the one asked for.
+        val match = response.body()?.resolvedBookmarks()
+            ?.firstOrNull { it.url == bookmark.url }
+            ?: return null
+
+        val entity = match.toEntityModel()
+        if (entity.id != bookmark.id) {
+            bookmarksDao.deleteBookmarkById(bookmark.id)
+        }
+        bookmarksDao.insertPageWithTags(listOf(entity))
+        return entity.toDomainModel()
     }
 
     /**
@@ -297,7 +320,12 @@ class BookmarksRepositoryImpl(
                     hasEbook = bookmark.hasEbook,
                     createEbook = bookmark.createEbook
                 )
-                bookmarksDao.updateBookmark(updatedEntity)
+                // WithTags, because an edit can change them. The plain update only writes the
+                // bookmark row and leaves bookmark_tag_cross_ref as it was, so tag filtering went
+                // on using the old tags. It looked fine only because the caller then ran a full
+                // sync, whose insertPageWithTags rebuilds that table: a whole walk of the server
+                // papering over a stale write two lines away.
+                bookmarksDao.updateBookmarkWithTags(updatedEntity)
                 return updatedEntity.toDomainModel()
             }
             throw IllegalStateException("Response body is null")
@@ -306,6 +334,28 @@ class BookmarksRepositoryImpl(
         }
     }
 
+
+    override suspend fun addTagsToBookmarks(
+        token: String,
+        serverUrl: String,
+        bookmarkIds: List<Int>,
+        tagIds: List<Int>,
+    ): List<Bookmark> {
+        val response = apiService.addTagsToBookmarks(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/bulk/tags",
+            authorization = "Bearer $token",
+            body = BulkAddTagsPayloadDTO(
+                bookmarkIds = bookmarkIds,
+                tagIds = tagIds,
+            ).toJson(),
+        )
+        if (!response.isSuccessful) {
+            throw IllegalStateException("${response.errorBody()?.string()}")
+        }
+        val updated = response.body()?.message.orEmpty()
+        updated.forEach { dto -> bookmarksDao.updateBookmarkWithTags(dto.toEntityModel()) }
+        return updated.map { it.toDomainModel() }
+    }
 
     override suspend fun updateBookmarkCacheV1(
         token: String,
@@ -316,13 +366,25 @@ class BookmarksRepositoryImpl(
         val response = apiService.updateBookmarksCacheV1(
             url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/cache",
             authorization = "Bearer $token",
-            body = updateCachePayload.toDTO().toJson()
+            // The v1 endpoint reads snake_case (keep_metadata, create_archive, create_ebook,
+            // skip_exist). Sending the legacy camelCase DTO meant Go dropped every flag as an
+            // unknown field and defaulted them to false, so the dialog's checkboxes did nothing.
+            body = updateCachePayload.toV1DTO().toJson()
         )
         if (response.isSuccessful) {
             response.body()?.let {
                 it.message?.forEach { dto->
                     // TODO change to toEntityModel when backend is fixed
                     val updatedEntity = dto.toEntityModel().copy(
+                        // The response carries a freshly scraped title and excerpt that the
+                        // server does not persist on the bookmark itself. Writing them here made
+                        // the card show a new title straight after an update, which the next pull
+                        // to refresh then overwrote with the old one from the list endpoint. Seen
+                        // live: raw url -> "Kotlin Docs | Kotlin" -> raw url again. Keep whatever
+                        // the list endpoint is going to hand back, so the card does not change
+                        // and then change back.
+                        title = bookmark?.title ?: dto.title.orEmpty(),
+                        excerpt = bookmark?.excerpt ?: dto.excerpt.orEmpty(),
                         createEbook = if (updateCachePayload.createEbook) true else bookmark?.createEbook?: false,
                         createArchive = if (updateCachePayload.createArchive) true else bookmark?.createArchive?: false,
                         hasEbook = if (updateCachePayload.createEbook) true else bookmark?.hasEbook?: false,
@@ -339,7 +401,19 @@ class BookmarksRepositoryImpl(
         }
     }
 
-    override suspend fun deleteAllLocalBookmarks()  { bookmarksDao.deleteAll() }
+    /**
+     * Wipes the local cache. Used on logout.
+     *
+     * Tags and their cross references go too. Deleting only the bookmarks left the previous
+     * account's tags in the database and fifteen cross references pointing at rows that no longer
+     * existed, so the next person to sign in on that device inherited them.
+     */
+    override suspend fun deleteAllLocalBookmarks() {
+        bookmarksDao.deleteAll()
+        bookmarksDao.clearBookmarkTagCrossRefs()
+        tagDao.deleteAllTags()
+        bookmarkHtmlDao.deleteAll()
+    }
 
     override fun getBookmarkReadableContent(
         token: String,
@@ -358,66 +432,6 @@ class BookmarksRepositoryImpl(
             }
         }
     }.asFlow().flowOn(Dispatchers.IO)
-
-    /**
-     * Syncs the bookmarks between the remote server and the local database.
-     *
-     * This method performs the following steps:
-     * 1. Sends a sync request to the remote server.
-     * 2. If the server update is successful, updates the local database.
-     * 3. Emits the sync status if both operations are successful.
-     *
-     * The method uses a NetworkNoCacheResource to handle the network operation and error handling.
-     *
-     * @param token The session token for authentication with the remote API.
-     * @param serverUrl The base URL of the server API.
-     * @param syncBookmarksRequestPayload The payload containing the bookmarks to be synced.
-     * @return A Flow emitting a Result<SyncBookmarksResponse> representing the outcome of the sync operation.
-     *         It can emit Loading, Success with the sync result, or Error states.
-     */
-    override fun syncBookmarks(
-        token: String,
-        serverUrl: String,
-        syncBookmarksRequestPayload: SyncBookmarksRequestPayload
-    ): Flow<Result<SyncBookmarksResponse>> {
-        return object : NetworkNoCacheResource<SyncBookmarksResponseDTO, SyncBookmarksResponse>(errorHandler = errorHandler) {
-            override suspend fun fetchFromRemote(): Response<SyncBookmarksResponseDTO> {
-                return apiService.syncBookmarks(
-                    url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/sync",
-                    authorization = "Bearer $token",
-                    body = syncBookmarksRequestPayload.toJson()
-                )
-            }
-
-            override fun fetchResult(data: SyncBookmarksResponseDTO): Flow<SyncBookmarksResponse> {
-                return flow {
-                    emit(data.toDomainModel())
-                }
-            }
-        }.asFlow().flowOn(Dispatchers.IO)
-    }
-
-    override fun getBookmarkById(
-        token: String,
-        serverUrl: String,
-        bookmarkId: Int
-    ) = object :
-        NetworkNoCacheResource<SingleBookmarkResponseDTO, Bookmark>(errorHandler = errorHandler) {
-
-        override suspend fun fetchFromRemote(): Response<SingleBookmarkResponseDTO> = apiService.getBookmark(
-            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/$bookmarkId",
-            authorization = "Bearer $token",
-        )
-
-        override fun fetchResult(data: SingleBookmarkResponseDTO): Flow<Bookmark> {
-            return flow {
-                val bookmark = data.resolvedBookmark()
-                    ?: throw IllegalStateException("Could not resolve bookmark from response")
-                emit(bookmark.toDomainModel())
-            }
-        }
-    }.asFlow().flowOn(Dispatchers.IO)
-
 }
 
 sealed class SyncStatus {
@@ -426,4 +440,3 @@ sealed class SyncStatus {
     data class Completed(val totalSynced: Int) : SyncStatus()
     data class Error(val error: Result.ErrorType) : SyncStatus()
 }
-

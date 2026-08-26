@@ -1,8 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
 import android.media.MediaScannerConnection
-import android.util.Log
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +12,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -21,11 +21,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
@@ -36,8 +36,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.desarrollodroide.data.helpers.BookmarkViewType
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.pagekeeper.extensions.shareText
-import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
-import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorType
 import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.model.Bookmark
@@ -52,14 +50,19 @@ import java.io.File
 fun FeedScreen(
     feedViewModel: FeedViewModel,
     goToLogin: () -> Unit,
-    goToReadableContent:(Bookmark) -> Unit,
+    goToReadableContent: (Bookmark) -> Unit,
     openUrlInBrowser: (String) -> Unit,
     shareEpubFile: (File) -> Unit,
     isCategoriesVisible: MutableState<Boolean>,
-    isSearchBarVisible: MutableState<Boolean>,
-    setShowTopBar: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
+    val transientMessage by feedViewModel.transientMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(transientMessage) {
+        transientMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            feedViewModel.consumeTransientMessage()
+        }
+    }
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
@@ -67,41 +70,27 @@ fun FeedScreen(
     LaunchedEffect(feedViewModel) {
         feedViewModel.initializeIfNeeded()
     }
-    LaunchedEffect(isCategoriesVisible.value) {
-        if (isCategoriesVisible.value) {
-            // TODO remove when sync functionality is implemented
-            //feedViewModel.getTags()
-        }
-    }
 
     val bookmarksPagingItems: LazyPagingItems<Bookmark> =
         feedViewModel.bookmarksState.collectAsLazyPagingItems()
-
-    LaunchedEffect(Unit) {
-        snapshotFlow { bookmarksPagingItems.itemSnapshotList.items }
-            .collect { updatedItems ->
-                Log.d("FeedScreen", "Los bookmarks se han modificado: ${updatedItems.size} items")
-            }
-    }
-
-
 
     val bookmarksUiState = feedViewModel.bookmarksUiState.collectAsState().value
     val downloadUiState = feedViewModel.downloadUiState.collectAsState()
     val isCompactView by feedViewModel.compactView.collectAsState()
 
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
     val sheetStateCategories = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
+
+    val selectedBookmarks by feedViewModel.selectedBookmarks.collectAsStateWithLifecycle()
+    val refreshingIds by feedViewModel.refreshingBookmarks.collectAsStateWithLifecycle()
+    val settledIds by feedViewModel.settledEmptyBookmarks.collectAsStateWithLifecycle()
 
     val actions = FeedActions(
         goToLogin = {
             goToLogin()
         },
+        onToggleSelection = { bookmark -> feedViewModel.toggleSelection(bookmark) },
         onBookmarkSelect = { bookmark ->
             goToReadableContent(bookmark)
         },
@@ -126,6 +115,9 @@ fun FeedScreen(
             feedViewModel.bookmarkToUpdateCache.value = bookmark
             feedViewModel.showSyncDialog.value = true
         },
+        onRefreshBookmark = { bookmark ->
+            feedViewModel.refreshBookmark(bookmark)
+        },
         onClearError = {
             feedViewModel.resetData()
         },
@@ -142,43 +134,23 @@ fun FeedScreen(
         }
     }
 
+    val serverUrl by feedViewModel.serverUrl.collectAsStateWithLifecycle()
+    val xSessionId by feedViewModel.xSessionId.collectAsStateWithLifecycle()
+    val token by feedViewModel.token.collectAsStateWithLifecycle()
+
     FeedView(
         actions = actions,
-        serverURL = feedViewModel.getServerUrl(),
-        xSessionId = feedViewModel.getSession(),
-        token = feedViewModel.getToken(),
+        serverURL = serverUrl,
+        xSessionId = xSessionId,
+        token = token,
         viewType = if (isCompactView) BookmarkViewType.SMALL else BookmarkViewType.FULL,
         bookmarksPagingItems = bookmarksPagingItems,
+        selectedIds = selectedBookmarks.map { it.id }.toSet(),
+        refreshingIds = refreshingIds,
+        settledIds = settledIds,
         tagToHide = tagToHide,
         showOnlyHiddenTag = showOnlyHiddenTag
     )
-    if (feedViewModel.showBookmarkEditorScreen.value && feedViewModel.bookmarkSelected.value != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures { }
-                }
-        ) {
-            feedViewModel.bookmarkSelected.value?.let {
-                setShowTopBar(false)
-                BookmarkEditorScreen(
-                    pageTitle = "Edit",
-                    bookmarkEditorType = BookmarkEditorType.EDIT,
-                    bookmark = it,
-                    onBack = {
-                        setShowTopBar(true)
-                        feedViewModel.showBookmarkEditorScreen.value = false
-                    },
-                    updateBookmark = { bookMark ->
-                        setShowTopBar(true)
-                        feedViewModel.showBookmarkEditorScreen.value = false
-                        feedViewModel.refreshFeed()
-                    }
-                )
-            }
-        }
-    }
     if (feedViewModel.showDeleteConfirmationDialog.value && feedViewModel.bookmarkToDelete.value != null) {
         ConfirmDialog(
             title = "Confirmation",
@@ -218,7 +190,6 @@ fun FeedScreen(
                 dismissOnBackPress = false
             ),
         )
-        Log.v("bookmarksUiState", "Error")
     }
     val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
     UpdateCacheDialog(
@@ -271,29 +242,6 @@ fun FeedScreen(
         )
     }
 
-    if (isSearchBarVisible.value) {
-        val scope = rememberCoroutineScope()
-        ModalBottomSheet(
-            modifier = Modifier.fillMaxSize(),
-            shape = BottomSheetDefaults.ExpandedShape,
-            onDismissRequest = {
-                isSearchBarVisible.value = false
-            },
-            sheetState = sheetState,
-            dragHandle = null
-        ) {
-            SearchBar(
-                onBookmarkClick =  actions.onBookmarkSelect,
-                onDismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        isSearchBarVisible.value = false
-                    }
-                }
-            )
-        }
-    }
-
     if (isCategoriesVisible.value) {
         val scope = rememberCoroutineScope()
         ModalBottomSheet(
@@ -335,8 +283,9 @@ fun FeedScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun FeedView(
+internal fun FeedView(
     actions: FeedActions,
     viewType: BookmarkViewType,
     serverURL: String,
@@ -344,8 +293,16 @@ private fun FeedView(
     token: String,
     bookmarksPagingItems: LazyPagingItems<Bookmark>,
     tagToHide: Tag?,
-    showOnlyHiddenTag: Boolean
+    showOnlyHiddenTag: Boolean,
+    selectedIds: Set<Int> = emptySet(),
+    refreshingIds: Set<Int> = emptySet(),
+    settledIds: Set<Int> = emptySet(),
 ) {
+    // itemCount alone is not enough to decide the screen is empty. On a cold start the pager has
+    // not emitted yet, so the count is 0 while the first load is still running, and the feed used
+    // to greet every launch with "No bookmarks yet" and a Refresh button before the rows appeared.
+    val isLoadingFirstPage = bookmarksPagingItems.loadState.refresh is LoadState.Loading
+
     if (bookmarksPagingItems.itemCount > 0) {
         Column {
             Box(
@@ -361,11 +318,18 @@ private fun FeedView(
                     viewType = viewType,
                     bookmarksPagingItems = bookmarksPagingItems,
                     tagToHide = tagToHide,
-                    showOnlyHiddenTag = showOnlyHiddenTag
+                    showOnlyHiddenTag = showOnlyHiddenTag,
+                    selectedIds = selectedIds,
+                    refreshingIds = refreshingIds,
+                    settledIds = settledIds,
                 )
             }
         }
-    } else  {
+    } else if (isLoadingFirstPage) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            ContainedLoadingIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+    } else {
         EmptyView(actions)
     }
 }
@@ -395,4 +359,7 @@ data class FeedActions(
     val onClickSync: (Bookmark) -> Unit,
     val onClearError: () -> Unit,
     val onCategoriesSelectedChanged: (List<Tag>) -> Unit,
+    val onToggleSelection: (Bookmark) -> Unit = {},
+    /** Re-fetch one bookmark rather than the whole library; the pending banner's action. */
+    val onRefreshBookmark: (Bookmark) -> Unit = {},
 )
