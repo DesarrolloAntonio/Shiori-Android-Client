@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.ImageLoader
@@ -38,6 +39,7 @@ class SettingsViewModel(
     private val getTagsUseCase: GetTagsUseCase,
     private val imageLoader: ImageLoader,
     private val syncWorks: SyncWorks,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
     ) : ViewModel() {
 
     private val _logoutUiState = MutableStateFlow(UiState<String>(isLoading = false))
@@ -133,21 +135,21 @@ class SettingsViewModel(
     // Logout wipes the local database and cancels the sync queue, so anything not yet sent to the
     // server is lost with it. Null means no confirmation is on screen; otherwise it holds how many
     // changes are still waiting, so the dialog can say what will be discarded.
-    private val _logoutConfirmation = MutableStateFlow<Int?>(null)
-    val logoutConfirmation: StateFlow<Int?> = _logoutConfirmation.asStateFlow()
+    // In the saved state, so a confirmation left open survives Android killing the app.
+    val logoutConfirmation: StateFlow<Int?> = savedStateHandle.getStateFlow(KEY_LOGOUT_CONFIRMATION, null)
 
     fun requestLogout() {
         viewModelScope.launch {
-            _logoutConfirmation.value = syncWorks.getPendingJobs().first().size
+            savedStateHandle[KEY_LOGOUT_CONFIRMATION] = syncWorks.getPendingJobs().first().size
         }
     }
 
     fun cancelLogout() {
-        _logoutConfirmation.value = null
+        savedStateHandle[KEY_LOGOUT_CONFIRMATION] = null
     }
 
     fun confirmLogout() {
-        _logoutConfirmation.value = null
+        savedStateHandle[KEY_LOGOUT_CONFIRMATION] = null
         logout()
     }
 
@@ -279,6 +281,7 @@ class SettingsViewModel(
 
     private companion object {
         const val TAG = "SettingsViewModel"
+        const val KEY_LOGOUT_CONFIRMATION = "logout_confirmation_pending"
     }
 }
 

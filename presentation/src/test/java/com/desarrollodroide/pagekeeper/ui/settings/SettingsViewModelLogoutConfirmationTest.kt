@@ -89,7 +89,7 @@ class SettingsViewModelLogoutConfirmationTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = SettingsViewModel(
+    private fun viewModel(handle: androidx.lifecycle.SavedStateHandle = androidx.lifecycle.SavedStateHandle()) = SettingsViewModel(
         sendLogoutUseCase = sendLogoutUseCase,
         bookmarksRepository = mock<BookmarksRepository>(),
         settingsPreferenceDataSource = preferences,
@@ -97,6 +97,7 @@ class SettingsViewModelLogoutConfirmationTest {
         getTagsUseCase = mock<GetTagsUseCase>(),
         imageLoader = mock<ImageLoader>(),
         syncWorks = syncWorks,
+        savedStateHandle = handle,
     )
 
     @Test
@@ -139,6 +140,38 @@ class SettingsViewModelLogoutConfirmationTest {
         testScheduler.advanceUntilIdle()
 
         assertTrue(!vm.logoutUiState.value.error.isNullOrEmpty(), "no message, so the screen never leaves Settings")
+    }
+
+    /**
+     * An open confirmation lived only in the view model, so Android killing the app in the
+     * background closed it: back on Settings there was nothing to answer. Seen on a device (03).
+     */
+    @Test
+    fun `an open confirmation comes back after process death`() = runTest(dispatcher) {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        viewModel(handle).requestLogout()
+        testScheduler.advanceUntilIdle()
+
+        val restored = viewModel(handle)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, restored.logoutConfirmation.value)
+    }
+
+    /** The pair (R7): a cancelled confirmation does not come back. */
+    @Test
+    fun `a cancelled confirmation does not come back`() = runTest(dispatcher) {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        viewModel(handle).apply {
+            requestLogout()
+            testScheduler.advanceUntilIdle()
+            cancelLogout()
+        }
+
+        val restored = viewModel(handle)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(restored.logoutConfirmation.value)
     }
 
     /** The pair (R7): confirming does log out. */
