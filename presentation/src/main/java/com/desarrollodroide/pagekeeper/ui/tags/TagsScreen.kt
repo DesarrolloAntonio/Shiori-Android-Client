@@ -3,6 +3,7 @@ package com.desarrollodroide.pagekeeper.ui.tags
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -132,23 +134,14 @@ fun TagsScreen(
                 .padding(paddingValues),
             contentAlignment = Alignment.TopCenter,
         ) {
-            when {
-                tags.isEmpty() && uiState.isLoading -> {
-                    ContainedLoadingIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                tags.isEmpty() -> {
-                    EmptyTags(modifier = Modifier.align(Alignment.Center))
-                }
-
-                else -> {
-                    TagsList(
-                        tags = tags,
-                        onRename = { tagBeingEdited = it },
-                        onDelete = { tagBeingDeleted = it },
-                    )
-                }
-            }
+            TagsContent(
+                tags = tags,
+                isLoading = uiState.isLoading,
+                loadError = uiState.error,
+                onRetry = tagsViewModel::refresh,
+                onRename = { tagBeingEdited = it },
+                onDelete = { tagBeingDeleted = it },
+            )
         }
     }
 
@@ -293,6 +286,62 @@ private fun TagRow(
             }
         },
     )
+}
+
+/** What the tags screen shows: a spinner, the list, "No tags yet", or why the list could not load. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun BoxScope.TagsContent(
+    tags: List<Tag>,
+    isLoading: Boolean,
+    loadError: String?,
+    onRetry: () -> Unit,
+    onRename: (Tag) -> Unit,
+    onDelete: (Tag) -> Unit,
+) {
+    when {
+        tags.isEmpty() && isLoading -> {
+            ContainedLoadingIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+
+        // Before "No tags yet": with nothing cached, a failed load used to read as an empty list.
+        tags.isEmpty() && loadError != null -> {
+            TagsLoadError(modifier = Modifier.align(Alignment.Center), onRetry = onRetry)
+        }
+
+        tags.isEmpty() -> {
+            EmptyTags(modifier = Modifier.align(Alignment.Center))
+        }
+
+        else -> {
+            TagsList(tags = tags, onRename = onRename, onDelete = onDelete)
+        }
+    }
+}
+
+@Composable
+private fun TagsLoadError(modifier: Modifier = Modifier, onRetry: () -> Unit) {
+    Column(
+        modifier = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "Couldn't load tags",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = "The server could not be reached or refused the request.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
+            Text("Retry")
+        }
+    }
 }
 
 @Composable
