@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
+import com.desarrollodroide.pagekeeper.ui.login.messageForUser
 import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.error
 import com.desarrollodroide.pagekeeper.ui.components.isLoading
@@ -159,7 +160,9 @@ class SettingsViewModel(
                 when (result) {
                     is Result.Error -> {
                         clearImageCachesOnLogout()
-                        _logoutUiState.error(errorMessage = result.error?.throwable?.message?: "")
+                        // Never empty: an empty message showed no dialog and left a signed-out user on
+                        // Settings. The session is already gone whatever the server answered.
+                        _logoutUiState.error(errorMessage = result.error.messageForUser())
                     }
                     is Result.Loading -> {
                         _logoutUiState.isLoading(true)

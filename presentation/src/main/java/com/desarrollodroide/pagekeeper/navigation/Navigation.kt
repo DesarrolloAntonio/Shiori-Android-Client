@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,9 +50,7 @@ fun Navigation(
                 goToLogin = {
                     loginViewModel.clearState()
                     feedViewModel.resetData()
-                    navController.navigate(NavItem.LoginNavItem.route) {
-                        popUpTo(NavItem.HomeNavItem.route) { inclusive = true }
-                    }
+                    navController.navigateToLoginAfterLogout()
                 },
                 onFinish = onFinish,
                 openUrlInBrowser = openUrlInBrowser,
@@ -79,4 +78,16 @@ private inline fun <reified T> NavBackStackEntry.findArg(key: String): T {
     val value = arguments?.get(key)
     requireNotNull(value)
     return value as T
+}
+
+/**
+ * Leaves the signed-in part of the app for the login screen after a logout.
+ *
+ * Pops the whole graph, not just the signed-in screen: popping only that left the login the graph
+ * started with underneath the new one, and Back redrew the same screen before leaving the app.
+ */
+internal fun NavController.navigateToLoginAfterLogout() {
+    navigate(NavItem.LoginNavItem.route) {
+        popUpTo(graph.id) { inclusive = true }
+    }
 }

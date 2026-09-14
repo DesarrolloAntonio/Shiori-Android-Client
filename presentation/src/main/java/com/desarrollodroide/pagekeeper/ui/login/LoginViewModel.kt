@@ -1,7 +1,10 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
 import android.util.Log
+import com.google.gson.JsonParser
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.desarrollodroide.pagekeeper.ui.components.UiState
@@ -25,12 +28,15 @@ class LoginViewModel(
     private val loginUseCase: SendLoginUseCase,
     private val refreshTokenUseCase: RefreshTokenUseCase,
     private val livenessUseCase: SystemLivenessUseCase,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
 
-    var rememberSession = mutableStateOf(false)
+    // Kept in the saved state so a process death, e.g. while switching to a password manager, does
+    // not empty the form. The password is deliberately not kept.
+    var rememberSession = savedStateHandle.savedMutableState(KEY_REMEMBER, false)
 
-    var serverUrl = mutableStateOf("")
-    var userName = mutableStateOf("")
+    var serverUrl = savedStateHandle.savedMutableState(KEY_SERVER_URL, "")
+    var userName = savedStateHandle.savedMutableState(KEY_USER_NAME, "")
     var password = mutableStateOf("")
 
     val userNameError = mutableStateOf(false)
@@ -63,7 +69,7 @@ class LoginViewModel(
                 .collect { result ->
                     when (result) {
                         is Result.Error -> {
-                            val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
+                            val error = result.error.messageForUser()
                             _userUiState.error(
                                 errorMessage = error
                             )
@@ -90,6 +96,8 @@ class LoginViewModel(
                                 _userUiState.success(result.data)
                             } else {
                                 settingsPreferenceDataSource.resetData()
+                                // Publish it: this branch used to leave the spinner up for good.
+                                _userUiState.error(errorMessage = "The server did not return a session")
                             }
                         }
                     }
@@ -112,10 +120,7 @@ class LoginViewModel(
                                 // a 401 from a proxy or a 5xx used to fall through here and leave a
                                 // dialog on screen that cannot be dismissed.
                                 Log.v("LoginViewModel", "Error connecting to server")
-                                val error = result.error?.throwable?.message
-                                    ?: result.error?.message
-                                    ?: result.error?.statusCode?.let { "The server answered HTTP $it" }
-                                    ?: "Unknown error"
+                                val error = result.error.messageForUser()
                                 _livenessUiState.error(errorMessage = error)
                             }
                         }
@@ -142,7 +147,7 @@ class LoginViewModel(
                     when (result) {
                         is Result.Error -> {
                             Log.v("LoginViewModel", "Server Availability error")
-                            val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
+                            val error = result.error.messageForUser()
                             _serverAvailabilityUiState.error(errorMessage = error)
                         }
                         is Result.Loading -> {
@@ -212,5 +217,44 @@ class LoginViewModel(
 
     fun resetServerAvailabilityUiState() {
         _serverAvailabilityUiState.idle(true)
+    }
+}
+
+/**
+ * What the login screen tells the user about a failed request.
+ *
+ * An HTTP error carries the response body as its message. Shown as it came, that was
+ * `{"ok":false,"message":"…"}` from Shiori, or a reverse proxy's whole HTML page. Shiori's own
+ * message is used when the body is Shiori's JSON; any other body is never shown, only its status.
+ */
+internal fun Result.ErrorType?.messageForUser(): String {
+    if (this is Result.ErrorType.HttpError) {
+        val shioriMessage = runCatching {
+            JsonParser.parseString(message.orEmpty()).asJsonObject.get("message")
+                ?.takeIf { it.isJsonPrimitive }?.asString
+        }.getOrNull()
+        if (!shioriMessage.isNullOrBlank()) return shioriMessage
+        statusCode?.let { return "The server answered HTTP $it" }
+    }
+    return this?.throwable?.message ?: this?.message ?: "Unknown error"
+}
+
+private const val KEY_SERVER_URL = "login_server_url"
+private const val KEY_USER_NAME = "login_user_name"
+private const val KEY_REMEMBER = "login_remember"
+
+/** Compose state that starts from, and writes every change back to, this saved state entry. */
+private fun <T> SavedStateHandle.savedMutableState(key: String, initial: T): MutableState<T> {
+    val state = mutableStateOf(get<T>(key) ?: initial)
+    return object : MutableState<T> {
+        override var value: T
+            get() = state.value
+            set(newValue) {
+                state.value = newValue
+                this@savedMutableState[key] = newValue
+            }
+
+        override fun component1(): T = value
+        override fun component2(): (T) -> Unit = { value = it }
     }
 }

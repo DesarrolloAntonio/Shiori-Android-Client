@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
@@ -223,7 +224,10 @@ fun SettingsContent(
             openDialog = remember { mutableStateOf(true) },
             onConfirm = {
                 goToLogin()
-            }
+            },
+            // Accept is the only way out: it is what leaves Settings, and the session is already
+            // gone. Dismissing by Back or outside used to leave a signed-out user here.
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         )
     } else if (logoutUiState.data != null) {
         LaunchedEffect(Unit) {

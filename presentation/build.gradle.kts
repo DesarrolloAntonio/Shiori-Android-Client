@@ -139,6 +139,9 @@ dependencies {
     androidTestImplementation (platform(libs.compose.bom))
     androidTestImplementation (libs.compose.ui.test.junit4)
     androidTestImplementation (libs.androidx.test.ext.junit)
+    androidTestImplementation (libs.androidx.test.espresso.core)
+    androidTestImplementation (libs.androidx.test.core)
+    androidTestImplementation (libs.androidx.test.runner)
     // Stands in for a Shiori server so the image pipeline's cache behaviour can be observed.
     androidTestImplementation (libs.okhttp3.mockwebserver)
     androidTestImplementation (libs.kotlin.coroutines.test)

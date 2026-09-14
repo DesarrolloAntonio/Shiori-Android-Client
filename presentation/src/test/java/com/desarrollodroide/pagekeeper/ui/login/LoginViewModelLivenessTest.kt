@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -98,6 +99,68 @@ class LoginViewModelLivenessTest {
 
         assertFalse(vm.livenessUiState.value.isLoading)
         assertNotNull(vm.livenessUiState.value.error)
+    }
+
+    /**
+     * The dialog used to print the response body as it came: `{"ok":false,"message":"…"}` from
+     * Shiori, a whole HTML page from a reverse proxy. Shiori's own message is what the user needs.
+     */
+    @Test
+    fun `a Shiori error body shows the server's own message`() = runTest(dispatcher) {
+        livenessAnswers(Result.ErrorType.HttpError(statusCode = 500, message = """{"ok":false,"message":"database is locked"}"""))
+        val vm = viewModel()
+
+        vm.checkSystemLiveness()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("database is locked", vm.livenessUiState.value.error)
+    }
+
+    /** The pair (R7): a body that is not Shiori's JSON is never shown; the status code is. */
+    @Test
+    fun `a body that is not Shiori JSON shows the HTTP status instead`() = runTest(dispatcher) {
+        livenessAnswers(Result.ErrorType.HttpError(statusCode = 502, message = "<html><body><h1>502 Bad Gateway</h1></body></html>"))
+        val vm = viewModel()
+
+        vm.checkSystemLiveness()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("The server answered HTTP 502", vm.livenessUiState.value.error)
+    }
+
+    /**
+     * A server that answers the login with 200 but no session left the spinner up for good: the
+     * success branch only reset the stored data and published nothing. Seen on a device against a
+     * fake server answering `{"ok":true,"message":{}}`.
+     */
+    @Test
+    fun `a login answered without a session ends the spinner with an error`() = runTest(dispatcher) {
+        loginUseCase.stub {
+            on { invoke(any(), any(), any()) } doReturn flowOf(Result.Loading(null), Result.Success(User(session = "", token = "", account = Account())))
+        }
+        val vm = viewModel()
+
+        vm.sendLogin()
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(vm.userUiState.value.isLoading, "still loading after a login with no session")
+        assertNotNull(vm.userUiState.value.error)
+    }
+
+    /** The pair (R7): a login that does return a session is a success, not an error. */
+    @Test
+    fun `a login with a session succeeds`() = runTest(dispatcher) {
+        val user = User(session = "token", token = "token", account = Account())
+        loginUseCase.stub {
+            on { invoke(any(), any(), any()) } doReturn flowOf(Result.Loading(null), Result.Success(user))
+        }
+        val vm = viewModel()
+
+        vm.sendLogin()
+        testScheduler.advanceUntilIdle()
+
+        assertNull(vm.userUiState.value.error)
+        assertEquals(user, vm.userUiState.value.data)
     }
 
     /** The pair (R7): a 404 is not an error, it is an old server, and the login goes ahead. */

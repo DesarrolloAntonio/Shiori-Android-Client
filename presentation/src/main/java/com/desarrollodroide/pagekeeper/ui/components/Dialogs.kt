@@ -158,6 +158,7 @@ fun ErrorDialog(
     content: String = "",
     openDialog: MutableState<Boolean>,
     onConfirm: (() -> Unit)? = null,
+    properties: DialogProperties = DialogProperties(),
 ) {
     SimpleDialog(
         title = title,
@@ -166,6 +167,7 @@ fun ErrorDialog(
         confirmButtonText = "Accept",
         openDialog = openDialog,
         onConfirm = onConfirm,
+        properties = properties,
     )
 }
 

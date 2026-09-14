@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +27,13 @@ fun SwitchOption(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     ListItem(
-        modifier = modifier.clickable { onCheckedChange(!checked) },
+        // One control: the row is the toggle and the Switch only draws it. With both taking clicks
+        // a screen reader stopped twice per setting, and the second stop had no name.
+        modifier = modifier.toggleable(
+            value = checked,
+            role = Role.Switch,
+            onValueChange = onCheckedChange,
+        ),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         leadingContent = {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -35,7 +43,7 @@ fun SwitchOption(
             { Text(subtitle, style = MaterialTheme.typography.bodyMedium) }
         } else null,
         trailingContent = {
-            Switch(checked = checked, onCheckedChange = onCheckedChange)
+            Switch(checked = checked, onCheckedChange = null)
         },
     )
 }

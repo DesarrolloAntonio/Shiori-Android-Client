@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -120,6 +121,24 @@ class SettingsViewModelLogoutConfirmationTest {
 
         assertNull(vm.logoutConfirmation.value)
         verify(sendLogoutUseCase, never()).invoke(any(), any())
+    }
+
+    /**
+     * The use case has already wiped the session when the server refuses the logout. An HTTP error
+     * carries no throwable, so the message came out empty, no dialog showed and nothing moved the
+     * user off Settings: signed out, still looking signed in. Seen on a device against a 401.
+     */
+    @Test
+    fun `a logout the server refuses still reports something`() = runTest(dispatcher) {
+        sendLogoutUseCase.stub {
+            on { invoke(any(), any()) } doReturn flowOf(Result.Loading(null), Result.Error(Result.ErrorType.HttpError(statusCode = 401, message = """{"ok":false,"message":"unauthorized"}""")))
+        }
+        val vm = viewModel()
+
+        vm.confirmLogout()
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(!vm.logoutUiState.value.error.isNullOrEmpty(), "no message, so the screen never leaves Settings")
     }
 
     /** The pair (R7): confirming does log out. */

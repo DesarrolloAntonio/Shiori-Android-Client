@@ -85,6 +85,9 @@ class SettingsPreferencesDataSourceImpl(
             protoSession.copy {
                 this.id = session.id
                 this.username = session.username
+                // Written every time, so a login stores the real value and a logout (an empty
+                // session) clears whatever an earlier write left.
+                this.owner = session.owner
                 this.password = secretCipher.encrypt(password)
                 this.session = session.session
                 this.url = serverUrl

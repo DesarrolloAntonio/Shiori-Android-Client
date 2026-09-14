@@ -10,8 +10,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -34,7 +36,10 @@ fun FeedSection(
     onNavigateToTags: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isCategoriesVisible = remember { mutableStateOf(false) }
+    // Open only because the user asked. It used to open whenever tags were loaded, and the view
+    // model keeps them once fetched, so a rotation or a trip to Manage tags brought back a sheet
+    // the user had closed. Saveable, so a rotation keeps it the way the user left it.
+    var hideTagSheetRequested by rememberSaveable { mutableStateOf(false) }
 
     SettingsGroup(title = "Bookmark list", modifier = modifier) {
         SwitchOption(
@@ -60,7 +65,10 @@ fun FeedSection(
             title = "Hide tag",
             icon = Icons.Filled.Sell,
             subtitle = hideTag?.name ?: "None",
-            onClick = onClickHideDialogOption
+            onClick = {
+                hideTagSheetRequested = true
+                onClickHideDialogOption()
+            }
         )
     }
 
@@ -70,17 +78,11 @@ fun FeedSection(
 
     val sheetStateCategories = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
-    LaunchedEffect(tagsUiState) {
-        if (tagsUiState.data != null) {
-            isCategoriesVisible.value = true
-        }
-    }
-
-    if (isCategoriesVisible.value) {
+    if (hideTagSheetRequested && !tagsUiState.isLoading && tagsUiState.data != null) {
         val scope = rememberCoroutineScope()
         ModalBottomSheet(
             shape = BottomSheetDefaults.ExpandedShape,
-            onDismissRequest = { isCategoriesVisible.value = false },
+            onDismissRequest = { hideTagSheetRequested = false },
             sheetState = sheetStateCategories,
         ) {
             val categories: List<Tag> = tagsUiState.data ?: emptyList()
@@ -90,7 +92,7 @@ fun FeedSection(
                 onApply = { selectedTag ->
                     scope.launch {
                         sheetStateCategories.hide()
-                        isCategoriesVisible.value = false
+                        hideTagSheetRequested = false
                         onHideTagChanged(selectedTag)
                     }
                 },
