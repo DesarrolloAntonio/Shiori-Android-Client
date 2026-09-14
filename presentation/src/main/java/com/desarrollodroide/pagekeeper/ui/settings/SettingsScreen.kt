@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -333,7 +334,13 @@ private fun LogoutConfirmationDialog(
                 }
             )
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Log out") } },
+        // Log out is the destructive one: it empties this device's copy.
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text("Log out") }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }

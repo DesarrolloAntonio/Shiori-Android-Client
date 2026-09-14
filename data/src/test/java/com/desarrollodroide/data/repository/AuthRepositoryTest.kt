@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.mockito.Mockito.*
 import retrofit2.Response
 import org.mockito.kotlin.any
@@ -228,5 +229,40 @@ class AuthRepositoryImplTest {
         // Assert
         assertTrue(results.last() is Result.Error)
         verify(settingsPreferenceDataSource, never()).updateAuthToken(anyString())
+    }
+
+    /**
+     * Shiori's v1 login answers only a token, so a real login stored no account id and owner false,
+     * whatever the account was. Found by the one real login of the QA campaign; the injected session
+     * had written both itself, which hid it.
+     */
+    @Test
+    fun `a login stores the account's id and owner flag`() = runTest {
+        `when`(apiService.sendLoginV1(anyString(), any())).thenReturn(
+            Response.success(LoginResponseDTO(ok = true, message = LoginResponseMessageDTO(expires = null, session = null, token = "tok"), error = null))
+        )
+        `when`(apiService.getMe(anyString(), anyString())).thenReturn(
+            Response.success(com.desarrollodroide.network.model.AccountResponseDTO(ok = true, message = com.desarrollodroide.network.model.AccountDTO(id = 7, userName = "qa", isOwner = true)))
+        )
+        `when`(settingsPreferenceDataSource.getUser()).thenReturn(flowOf(User("tok", "tok", Account(7, "qa", "", true, "http://test.com"))))
+
+        authRepository.sendLoginV1("qa", "pw", "http://test.com").toList()
+
+        verify(settingsPreferenceDataSource).saveUser(check { assertEquals(7, it.id); assertTrue(it.owner) }, eq("http://test.com"), eq("pw"))
+    }
+
+    /** The pair (R7): if the account can't be read, the login still succeeds with what it has. */
+    @Test
+    fun `a login whose account can't be read still succeeds`() = runTest {
+        `when`(apiService.sendLoginV1(anyString(), any())).thenReturn(
+            Response.success(LoginResponseDTO(ok = true, message = LoginResponseMessageDTO(expires = null, session = null, token = "tok"), error = null))
+        )
+        `when`(apiService.getMe(anyString(), anyString())).thenReturn(Response.error(500, "".toResponseBody()))
+        `when`(settingsPreferenceDataSource.getUser()).thenReturn(flowOf(User("tok", "tok", Account(-1, "qa", "", false, "http://test.com"))))
+
+        val results = authRepository.sendLoginV1("qa", "pw", "http://test.com").toList()
+
+        assertTrue(results.last() is Result.Success)
+        verify(settingsPreferenceDataSource).saveUser(check { assertFalse(it.owner) }, eq("http://test.com"), eq("pw"))
     }
 }

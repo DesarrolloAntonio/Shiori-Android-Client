@@ -162,7 +162,7 @@ class SettingsViewModel(
                         clearImageCachesOnLogout()
                         // Never empty: an empty message showed no dialog and left a signed-out user on
                         // Settings. The session is already gone whatever the server answered.
-                        _logoutUiState.error(errorMessage = result.error.messageForUser())
+                        _logoutUiState.error(errorMessage = result.error.messageForUser(unreachable = "Signed out on this device. The server could not be reached."))
                     }
                     is Result.Loading -> {
                         _logoutUiState.isLoading(true)

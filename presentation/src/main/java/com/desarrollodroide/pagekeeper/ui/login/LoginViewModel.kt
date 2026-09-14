@@ -227,7 +227,11 @@ class LoginViewModel(
  * `{"ok":false,"message":"…"}` from Shiori, or a reverse proxy's whole HTML page. Shiori's own
  * message is used when the body is Shiori's JSON; any other body is never shown, only its status.
  */
-internal fun Result.ErrorType?.messageForUser(): String {
+internal fun Result.ErrorType?.messageForUser(
+    unreachable: String = "Can't reach the server. Check the address and your connection.",
+): String {
+    // "Failed to connect to /192.168.1.68:18080" was read as "my account is gone".
+    if (this is Result.ErrorType.IOError) return unreachable
     if (this is Result.ErrorType.HttpError) {
         val shioriMessage = runCatching {
             JsonParser.parseString(message.orEmpty()).asJsonObject.get("message")

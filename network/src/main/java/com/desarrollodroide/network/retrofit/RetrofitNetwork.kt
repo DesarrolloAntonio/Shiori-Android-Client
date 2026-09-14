@@ -35,6 +35,13 @@ interface RetrofitNetwork {
         @Body jsonData: String
     ): Response<LoginResponseDTO>
 
+    /** The signed-in account. The v1 login answers only a token, so this is where id and owner come from. */
+    @GET()
+    suspend fun getMe(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+    ): Response<com.desarrollodroide.network.model.AccountResponseDTO>
+
     @POST()
     suspend fun refreshToken(
         @Url url: String,

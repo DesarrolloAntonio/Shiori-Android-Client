@@ -116,6 +116,21 @@ class LoginViewModelLivenessTest {
         assertEquals("database is locked", vm.livenessUiState.value.error)
     }
 
+    /**
+     * "Failed to connect to /192.168.1.68:18080" read, to the one person who saw it, as "my account
+     * is gone": the emulator simply could not reach that address. Said in words instead.
+     */
+    @Test
+    fun `an unreachable server says it can't be reached`() = runTest(dispatcher) {
+        livenessAnswers(Result.ErrorType.IOError(java.net.ConnectException("Failed to connect to /192.168.1.68:18080")))
+        val vm = viewModel()
+
+        vm.checkSystemLiveness()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("Can't reach the server. Check the address and your connection.", vm.livenessUiState.value.error)
+    }
+
     /** The pair (R7): a body that is not Shiori's JSON is never shown; the status code is. */
     @Test
     fun `a body that is not Shiori JSON shows the HTTP status instead`() = runTest(dispatcher) {

@@ -87,9 +87,21 @@ class AuthRepositoryImpl(
         NetworkBoundResource<LoginResponseDTO, User>(errorHandler = errorHandler) {
 
         override suspend fun saveRemoteData(response: LoginResponseDTO) {
+            val session = response.toProtoEntity(username)
+            // The v1 login answers only a token, so the account's id and owner flag come from
+            // /auth/me. A failure there is not a failed login: the session is saved without them.
+            val account = runCatching {
+                apiService.getMe(
+                    url = "${serverUrl.removeTrailingSlash()}/api/v1/auth/me",
+                    authorization = "Bearer ${session.token}",
+                ).takeIf { it.isSuccessful }?.body()?.message
+            }.getOrNull()
             settingsPreferenceDataSource.saveUser(
                 password = password,
-                session = response.toProtoEntity(username),
+                session = if (account == null) session else session.toBuilder()
+                    .setId(account.id ?: -1)
+                    .setOwner(account.isOwner ?: false)
+                    .build(),
                 serverUrl = serverUrl,
             )
         }
