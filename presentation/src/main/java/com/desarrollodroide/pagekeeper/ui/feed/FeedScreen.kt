@@ -173,24 +173,14 @@ fun FeedScreen(
     if (bookmarksUiState.isLoading || downloadUiState.value.isLoading) {
         InfiniteProgressDialog(onDismissRequest = {})
     }
-    if (!bookmarksUiState.error.isNullOrEmpty()) {
-        ConfirmDialog(
-            icon = Icons.Default.Error,
-            title = "Error",
-            content = bookmarksUiState.error,
-            openDialog = remember { mutableStateOf(true) },
-            onConfirm = {
-                if (bookmarksUiState.error == SESSION_HAS_BEEN_EXPIRED){
-                    actions.onClearError()
-                    actions.goToLogin.invoke()
-                }
-            },
-            properties = DialogProperties(
-                dismissOnClickOutside = false,
-                dismissOnBackPress = false
-            ),
-        )
-    }
+    FeedErrorDialog(
+        error = bookmarksUiState.error,
+        onAccept = { feedViewModel.clearError() },
+        onSessionExpired = {
+            actions.onClearError()
+            actions.goToLogin.invoke()
+        },
+    )
     val isUpdating = feedViewModel.bookmarksUiState.collectAsState().value.isUpdating
     UpdateCacheDialog(
         isLoading = isUpdating,

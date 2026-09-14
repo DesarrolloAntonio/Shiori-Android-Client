@@ -23,3 +23,13 @@ fun String.isRTLText(): Boolean {
     return arabicCount > textSample.length / 2
 }
 
+/** A bookmark time as the server sends it (UTC), shown as a date in the device's zone. */
+fun String.asLocalBookmarkDate(
+    zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
+    locale: java.util.Locale = java.util.Locale.getDefault(),
+): String = runCatching {
+    java.time.LocalDateTime.parse(this, com.desarrollodroide.model.SERVER_TIMESTAMP)
+        .atOffset(java.time.ZoneOffset.UTC)
+        .atZoneSameInstant(zone)
+        .format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(locale))
+}.getOrDefault(this)

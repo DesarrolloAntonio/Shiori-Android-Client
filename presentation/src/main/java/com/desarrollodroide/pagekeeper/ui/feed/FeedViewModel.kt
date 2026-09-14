@@ -291,8 +291,14 @@ class FeedViewModel(
         if (error is Result.ErrorType.SessionExpired) {
             _bookmarksUiState.error(errorMessage = SESSION_HAS_BEEN_EXPIRED)
         } else {
-            Log.e(TAG, "Unhandled exception: ${error.message}")
-            //_bookmarksUiState.error(errorMessage = "Unhandled exception: ${error.message}")
+            Log.e(TAG, "Sync failed: ${error.throwable?.message ?: error.message}")
+            // Said out loud: the refresh spinner stops on a timer either way, so a failure that
+            // only logged read as a refresh that had worked.
+            _transientMessage.value = when (error) {
+                is Result.ErrorType.IOError -> "Could not refresh: the server could not be reached"
+                is Result.ErrorType.HttpError -> "Could not refresh: the server answered HTTP ${error.statusCode}"
+                else -> "Could not refresh: ${error.throwable?.message ?: "unknown error"}"
+            }
         }
     }
 
@@ -421,6 +427,11 @@ class FeedViewModel(
                 updateCachePayload = updateCachePayload
             )
         }
+    }
+
+    /** Dismisses an ordinary feed error, so the next failure can show its own dialog. */
+    fun clearError() {
+        _bookmarksUiState.value = _bookmarksUiState.value.copy(error = null)
     }
 
     fun resetData() {

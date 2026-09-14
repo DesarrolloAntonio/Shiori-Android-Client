@@ -1,5 +1,6 @@
 package com.desarrollodroide.data.repository
 
+import com.desarrollodroide.model.serverTimestampNow
 import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -406,7 +407,7 @@ class BookmarksRepositoryImpl(
                         createArchive = if (updateCachePayload.createArchive) true else bookmark?.createArchive?: false,
                         hasEbook = if (updateCachePayload.createEbook) true else bookmark?.hasEbook?: false,
                         hasArchive = if (updateCachePayload.createArchive) true else bookmark?.hasArchive?: false,
-                        modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        modified = serverTimestampNow()
                     )
                     bookmarksDao.updateBookmark(updatedEntity)
                 }

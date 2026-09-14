@@ -1,5 +1,6 @@
 package com.desarrollodroide.domain.usecase
 
+import com.desarrollodroide.model.serverTimestampNow
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
@@ -21,7 +22,7 @@ class UpdateBookmarkCacheUseCase(
         bookmark: Bookmark
     ) {
         val updatedBookmark = bookmark.copy(
-            modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            modified = serverTimestampNow()
         )
         bookmarksDao.updateBookmark(updatedBookmark.toEntityModel())
         syncManager.scheduleSyncWork(

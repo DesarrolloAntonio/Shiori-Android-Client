@@ -170,4 +170,35 @@ class FeedSyncTest {
 
         assertEquals(2, syncCount, "the guard must not wedge refresh shut once the sync is done")
     }
+
+    /**
+     * A refresh that could not reach the server stopped its spinner and said nothing, so it read as
+     * a refresh that worked. Seen on a device: the first sync against the test server failed with
+     * "unexpected end of stream" and the feed stayed empty without a word.
+     */
+    @Test
+    fun `a refresh that fails says so`() = runTest(dispatcher) {
+        getAllRemoteBookmarksUseCase.stub {
+            onBlocking { invoke(any(), any()) } doReturn flowOf(
+                Result.success(SyncStatus.Error(com.desarrollodroide.common.result.Result.ErrorType.IOError(java.io.IOException("unexpected end of stream"))) as SyncStatus)
+            )
+        }
+        val viewModel = viewModel()
+
+        viewModel.refreshFeed()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("Could not refresh: the server could not be reached", viewModel.transientMessage.value)
+    }
+
+    /** The pair (R7): a refresh that completes says nothing. */
+    @Test
+    fun `a refresh that completes says nothing`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+
+        viewModel.refreshFeed()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(null, viewModel.transientMessage.value)
+    }
 }

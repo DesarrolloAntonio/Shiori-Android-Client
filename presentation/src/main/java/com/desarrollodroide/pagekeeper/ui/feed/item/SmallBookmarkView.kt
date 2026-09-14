@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
+import com.desarrollodroide.pagekeeper.extensions.asLocalBookmarkDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -96,7 +97,8 @@ fun SmallBookmarkView(
                         maxLines = 2
                     )
                     Text(
-                        text = bookmark.modified,
+                        // The server's UTC time as a date in the device's zone, as the web shows it.
+                        text = bookmark.modified.asLocalBookmarkDate(),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1

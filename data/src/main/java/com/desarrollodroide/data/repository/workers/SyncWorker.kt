@@ -1,5 +1,6 @@
 package com.desarrollodroide.data.repository.workers
 
+import com.desarrollodroide.model.serverTimestampNow
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -143,7 +144,7 @@ class SyncWorker(
                 val updatedBookmark = syncCreateBookmark(xSession, serverUrl, bookmarkId)
                 bookmarksDao.deleteBookmarkById(bookmarkId)
                 bookmarksDao.insertBookmark(updatedBookmark.toEntityModel(
-                    modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    modified = serverTimestampNow()
                 ))
                 val outputData = workDataOf(
                     "syncResult" to "SUCCESS",

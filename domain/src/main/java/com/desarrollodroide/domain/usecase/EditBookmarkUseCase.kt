@@ -1,5 +1,6 @@
 package com.desarrollodroide.domain.usecase
 
+import com.desarrollodroide.model.serverTimestampNow
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.desarrollodroide.model.Bookmark
@@ -21,7 +22,7 @@ class EditBookmarkUseCase(
         bookmark: Bookmark
     ) {
         val updatedBookmark = bookmark.copy(
-            modified = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            modified = serverTimestampNow()
         )
         updatedBookmark.tags.forEach { tag ->
             tagsDao.insertTag(tag.toEntityModel())

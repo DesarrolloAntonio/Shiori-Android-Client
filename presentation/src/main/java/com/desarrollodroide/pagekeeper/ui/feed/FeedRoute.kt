@@ -108,6 +108,10 @@ fun FeedRoute(
     }
 
     val selectedBookmarks by feedViewModel.selectedBookmarks.collectAsStateWithLifecycle()
+    SelectionBackHandler(
+        selectionActive = selectedBookmarks.isNotEmpty(),
+        onClearSelection = { feedViewModel.clearSelection() },
+    )
     val showDeleteSelectedDialog = remember { mutableStateOf(false) }
     val showUpdateSelectedDialog = remember { mutableStateOf(false) }
     val showAddTagsDialog = remember { mutableStateOf(false) }

@@ -34,4 +34,21 @@ class StringExtensionsKtTest {
         val emptyString = ""
         assertFalse(emptyString.isRTLText())
     }
+
+    /**
+     * Cards showed the server's UTC time as if it were local: a bookmark edited at 13:20 in Madrid
+     * read 11:20, and from 22:00 to midnight the date was the day before. The web shows the date.
+     */
+    @Test
+    fun `a late evening bookmark shows the device's date, not the UTC one`() {
+        val date = "2026-09-14 22:30:00".asLocalBookmarkDate(java.time.ZoneId.of("Europe/Madrid"), java.util.Locale.US)
+
+        assertEquals("Sep 15, 2026", date)
+    }
+
+    /** The pair (R7): something that is not a server time is shown as it came, not dropped. */
+    @Test
+    fun `a value that is not a server time is shown as it came`() {
+        assertEquals("yesterday", "yesterday".asLocalBookmarkDate(java.time.ZoneId.of("Europe/Madrid"), java.util.Locale.US))
+    }
 }
