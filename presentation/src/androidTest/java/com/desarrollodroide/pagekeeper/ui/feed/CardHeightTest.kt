@@ -14,6 +14,8 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -117,6 +119,35 @@ class CardHeightTest {
             difference,
             1f
         )
+    }
+
+    /**
+     * The tags have to be on the card.
+     *
+     * The card reserved a 32dp row for them, but an assist chip keeps a 48dp touch target and a
+     * one-line FlowRow drops a line that does not fit, so the row always came out empty: no card
+     * showed a single tag from 642c977 until this, a release included. Seen on a device.
+     */
+    @Test
+    fun theCardShowsItsTags() {
+        rule.setContent {
+            ShioriTheme {
+                androidx.compose.foundation.layout.Box(modifier = Modifier.requiredWidth(400.dp)) {
+                    BookmarkItem(
+                        getBookmark = { withImage },
+                        serverURL = "http://test",
+                        xSessionId = "",
+                        token = "",
+                        viewType = BookmarkViewType.FULL,
+                        actions = noActions,
+                    )
+                }
+            }
+        }
+        rule.waitForIdle()
+
+        rule.onNodeWithText("android").assertIsDisplayed()
+        rule.onNodeWithText("compose").assertIsDisplayed()
     }
 
     /**

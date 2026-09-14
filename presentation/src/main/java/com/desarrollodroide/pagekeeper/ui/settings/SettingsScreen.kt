@@ -20,6 +20,9 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
@@ -79,6 +82,15 @@ fun SettingsScreen(
     val serverVersion by settingsViewModel.serverVersion.collectAsStateWithLifecycle()
     val serverUrl by settingsViewModel.serverUrl.collectAsStateWithLifecycle()
     val createArchive by settingsViewModel.createArchive.collectAsStateWithLifecycle()
+    val logoutConfirmation by settingsViewModel.logoutConfirmation.collectAsStateWithLifecycle()
+
+    logoutConfirmation?.let { pendingChanges ->
+        LogoutConfirmationDialog(
+            pendingChanges = pendingChanges,
+            onConfirm = settingsViewModel::confirmLogout,
+            onDismiss = settingsViewModel::cancelLogout,
+        )
+    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -114,7 +126,7 @@ fun SettingsScreen(
             SettingsContent(
                 logoutUiState = logoutUiState,
                 tagsUiState = tagsUiState,
-                onLogout = { settingsViewModel.logout() },
+                onLogout = { settingsViewModel.requestLogout() },
                 goToLogin = {
                     settingsViewModel.clearImageCache()
                     goToLogin.invoke()
@@ -290,6 +302,36 @@ fun SettingsContent(
             VersionFooter(serverVersion = serverVersion)
         }
     }
+}
+
+/**
+ * Logout empties the local database and cancels the sync queue, so it asks first, as the web UI
+ * does. When changes are still waiting to reach the server it says they will be lost: offline,
+ * one tap used to discard a bookmark that had never been sent.
+ */
+@Composable
+private fun LogoutConfirmationDialog(
+    pendingChanges: Int,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+        title = { Text("Log out?") },
+        text = {
+            Text(
+                if (pendingChanges > 0) {
+                    val changes = if (pendingChanges == 1) "1 change has" else "$pendingChanges changes have"
+                    "$changes not reached the server yet and will be lost. Bookmarks on the server are not affected."
+                } else {
+                    "Bookmarks stored on this device will be removed. Bookmarks on the server are not affected."
+                }
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Log out") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 /** Server + app version, shown once at the bottom of the settings list. */

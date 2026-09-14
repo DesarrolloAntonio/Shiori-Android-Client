@@ -151,5 +151,9 @@ fun FullBookmarkView(
 /** Hero image height. Fixed so a card is the same shape on a phone and in a half width pane. */
 private val HeroImageHeight = 200.dp
 
-/** One AssistChip tall. Reserved whether or not the bookmark has tags, so cards stay level. */
-private val TagRowHeight = 32.dp
+/**
+ * One AssistChip with its touch target. The chip draws 32dp but keeps a 48dp minimum interactive
+ * size, and the one-line FlowRow drops a line that does not fit: at 32dp the row came out empty
+ * and no card showed its tags.
+ */
+private val TagRowHeight = 48.dp

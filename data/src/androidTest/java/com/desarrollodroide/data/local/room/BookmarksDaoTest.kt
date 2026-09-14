@@ -10,6 +10,7 @@ import com.desarrollodroide.model.Tag
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -276,6 +277,35 @@ class BookmarksDaoTest {
             assertEquals(1, bookmark.tags.size)
             assertEquals(2, bookmark.tags[0].id)
         }
+    }
+
+    /**
+     * A full sync prunes every row the server did not list. A bookmark added while the server was
+     * unreachable only exists here, under a temporary id, until its create job gets through, so
+     * the server can never list it: the prune used to delete it, the job then found no row and
+     * reported success, and the bookmark was gone. Seen on a device.
+     */
+    @Test
+    fun pruneKeepsBookmarksNotYetCreatedOnTheServer() = runBlocking {
+        val pendingCreate = bookmark.copy(id = 1_789_385_079, url = "https://example.com/?qa=pending")
+        bookmarksDao.insertBookmark(pendingCreate)
+        bookmarksDao.insertBookmark(bookmark.copy(id = 2))
+
+        bookmarksDao.deleteBookmarksNotIn(listOf(2))
+
+        assertNotNull(bookmarksDao.getBookmarkById(pendingCreate.id))
+    }
+
+    /** The pair (R7): a server bookmark the sync did not see is still pruned. */
+    @Test
+    fun pruneStillDeletesServerBookmarksTheSyncDidNotSee() = runBlocking {
+        bookmarksDao.insertBookmark(bookmark.copy(id = 1))
+        bookmarksDao.insertBookmark(bookmark.copy(id = 2))
+
+        bookmarksDao.deleteBookmarksNotIn(listOf(2))
+
+        assertNull(bookmarksDao.getBookmarkById(1))
+        assertNotNull(bookmarksDao.getBookmarkById(2))
     }
 
     @Test

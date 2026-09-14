@@ -107,10 +107,15 @@ class LoginViewModel(
                                 // Liveness not supported, versión < 1.6
                                 sendLogin()
                                 Log.v("LoginViewModel", "Liveness not supported")
-                            } else if (result.error is Result.ErrorType.IOError) {
-                                // Error connecting to server
+                            } else {
+                                // Every other failure has to end the spinner, not only an IO error:
+                                // a 401 from a proxy or a 5xx used to fall through here and leave a
+                                // dialog on screen that cannot be dismissed.
                                 Log.v("LoginViewModel", "Error connecting to server")
-                                val error = result.error?.throwable?.message?:result.error?.message?:"Unknown error"
+                                val error = result.error?.throwable?.message
+                                    ?: result.error?.message
+                                    ?: result.error?.statusCode?.let { "The server answered HTTP $it" }
+                                    ?: "Unknown error"
                                 _livenessUiState.error(errorMessage = error)
                             }
                         }

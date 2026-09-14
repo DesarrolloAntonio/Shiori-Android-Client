@@ -14,6 +14,7 @@ import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.repository.BookmarksRepository
+import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -34,6 +36,7 @@ class SettingsViewModel(
     private val themeManager: ThemeManager,
     private val getTagsUseCase: GetTagsUseCase,
     private val imageLoader: ImageLoader,
+    private val syncWorks: SyncWorks,
     ) : ViewModel() {
 
     private val _logoutUiState = MutableStateFlow(UiState<String>(isLoading = false))
@@ -125,6 +128,28 @@ class SettingsViewModel(
         observeDefaultsSettings()
         updateCacheSize()
     }
+
+    // Logout wipes the local database and cancels the sync queue, so anything not yet sent to the
+    // server is lost with it. Null means no confirmation is on screen; otherwise it holds how many
+    // changes are still waiting, so the dialog can say what will be discarded.
+    private val _logoutConfirmation = MutableStateFlow<Int?>(null)
+    val logoutConfirmation: StateFlow<Int?> = _logoutConfirmation.asStateFlow()
+
+    fun requestLogout() {
+        viewModelScope.launch {
+            _logoutConfirmation.value = syncWorks.getPendingJobs().first().size
+        }
+    }
+
+    fun cancelLogout() {
+        _logoutConfirmation.value = null
+    }
+
+    fun confirmLogout() {
+        _logoutConfirmation.value = null
+        logout()
+    }
+
     fun logout() {
         viewModelScope.launch {
             sendLogoutUseCase(
@@ -175,6 +200,10 @@ class SettingsViewModel(
 
     fun getTags() {
       viewModelScope.launch {
+            // The dialog shown while this loads cannot be dismissed, so every way out of the
+            // request has to end the loading state. Hiding a tag is a local setting: when the
+            // server cannot be reached, the tags already stored on the device are enough.
+            var storedTags: List<Tag>? = null
             getTagsUseCase.invoke(
                 serverUrl = settingsPreferenceDataSource.getUrl(),
                 token = _token,
@@ -184,9 +213,20 @@ class SettingsViewModel(
                     when (result) {
                         is Result.Error -> {
                             Log.v(TAG, "Error getting tags: ${result.error?.message}")
+                            val fallback = storedTags
+                            if (!fallback.isNullOrEmpty()) {
+                                _tagsState.success(fallback)
+                            } else {
+                                _tagsState.error(
+                                    errorMessage = result.error?.throwable?.message
+                                        ?: result.error?.message
+                                        ?: "Could not load tags"
+                                )
+                            }
                         }
                         is Result.Loading -> {
                             Log.v(TAG, "Loading, updating tags from cache...")
+                            result.data?.let { storedTags = it }
                             _tagsState.isLoading(true)
                         }
                         is Result.Success -> {

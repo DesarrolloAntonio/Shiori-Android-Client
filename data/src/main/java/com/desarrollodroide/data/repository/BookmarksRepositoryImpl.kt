@@ -314,7 +314,24 @@ class BookmarksRepositoryImpl(
             body = bookmark.toEditBookmarkDTO().toEditBookmarkJson()
         )
         if (response.isSuccessful) {
-            response.body()?.resolvedBookmark()?.let { bookmarkDTO ->
+            response.body()?.resolvedBookmark()?.let { editedDTO ->
+                // The legacy update adds tags but never removes one: Shiori 1.8.0 answers 200 with
+                // a removed tag still attached, and the next sync put it back on the card. The v1
+                // bulk route replaces the whole set, so it is sent whenever the server kept a tag
+                // the edit dropped.
+                val wantedNames = bookmark.tags.map { it.name }.toSet()
+                val editedId = editedDTO.id
+                val bookmarkDTO = if (editedId != null && editedDTO.tags.orEmpty().any { it.name !in wantedNames }) {
+                    addTagsToBookmarks(
+                        token = xSession,
+                        serverUrl = serverUrl,
+                        bookmarkIds = listOf(editedId),
+                        tagIds = editedDTO.tags.orEmpty().filter { it.name in wantedNames }.mapNotNull { it.id },
+                    )
+                    editedDTO.copy(tags = editedDTO.tags.orEmpty().filter { it.name in wantedNames })
+                } else {
+                    editedDTO
+                }
                 // TODO force fields to avoid invalid backend response
                 val updatedEntity = bookmarkDTO.toEntityModel().copy(
                     hasEbook = bookmark.hasEbook,

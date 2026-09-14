@@ -28,6 +28,8 @@ import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.network.model.BookmarkDTO
+import com.desarrollodroide.network.model.BookmarkResponseDTO
+import com.desarrollodroide.network.model.TagDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -264,6 +266,50 @@ class BookmarksRepositoryTest {
 
         verify(bookmarksDao).updateBookmarkWithTags(any())
         verify(bookmarksDao, never()).updateBookmark(any())
+    }
+
+    /**
+     * Shiori's legacy PUT /api/bookmarks adds tags but never removes one: on 1.8.0 it answers 200
+     * with the removed tag still attached, with or without `deleted: true`. The edit looked saved,
+     * and the next sync put the tag back. Seen on a device; measured against the server.
+     */
+    @Test
+    fun `a tag removed in an edit is removed on the server too`() = runTest {
+        val serverKeptIt = BookmarkDTO(
+            89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
+            true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0), TagDTO(id = 11, name = "qa_c", nBookmarks = 0)), true, true
+        )
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = serverKeptIt)))
+        `when`(apiService.addTagsToBookmarks(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(BookmarkResponseDTO(ok = true, message = listOf(serverKeptIt.copy(tags = listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0)))))))
+
+        bookmarksRepository.editBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = serverKeptIt.copy(tags = listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0))).toDomainModel(),
+        )
+
+        verify(apiService).addTagsToBookmarks(
+            eq("http://test.com/api/v1/bookmarks/bulk/tags"),
+            eq("Bearer session"),
+            check { assertTrue(it.contains("\"tag_ids\":[9]"), it) },
+        )
+    }
+
+    /** The pair (R7): when the server already has exactly the tags asked for, nothing else is sent. */
+    @Test
+    fun `an edit the server applied in full sends nothing more`() = runTest {
+        val applied = BookmarkDTO(
+            89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
+            true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0)), true, true
+        )
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = applied)))
+
+        bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = applied.toDomainModel())
+
+        verify(apiService, never()).addTagsToBookmarks(anyString(), anyString(), anyString())
     }
 
     /**

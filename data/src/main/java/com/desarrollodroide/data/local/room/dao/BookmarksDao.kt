@@ -11,6 +11,12 @@ import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.entity.BookmarkTagCrossRef
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Temporary ids are epoch seconds (AddBookmarkUseCase), far above any sequential server id; the
+ * same threshold as Bookmark.isTemporaryId.
+ */
+private const val MAX_SERVER_BOOKMARK_ID = 1_000_000
+
 @Dao
 interface BookmarksDao {
 
@@ -173,8 +179,12 @@ interface BookmarksDao {
    * Removes cached bookmarks the server no longer returned, after a full sync has upserted
    * everything it did return. Together with [insertPageWithTags] this replaces the old
    * delete-everything-then-insert approach, which lost the whole cache if a sync failed part way.
+   *
+   * Rows under a temporary id are left alone. They are bookmarks whose create has not reached the
+   * server yet, so no server listing can contain them; pruning them deleted the bookmark before its
+   * create job ran, and the job then reported success over a row that no longer existed.
    */
-  @Query("DELETE FROM bookmarks WHERE id NOT IN (:keepIds)")
+  @Query("DELETE FROM bookmarks WHERE id NOT IN (:keepIds) AND id <= $MAX_SERVER_BOOKMARK_ID")
   suspend fun deleteBookmarksNotIn(keepIds: List<Int>)
 
   /**

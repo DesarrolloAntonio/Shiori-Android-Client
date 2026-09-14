@@ -2,14 +2,15 @@ package com.desarrollodroide.pagekeeper.ui.settings
 
 import androidx.compose.runtime.mutableStateOf
 import coil3.ImageLoader
-import coil3.disk.DiskCache
-import coil3.memory.MemoryCache
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.repository.BookmarksRepository
+import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
+import com.desarrollodroide.model.PendingJob
+import com.desarrollodroide.model.SyncOperationType
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,38 +20,29 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.after
 import org.mockito.kotlin.never
-import org.mockito.kotlin.timeout
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 
 /**
- * Logout has to take the image caches with it.
+ * Logout empties the local database and cancels the sync queue. It used to run on the first tap,
+ * so offline a bookmark that had never reached the server was deleted from the device, its upload
+ * cancelled, and it was gone for good once the network came back. Seen on a device.
  *
- * The database is emptied on the way out, so leaving Coil's caches behind means the next account
- * to sign in on the device inherits the previous one's thumbnails. They are keyed by url, with
- * nothing tying an entry to an account.
+ * Now the tap only asks, and says how many changes are still waiting.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SettingsViewModelLogoutTest {
+class SettingsViewModelLogoutConfirmationTest {
 
     private val dispatcher = StandardTestDispatcher()
 
-    private val diskCache: DiskCache = mock()
-    private val memoryCache: MemoryCache = mock()
-    private val imageLoader: ImageLoader = mock<ImageLoader>().stub {
-        on { this.diskCache } doReturn diskCache
-        on { this.memoryCache } doReturn memoryCache
-    }
-
-    // Every Flow the view model reads eagerly in a property initialiser has to be stubbed: an
-    // unstubbed mock hands back null and stateIn then dereferences it.
     private val preferences: SettingsPreferenceDataSource = mock<SettingsPreferenceDataSource>().stub {
         onBlocking { getUrl() } doReturn "http://test.com"
         onBlocking { getSession() } doReturn "session"
@@ -72,7 +64,19 @@ class SettingsViewModelLogoutTest {
         override var useDynamicColors = mutableStateOf(false)
     }
 
-    private val sendLogoutUseCase: SendLogoutUseCase = mock()
+    private val sendLogoutUseCase: SendLogoutUseCase = mock<SendLogoutUseCase>().stub {
+        on { invoke(any(), any()) } doReturn flowOf(Result.Success("ok"))
+    }
+
+    private val pendingCreate = PendingJob(
+        operationType = SyncOperationType.CREATE,
+        state = "ENQUEUED",
+        bookmarkId = 1_789_383_854,
+        bookmarkTitle = "",
+    )
+    private val syncWorks: SyncWorks = mock<SyncWorks>().stub {
+        on { getPendingJobs() } doReturn flowOf(listOf(pendingCreate))
+    }
 
     @BeforeEach
     fun setUp() {
@@ -90,62 +94,45 @@ class SettingsViewModelLogoutTest {
         settingsPreferenceDataSource = preferences,
         themeManager = themeManager,
         getTagsUseCase = mock<GetTagsUseCase>(),
-        imageLoader = imageLoader,
-        syncWorks = mock(),
+        imageLoader = mock<ImageLoader>(),
+        syncWorks = syncWorks,
     )
 
     @Test
-    fun `logging out clears the image caches`() = runTest(dispatcher) {
-        sendLogoutUseCase.stub {
-            on { invoke(any(), any()) } doReturn flowOf(Result.Success("ok"))
-        }
+    fun `tapping logout asks first and says how many changes are waiting`() = runTest(dispatcher) {
+        val vm = viewModel()
 
-        viewModel().logout()
+        vm.requestLogout()
         testScheduler.advanceUntilIdle()
 
-        verifyCachesCleared()
-    }
-
-    /**
-     * A logout the server never answered still signs you out locally — the use case wipes the
-     * database on its error branch too — so the caches have to go on that path as well.
-     */
-    @Test
-    fun `a failed logout still clears the image caches`() = runTest(dispatcher) {
-        sendLogoutUseCase.stub {
-            on { invoke(any(), any()) } doReturn flowOf(
-                Result.Error(Result.ErrorType.IOError(Exception("no network")))
-            )
-        }
-
-        viewModel().logout()
-        testScheduler.advanceUntilIdle()
-
-        verifyCachesCleared()
+        assertEquals(1, vm.logoutConfirmation.value)
+        verify(sendLogoutUseCase, never()).invoke(any(), any())
     }
 
     @Test
-    fun `merely opening settings does not clear the caches`() = runTest(dispatcher) {
-        viewModel()
+    fun `cancelling the confirmation logs nobody out`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.requestLogout()
+        testScheduler.advanceUntilIdle()
+        vm.cancelLogout()
         testScheduler.advanceUntilIdle()
 
-        // after(), not never() on its own: the clearing runs off the test scheduler, so an
-        // immediate never() would pass simply by checking too early.
-        verify(diskCache, after(TIMEOUT_MS).never()).clear()
-        verify(memoryCache, never()).clear()
+        assertNull(vm.logoutConfirmation.value)
+        verify(sendLogoutUseCase, never()).invoke(any(), any())
     }
 
-    /**
-     * ImageLoader.clearCache switches to Dispatchers.IO, which the test scheduler does not drive,
-     * so advanceUntilIdle returns before the caches have actually been touched. Verifying straight
-     * afterwards made this pass or fail depending on which thread got there first.
-     */
-    private fun verifyCachesCleared() {
-        verify(diskCache, timeout(TIMEOUT_MS)).clear()
-        verify(memoryCache, timeout(TIMEOUT_MS)).clear()
-    }
+    /** The pair (R7): confirming does log out. */
+    @Test
+    fun `confirming logs out`() = runTest(dispatcher) {
+        val vm = viewModel()
 
-    private companion object {
-        const val TIMEOUT_MS = 2_000L
+        vm.requestLogout()
+        testScheduler.advanceUntilIdle()
+        vm.confirmLogout()
+        testScheduler.advanceUntilIdle()
+
+        assertNull(vm.logoutConfirmation.value)
+        verify(sendLogoutUseCase).invoke(any(), any())
     }
 }

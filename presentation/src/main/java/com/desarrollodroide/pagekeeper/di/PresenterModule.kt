@@ -57,6 +57,7 @@ fun presenterModule() = module {
             themeManager = get(),
             getTagsUseCase = get(),
             imageLoader = get(),
+            syncWorks = get(),
         )
     }
 
