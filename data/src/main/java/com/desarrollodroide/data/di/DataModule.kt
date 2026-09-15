@@ -111,7 +111,8 @@ fun dataModule() = module {
         bookmarksDao = get(),
         tagDao = get(),
         bookmarkHtmlDao = get(),
-        errorHandler = get()
+        errorHandler = get(),
+        syncWorks = get(),
     ) as BookmarksRepository }
 
     single { FileRepositoryImpl(

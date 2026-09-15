@@ -19,6 +19,7 @@ import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
+import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BulkAddTagsPayloadDTO
 import com.desarrollodroide.network.model.BookmarksDTO
 import com.desarrollodroide.network.model.ReadableContentResponseDTO
@@ -40,7 +41,8 @@ class BookmarksRepositoryImpl(
     private val bookmarksDao: BookmarksDao,
     private val tagDao: TagDao,
     private val bookmarkHtmlDao: BookmarkHtmlDao,
-    private val errorHandler: ErrorHandler
+    private val errorHandler: ErrorHandler,
+    private val syncWorks: SyncWorks,
 ) : BookmarksRepository {
 
     private val TAG = "BookmarksRepository"
@@ -172,8 +174,12 @@ class BookmarksRepositoryImpl(
                     ?: emptyList()
 
                 // Written as it arrives, so the feed fills in progressively and a sync that dies
-                // half way leaves the pages it did fetch rather than nothing.
-                bookmarksDao.insertPageWithTags(bookmarks)
+                // half way leaves the pages it did fetch rather than nothing. A bookmark with an
+                // edit or a delete still waiting to upload keeps what this device has: its job
+                // uploads the row as stored, so writing the server's copy over it lost the edit.
+                // Read after the page arrives, so an edit saved during the request counts.
+                val waiting = syncWorks.bookmarkIdsWithPendingChanges()
+                bookmarksDao.insertPageWithTags(bookmarks.filter { it.id !in waiting })
                 seenIds.addAll(bookmarks.map { it.id })
 
                 hasNextPage = hasNextPage(bookmarksDto)
@@ -185,7 +191,7 @@ class BookmarksRepositoryImpl(
             // Prune only once every page has been accounted for. Deleting up front, as the old
             // code did, meant a failure mid-sync left the user with an empty cache.
             if (seenIds.isNotEmpty()) {
-                bookmarksDao.deleteBookmarksNotIn(seenIds)
+                bookmarksDao.deleteBookmarksNotIn((seenIds + syncWorks.bookmarkIdsWithPendingChanges()).distinct())
                 bookmarksDao.deleteOrphanedTagCrossRefs()
                 bookmarkHtmlDao.deleteOrphanedHtml()
             }
@@ -309,10 +315,21 @@ class BookmarksRepositoryImpl(
         serverUrl: String,
         bookmark: Bookmark
     ): Bookmark {
+        // The PUT overwrites url, title and excerpt with whatever it is sent, and an edit can wait
+        // offline for days. Sent as this device last saw it, the row undid anything another
+        // client had changed meanwhile. The editor only changes tags and Public, so the rest is
+        // taken from the server's current copy.
+        val serverCopy = findOnServer(xSession, serverUrl, bookmark)
+            ?: throw IllegalStateException("Bookmark ${bookmark.id} is no longer on the server at ${bookmark.url}")
+        val merged = bookmark.copy(
+            url = serverCopy.url ?: bookmark.url,
+            title = serverCopy.title ?: bookmark.title,
+            excerpt = serverCopy.excerpt ?: bookmark.excerpt,
+        )
         val response = apiService.editBookmark(
             url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",
             xSessionId = xSession,
-            body = bookmark.toEditBookmarkDTO().toEditBookmarkJson()
+            body = merged.toEditBookmarkDTO().toEditBookmarkJson()
         )
         if (response.isSuccessful) {
             response.body()?.resolvedBookmark()?.let { editedDTO ->
@@ -349,6 +366,30 @@ class BookmarksRepositoryImpl(
             throw IllegalStateException("Response body is null")
         } else {
             throw IllegalStateException("${response.errorBody()?.string()}")
+        }
+    }
+
+    /**
+     * The server's current copy of [bookmark], or null when it has no bookmark with that id.
+     *
+     * The legacy API has no read by id; the list takes a keyword that matches urls as substrings,
+     * so the copy is looked for by id among the results for the bookmark's own url.
+     */
+    private suspend fun findOnServer(xSession: String, serverUrl: String, bookmark: Bookmark): BookmarkDTO? {
+        var page = 1
+        while (true) {
+            val response = apiService.getPagingBookmarks(
+                xSessionId = xSession,
+                url = "${serverUrl.removeTrailingSlash()}/api/bookmarks" +
+                    "?keyword=${URLEncoder.encode(bookmark.url, "UTF-8")}&page=$page"
+            )
+            if (!response.isSuccessful) {
+                // The body carries "session has been expired", which is what makes the worker renew it.
+                throw IllegalStateException("${response.errorBody()?.string()}")
+            }
+            response.body()?.resolvedBookmarks()?.firstOrNull { it.id == bookmark.id }?.let { return it }
+            if (!hasNextPage(response)) return null
+            page++
         }
     }
 

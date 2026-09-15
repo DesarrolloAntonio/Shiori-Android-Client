@@ -34,6 +34,7 @@ fun appModule() = module {
             tagDao = get(),
             bookmarkHtmlDao = get(),
             errorHandler = get(),
+            syncWorks = get(),
         ) as BookmarksRepository
     }
 

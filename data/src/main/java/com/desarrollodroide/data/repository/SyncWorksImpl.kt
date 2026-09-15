@@ -69,7 +69,7 @@ class SyncWorksImpl(
             .asFlow()
             .map { workInfos ->
                 workInfos
-                    .filter { !it.state.isFinished }
+                    .filter { it.state.isShownAsPending() }
                     .mapNotNull { workInfo ->
                         Log.d("SyncManager", "WorkInfo: id=${workInfo.id}, state=${workInfo.state}, tags=${workInfo.tags}")
 
@@ -99,7 +99,7 @@ class SyncWorksImpl(
     override suspend fun retryAllPendingJobs() {
         val allWorkInfos = withContext(Dispatchers.IO) {
             workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
-        }.filter { !it.state.isFinished }
+        }
 
         allWorkInfos.forEach { workInfo ->
             val operationType = workInfo.getSyncOperationType()
@@ -108,11 +108,18 @@ class SyncWorksImpl(
             if (operationType != null && bookmarkId != null) {
                 val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
 
-                if (bookmark != null) {
+                if (shouldRequeue(operationType, workInfo.state, rowExists = bookmark != null) && bookmark != null) {
                     scheduleSyncWork(operationType, bookmark)
                 }
             }
         }
+    }
+
+    override suspend fun bookmarkIdsWithPendingChanges(): Set<Int> = withContext(Dispatchers.IO) {
+        workManager.getWorkInfosByTag("worker_${SyncWorker::class.java.name}").get()
+            .filter { holdsLocalChange(it.getSyncOperationType(), it.state) }
+            .mapNotNull { it.getBookmarkId() }
+            .toSet()
     }
 
     fun WorkInfo.getSyncOperationType(): SyncOperationType? {
@@ -139,3 +146,35 @@ class SyncWorksImpl(
             .also { Log.d("SyncManager", "BookmarkTitle: $it") }
     }
 }
+
+/**
+ * Whether the sync sheet (and its badge) lists a job: everything not done yet, and a job that gave
+ * up. A failed job used to drop out of the list the moment it failed, so a change that never
+ * reached the server left no trace anywhere.
+ */
+internal fun WorkInfo.State.isShownAsPending(): Boolean = !isFinished || this == WorkInfo.State.FAILED
+
+/**
+ * Whether a job holds a change that exists only on this device, so a sync must not write the
+ * server's copy over its bookmark.
+ *
+ * An UPDATE uploads the row as it is stored when it runs. A refresh while the upload waited for a
+ * retry wrote the server's copy over the row, and the retry then uploaded that copy: the edit was
+ * gone and the job reported success. A DELETE has already removed the row, and a refresh put the
+ * card back. A failed job counts too, for as long as the sheet lists it: "Retry all" uploads the
+ * row as stored.
+ */
+internal fun holdsLocalChange(operationType: SyncOperationType?, state: WorkInfo.State): Boolean =
+    (operationType == SyncOperationType.UPDATE || operationType == SyncOperationType.DELETE) &&
+        state.isShownAsPending()
+
+/**
+ * Whether "Retry all" re-creates a job.
+ *
+ * Never a CACHE job: its options travel only in the original request, and the copy made here had
+ * none, so it failed on every attempt. Never a running job, which REPLACE would cancel mid-request.
+ */
+internal fun shouldRequeue(operationType: SyncOperationType, state: WorkInfo.State, rowExists: Boolean): Boolean =
+    operationType != SyncOperationType.CACHE &&
+        rowExists &&
+        state in setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED, WorkInfo.State.FAILED)

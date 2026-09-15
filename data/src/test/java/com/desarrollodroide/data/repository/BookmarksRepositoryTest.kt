@@ -26,6 +26,8 @@ import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.mapper.toDomainModel
+import com.desarrollodroide.data.mapper.toEditBookmarkDTO
+import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
@@ -54,12 +56,16 @@ class BookmarksRepositoryTest {
     @Mock
     private lateinit var errorHandler: ErrorHandler
 
+    @Mock
+    private lateinit var syncWorks: SyncWorks
+
     private lateinit var bookmarksRepository: BookmarksRepositoryImpl
 
     @BeforeEach
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, tagDao, bookmarkHtmlDao, errorHandler)
+        kotlinx.coroutines.runBlocking { `when`(syncWorks.bookmarkIdsWithPendingChanges()).thenReturn(emptySet()) }
+        bookmarksRepository = BookmarksRepositoryImpl(apiService, bookmarksDao, tagDao, bookmarkHtmlDao, errorHandler, syncWorks)
     }
 
     @Test
@@ -218,6 +224,51 @@ class BookmarksRepositoryTest {
         verify(bookmarksDao).deleteBookmarksNotIn(check { assertEquals(listOf(7), it) })
     }
 
+    /**
+     * A refresh must not write over a change still waiting to upload. Seen on a device (QA campaign,
+     * process 04, #13): an edit's upload failed once, a pull to refresh wrote the server's copy over
+     * the row during the retry's wait, and the retry uploaded that copy — the new tag was gone from
+     * the card, the database and the server, and the job reported success.
+     */
+    @Test
+    fun `a sync leaves a bookmark whose edit is waiting to upload as it is`() = runTest {
+        `when`(syncWorks.bookmarkIdsWithPendingChanges()).thenReturn(setOf(97))
+        `when`(apiService.getPagingBookmarks(anyString(), anyString())).thenReturn(Response.success(pageWith97And98))
+
+        bookmarksRepository.syncAllBookmarks("session", "http://test.com").toList()
+
+        verify(bookmarksDao).insertPageWithTags(check { assertEquals(listOf(98), it.map { row -> row.id }) })
+    }
+
+    /** Nor removed when the server no longer returns it: its job still has to run, and says so if it fails. */
+    @Test
+    fun `a sync does not prune a bookmark whose change is waiting to upload`() = runTest {
+        `when`(syncWorks.bookmarkIdsWithPendingChanges()).thenReturn(setOf(97))
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(pageWith97And98.copy(bookmarks = pageWith97And98.bookmarks!!.drop(1))))
+
+        bookmarksRepository.syncAllBookmarks("session", "http://test.com").toList()
+
+        verify(bookmarksDao).deleteBookmarksNotIn(check { assertTrue(97 in it, "97 pruned: $it") })
+    }
+
+    /** The pair (R7): with nothing waiting, the server's copy is written as before. */
+    @Test
+    fun `a sync writes every bookmark when nothing is waiting to upload`() = runTest {
+        `when`(apiService.getPagingBookmarks(anyString(), anyString())).thenReturn(Response.success(pageWith97And98))
+
+        bookmarksRepository.syncAllBookmarks("session", "http://test.com").toList()
+
+        verify(bookmarksDao).insertPageWithTags(check { assertEquals(listOf(97, 98), it.map { row -> row.id }) })
+    }
+
+    private val pageWith97And98 = BookmarksDTO(
+        page = 1, maxPage = 1, bookmarks = listOf(
+            BookmarkDTO(97, "http://a.com/97", "server copy", "", "", 0, "2023-01-01", "", "", false, false, false, listOf(), false, false),
+            BookmarkDTO(98, "http://a.com/98", "B", "", "", 0, "2023-01-01", "", "", false, false, false, listOf(), false, false),
+        )
+    )
+
     @Test
     fun `a sync that fails part way leaves the cache alone rather than emptying it`() = runTest {
         val xSessionId = "testSessionId"
@@ -255,6 +306,7 @@ class BookmarksRepositoryTest {
             1, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
             true, true, true, listOf(), true, true
         )
+        stubServerCopy(edited)
         `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
             .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = edited)))
 
@@ -279,6 +331,7 @@ class BookmarksRepositoryTest {
             89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
             true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0), TagDTO(id = 11, name = "qa_c", nBookmarks = 0)), true, true
         )
+        stubServerCopy(serverKeptIt)
         `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
             .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = serverKeptIt)))
         `when`(apiService.addTagsToBookmarks(anyString(), anyString(), anyString()))
@@ -304,12 +357,97 @@ class BookmarksRepositoryTest {
             89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
             true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0)), true, true
         )
+        stubServerCopy(applied)
         `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
             .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = applied)))
 
         bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = applied.toDomainModel())
 
         verify(apiService, never()).addTagsToBookmarks(anyString(), anyString(), anyString())
+    }
+
+    /**
+     * An edit made offline is uploaded later, and the server's PUT overwrites url, title and
+     * excerpt with whatever it is sent. Sending the row as this device last saw it undid anything
+     * another client had changed meanwhile: an excerpt edited on the web came back as the old one
+     * once the app's tag edit drained (QA campaign, process 04, C1).
+     */
+    @Test
+    fun `an uploaded edit keeps what another client changed on the server`() = runTest {
+        stubServerCopy(serverSideCopy)
+        stubEditAnswer()
+
+        bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit)
+
+        verify(apiService).editBookmark(anyString(), anyString(), check { json ->
+            val sent = com.google.gson.JsonParser.parseString(json).asJsonObject
+            assertEquals("QA server-side edit", sent.get("excerpt").asString)
+            assertEquals("QA_Off01 renamed on the web", sent.get("title").asString)
+        })
+    }
+
+    /** The pair (R7): what the app did edit — tags and Public — is sent as edited, not as the server had it. */
+    @Test
+    fun `an uploaded edit still sends the tags and public flag the user chose`() = runTest {
+        stubServerCopy(serverSideCopy)
+        stubEditAnswer()
+
+        bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit)
+
+        verify(apiService).editBookmark(anyString(), anyString(), check { json ->
+            val sent = com.google.gson.JsonParser.parseString(json).asJsonObject
+            assertEquals(1, sent.get("public").asInt)
+            assertEquals(listOf("qa_c1"), sent.getAsJsonArray("tags").map { it.asJsonObject.get("name").asString })
+        })
+    }
+
+    /** Without the server's copy there is nothing safe to send: the old row would overwrite whatever is there. */
+    @Test
+    fun `an edit to a bookmark the server no longer has is not sent`() = runTest {
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = emptyList())))
+        stubEditAnswer()
+
+        val error = runCatching {
+            bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit)
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException, "expected the upload to fail, got $error")
+        verify(apiService, never()).editBookmark(anyString(), anyString(), anyString())
+    }
+
+    /** The worker renews an expired session by reading the server's message, so the read has to pass it on. */
+    @Test
+    fun `an expired session while reading the server copy is reported as such`() = runTest {
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.error(401, SESSION_HAS_BEEN_EXPIRED.toResponseBody("text/plain".toMediaTypeOrNull())))
+
+        val error = runCatching {
+            bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit)
+        }.exceptionOrNull()
+
+        assertTrue(error?.message?.contains(SESSION_HAS_BEEN_EXPIRED) == true, "got $error")
+        verify(apiService, never()).editBookmark(anyString(), anyString(), anyString())
+    }
+
+    private val serverSideCopy = BookmarkDTO(
+        97, "http://qa.example/QA_Off01", "QA_Off01 renamed on the web", "QA server-side edit", "", 0,
+        "2023-01-01", "2023-01-03", "", true, false, false, listOf(TagDTO(id = 3, name = "qa_old", nBookmarks = 1)), false, false
+    )
+
+    private val offlineEdit = serverSideCopy.copy(
+        title = "QA_Off01", excerpt = "offline fixture", public = 1,
+        tags = listOf(TagDTO(id = null, name = "qa_c1", nBookmarks = null)),
+    ).toDomainModel()
+
+    private suspend fun stubServerCopy(copy: BookmarkDTO) {
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = listOf(copy.copy(id = 98, url = copy.url + "/other"), copy))))
+    }
+
+    private suspend fun stubEditAnswer() {
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = offlineEdit.toEditBookmarkDTO())))
     }
 
     /**

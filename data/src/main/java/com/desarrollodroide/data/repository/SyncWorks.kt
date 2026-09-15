@@ -17,4 +17,7 @@ interface SyncWorks {
     fun cancelAllSyncWorkers()
     suspend fun retryAllPendingJobs()
 
+    /** Bookmarks holding an edit or a delete that has not reached the server yet. */
+    suspend fun bookmarkIdsWithPendingChanges(): Set<Int>
+
 }
