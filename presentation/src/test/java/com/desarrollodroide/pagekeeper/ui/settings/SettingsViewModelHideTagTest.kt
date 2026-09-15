@@ -84,6 +84,7 @@ class SettingsViewModelHideTagTest {
         getTagsUseCase = getTagsUseCase,
         imageLoader = mock<ImageLoader>(),
         syncWorks = mock(),
+        networkLogger = mock(),
     )
 
     private fun tagsAnswer(flow: Flow<Result<List<Tag>?>>) = getTagsUseCase.stub {

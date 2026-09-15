@@ -20,6 +20,7 @@ import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
+import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.pagekeeper.extensions.bytesToDisplaySize
 import com.desarrollodroide.pagekeeper.extensions.clearCache
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,7 @@ class SettingsViewModel(
     private val getTagsUseCase: GetTagsUseCase,
     private val imageLoader: ImageLoader,
     private val syncWorks: SyncWorks,
+    private val networkLogger: NetworkLoggerInterceptor,
     private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
     ) : ViewModel() {
 
@@ -191,6 +193,9 @@ class SettingsViewModel(
     private suspend fun clearImageCachesOnLogout() {
         imageLoader.clearCache()
         updateCacheSize()
+        // The network log keeps the last responses, bookmark titles and urls included, for the life
+        // of the process: the next account to sign in could read the previous one's library in it.
+        networkLogger.clearLogs()
     }
 
     private fun loadSettings() {

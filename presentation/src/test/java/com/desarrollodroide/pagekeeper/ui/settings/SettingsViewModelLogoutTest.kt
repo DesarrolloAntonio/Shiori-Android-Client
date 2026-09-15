@@ -92,6 +92,7 @@ class SettingsViewModelLogoutTest {
         getTagsUseCase = mock<GetTagsUseCase>(),
         imageLoader = imageLoader,
         syncWorks = mock(),
+        networkLogger = mock(),
     )
 
     @Test

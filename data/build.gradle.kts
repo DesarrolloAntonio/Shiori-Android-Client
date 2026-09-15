@@ -101,6 +101,7 @@ dependencies {
     androidTestImplementation ("androidx.test:rules:1.5.0") // Android Test Rules for defining complex test cases.
     androidTestImplementation(libs.androidx.room.testing) // Room Testing support for testing Room databases.
     androidTestImplementation(libs.kotlin.coroutines.test) // Coroutines Test library for testing coroutines in Android tests.
+    androidTestImplementation(libs.androidx.work.testing) // A WorkManager that runs jobs at once, so a job can be driven to FAILED.
 }
 
 

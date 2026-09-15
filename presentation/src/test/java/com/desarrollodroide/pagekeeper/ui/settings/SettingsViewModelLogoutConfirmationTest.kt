@@ -11,6 +11,7 @@ import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.model.SyncOperationType
+import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.pagekeeper.helpers.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,6 +80,51 @@ class SettingsViewModelLogoutConfirmationTest {
         on { getPendingJobs() } doReturn flowOf(listOf(pendingCreate))
     }
 
+    private val networkLogger: NetworkLoggerInterceptor = mock()
+
+    /**
+     * The in-app network log (Settings → View network logs, staging builds) holds the last responses,
+     * bookmark titles and urls included, for the life of the process. Seen on a device (QA campaign,
+     * process 05): after one account logged out and another signed in, the log still showed the
+     * first account's library.
+     */
+    @Test
+    fun `logging out empties the network log`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.confirmLogout()
+        testScheduler.advanceUntilIdle()
+
+        verify(networkLogger).clearLogs()
+    }
+
+    /** Also when the server could not be told: the device is signed out either way. */
+    @Test
+    fun `a logout the server refused still empties the network log`() = runTest(dispatcher) {
+        sendLogoutUseCase.stub {
+            on { invoke(any(), any()) } doReturn flowOf(Result.Error(Result.ErrorType.HttpError(statusCode = 500, message = "")))
+        }
+        val vm = viewModel()
+
+        vm.confirmLogout()
+        testScheduler.advanceUntilIdle()
+
+        verify(networkLogger).clearLogs()
+    }
+
+    /** The pair (R7): backing out of the confirmation keeps the log. */
+    @Test
+    fun `cancelling the logout keeps the network log`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.requestLogout()
+        testScheduler.advanceUntilIdle()
+        vm.cancelLogout()
+        testScheduler.advanceUntilIdle()
+
+        verify(networkLogger, never()).clearLogs()
+    }
+
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -97,6 +143,7 @@ class SettingsViewModelLogoutConfirmationTest {
         getTagsUseCase = mock<GetTagsUseCase>(),
         imageLoader = mock<ImageLoader>(),
         syncWorks = syncWorks,
+        networkLogger = networkLogger,
         savedStateHandle = handle,
     )
 

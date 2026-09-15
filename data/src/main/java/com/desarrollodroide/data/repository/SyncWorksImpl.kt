@@ -94,6 +94,12 @@ class SyncWorksImpl(
 
     override fun cancelAllSyncWorkers() {
         workManager.cancelAllWorkByTag(SyncWorker::class.java.name)
+        // Cancelling only stops what has not finished. A job that already gave up stayed in the
+        // database, so the next account's sync sheet listed it, and since a failed edit keeps a
+        // refresh from writing its bookmark, that bookmark never appeared for the next account.
+        // Logout says pending changes are lost; pruning makes it so. SyncWorker is the app's only
+        // worker, so nothing else is removed.
+        workManager.pruneWork()
     }
 
     override suspend fun retryAllPendingJobs() {
