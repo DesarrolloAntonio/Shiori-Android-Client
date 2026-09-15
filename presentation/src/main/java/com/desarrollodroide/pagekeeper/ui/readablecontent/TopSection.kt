@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.desarrollodroide.pagekeeper.extensions.asLocalBookmarkDate
 
 /**
  * The block above an article: when it was saved, what it is called, and a way to the original.
@@ -34,6 +35,10 @@ import androidx.compose.ui.unit.sp
  * holding nothing but a back arrow, so the arrow moves in here, on the same row as View Original,
  * which was a row of its own with empty space either side of it. Everything goes left aligned:
  * centred headings read as a poster on a full screen and as an accident in a narrow column.
+ *
+ * [date] is the bookmark's time as the server sends it (UTC). It is shown as the cards show it, a
+ * date in the device's zone: shown as it came, the header read two hours off on a device in Madrid,
+ * in a different format from the card the article was opened from.
  */
 @Composable
 fun TopSection(
@@ -42,8 +47,9 @@ fun TopSection(
     onClick: () -> Unit,
     onClose: (() -> Unit)? = null,
 ) {
+    val shownDate = date.asLocalBookmarkDate()
     if (onClose != null) {
-        PaneTopSection(title = title, date = date, onClick = onClick, onClose = onClose)
+        PaneTopSection(title = title, date = shownDate, onClick = onClick, onClose = onClose)
         return
     }
     Column(
@@ -52,7 +58,7 @@ fun TopSection(
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = date,
+            text = shownDate,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
