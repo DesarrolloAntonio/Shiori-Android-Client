@@ -129,6 +129,34 @@ class FeedSyncTest {
         assertEquals(1, syncCount, "first login must walk the server once")
     }
 
+    /**
+     * The view model outlives a logout (it sits above the NavHost), and resetData forgot the search.
+     * Seen on a device (QA campaign, process 05, A-03): the next account's feed opened with the
+     * previous account's search typed in and said "No bookmarks yet" over its library.
+     */
+    @Test
+    fun `logging out forgets what the previous account searched for`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.updateSearchQuery("QA_Acc01")
+
+        vm.resetData()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("", vm.searchQuery.value)
+    }
+
+    /** The pair (R7): a refresh leaves the search as it is. */
+    @Test
+    fun `refreshing keeps the search`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.updateSearchQuery("QA_Acc01")
+
+        vm.refreshFeed()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("QA_Acc01", vm.searchQuery.value)
+    }
+
     @Test
     fun `a later start also syncs once`() = runTest(dispatcher) {
         databaseEmpty = false

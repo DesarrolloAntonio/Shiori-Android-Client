@@ -437,6 +437,9 @@ class FeedViewModel(
     fun resetData() {
         isInitialized = false
         _bookmarksUiState.idle(true)
+        // This view model outlives a logout, so the next account opened the feed with the
+        // previous one's search still typed in, and read "No bookmarks yet" over its library.
+        clearSearch()
         viewModelScope.launch {
             settingsPreferenceDataSource.saveUser(
                 password = "",
