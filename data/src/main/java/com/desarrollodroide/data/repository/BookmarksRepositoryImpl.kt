@@ -28,6 +28,7 @@ import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -313,7 +314,8 @@ class BookmarksRepositoryImpl(
     override suspend fun editBookmark(
         xSession: String,
         serverUrl: String,
-        bookmark: Bookmark
+        bookmark: Bookmark,
+        removedTagNames: Set<String>,
     ): Bookmark {
         // The PUT overwrites url, title and excerpt with whatever it is sent, and an edit can wait
         // offline for days. Sent as this device last saw it, the row undid anything another
@@ -334,22 +336,21 @@ class BookmarksRepositoryImpl(
         if (response.isSuccessful) {
             response.body()?.resolvedBookmark()?.let { editedDTO ->
                 // The legacy update adds tags but never removes one: Shiori 1.8.0 answers 200 with
-                // a removed tag still attached, and the next sync put it back on the card. The v1
-                // bulk route replaces the whole set, so it is sent whenever the server kept a tag
-                // the edit dropped.
+                // a removed tag still attached. Only the tags the user took off are removed, one
+                // by one. Removing "whatever the server has that this copy lacks" also stripped
+                // tags added on the web, or by "Add tags to selected", since this copy was synced
+                // (QA 2026-09-24, M-03); and the bulk route it used refuses an empty set, so the
+                // last tag of a bookmark could never be removed (M-02).
                 val wantedNames = bookmark.tags.map { it.name }.toSet()
                 val editedId = editedDTO.id
-                val bookmarkDTO = if (editedId != null && editedDTO.tags.orEmpty().any { it.name !in wantedNames }) {
-                    addTagsToBookmarks(
-                        token = xSession,
-                        serverUrl = serverUrl,
-                        bookmarkIds = listOf(editedId),
-                        tagIds = editedDTO.tags.orEmpty().filter { it.name in wantedNames }.mapNotNull { it.id },
-                    )
-                    editedDTO.copy(tags = editedDTO.tags.orEmpty().filter { it.name in wantedNames })
-                } else {
-                    editedDTO
+                val toRemove = editedDTO.tags.orEmpty()
+                    .filter { it.name in removedTagNames && it.name !in wantedNames }
+                if (editedId != null) {
+                    toRemove.mapNotNull { it.id }.forEach { tagId ->
+                        removeTagFromBookmark(xSession, serverUrl, editedId, tagId)
+                    }
                 }
+                val bookmarkDTO = editedDTO.copy(tags = editedDTO.tags.orEmpty() - toRemove.toSet())
                 // TODO force fields to avoid invalid backend response
                 val updatedEntity = bookmarkDTO.toEntityModel().copy(
                     hasEbook = bookmark.hasEbook,
@@ -365,6 +366,17 @@ class BookmarksRepositoryImpl(
             }
             throw IllegalStateException("Response body is null")
         } else {
+            throw IllegalStateException("${response.errorBody()?.string()}")
+        }
+    }
+
+    private suspend fun removeTagFromBookmark(token: String, serverUrl: String, bookmarkId: Int, tagId: Int) {
+        val response = apiService.removeTagFromBookmark(
+            url = "${serverUrl.removeTrailingSlash()}/api/v1/bookmarks/$bookmarkId/tags",
+            authorization = "Bearer $token",
+            body = "{\"tag_id\":$tagId}",
+        )
+        if (!response.isSuccessful) {
             throw IllegalStateException("${response.errorBody()?.string()}")
         }
     }
@@ -412,8 +424,21 @@ class BookmarksRepositoryImpl(
             throw IllegalStateException("${response.errorBody()?.string()}")
         }
         val updated = response.body()?.message.orEmpty()
-        updated.forEach { dto -> bookmarksDao.updateBookmarkWithTags(dto.toEntityModel()) }
-        return updated.map { it.toDomainModel() }
+        if (updated.isNotEmpty()) {
+            updated.forEach { dto -> bookmarksDao.updateBookmarkWithTags(dto.toEntityModel()) }
+            return updated.map { it.toDomainModel() }
+        }
+        // Shiori 1.8.0 answers {"ok":true,"message":null}: nothing came back to store. Left like
+        // that, Room never learnt the new tags, the card didn't show them, and the next edit of
+        // the bookmark uploaded the old set (QA 2026-09-24, M-03). Only the tags are added here;
+        // the rest of the row may hold an edit still waiting to upload.
+        val added = tagDao.getAllTags().first().filter { it.id in tagIds }.map { it.toDomainModel() }
+        return bookmarkIds.mapNotNull { id ->
+            val row = bookmarksDao.getBookmarkById(id) ?: return@mapNotNull null
+            val merged = row.copy(tags = (row.tags + added.filter { tag -> row.tags.none { it.name == tag.name } }))
+            bookmarksDao.updateBookmarkWithTags(merged)
+            merged.toDomainModel()
+        }
     }
 
     override suspend fun updateBookmarkCacheV1(

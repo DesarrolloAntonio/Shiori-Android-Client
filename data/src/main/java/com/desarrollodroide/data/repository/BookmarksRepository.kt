@@ -41,10 +41,15 @@ interface BookmarksRepository {
     bookmarkId: Int
   )
 
+  /**
+   * Uploads [bookmark] as it is in Room. [removedTagNames] are the tags the user took off it:
+   * only those are removed on the server, so a tag added elsewhere since the last sync survives.
+   */
   suspend fun editBookmark(
     xSession: String,
     serverUrl: String,
-    bookmark: Bookmark
+    bookmark: Bookmark,
+    removedTagNames: Set<String> = emptySet(),
   ): Bookmark
 
   suspend fun deleteAllLocalBookmarks()

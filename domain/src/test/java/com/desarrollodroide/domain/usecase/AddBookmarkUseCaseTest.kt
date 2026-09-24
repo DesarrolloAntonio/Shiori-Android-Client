@@ -56,7 +56,7 @@ class AddBookmarkUseCaseTest {
         verify(dao).insertBookmark(stored.capture())
 
         val scheduled = argumentCaptor<Bookmark>()
-        verify(syncManager).scheduleSyncWork(eq(SyncOperationType.CREATE), scheduled.capture(), anyOrNull())
+        verify(syncManager).scheduleSyncWork(eq(SyncOperationType.CREATE), scheduled.capture(), anyOrNull(), any())
 
         assertEquals(
             stored.firstValue.id,

@@ -90,6 +90,18 @@ interface RetrofitNetwork {
      * Adds tags to several bookmarks at once. Body is {"ids":[..],"tags":[{"name":".."}]} and the
      * response is the updated bookmarks, the same shape the cache endpoint returns.
      */
+    /**
+     * Takes one tag off one bookmark. The bulk route can't remove a bookmark's last tag: it
+     * refuses an empty tag_ids with a 400.
+     */
+    @Headers("Content-Type: application/json")
+    @HTTP(method = "DELETE", hasBody = true)
+    suspend fun removeTagFromBookmark(
+        @Url url: String,
+        @Header("Authorization") authorization: String,
+        @Body body: String
+    ): Response<Unit>
+
     @Headers("Content-Type: application/json")
     @PUT()
     suspend fun addTagsToBookmarks(

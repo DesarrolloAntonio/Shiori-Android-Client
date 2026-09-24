@@ -35,7 +35,8 @@ class SyncWorksImpl(
     override fun scheduleSyncWork(
         operationType: SyncOperationType,
         bookmark: Bookmark,
-        updateCachePayload: UpdateCachePayload?
+        updateCachePayload: UpdateCachePayload?,
+        removedTagNames: Set<String>,
     ) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val encodedTitle = URLEncoder.encode(bookmark.title, "UTF-8")
@@ -43,12 +44,16 @@ class SyncWorksImpl(
             .setInputData(workDataOf(
                 "operationType" to operationType.name,
                 "bookmarkId" to bookmark.id,
-                "updateCachePayload" to updateCachePayload?.toJson()
+                "updateCachePayload" to updateCachePayload?.toJson(),
+                "removedTags" to removedTagNames.toList().toJson(),
             ))
             .addTag("worker_${SyncWorker::class.java.name}")
             .addTag("operationType_${operationType.name}")
             .addTag("bookmarkId_${bookmark.id}")
             .addTag("bookmarkTitle_$encodedTitle")
+            // Kept as a tag too, because WorkInfo doesn't expose input data: it is how the next
+            // edit and "Retry all" find out what this job was still going to remove.
+            .addTag("$REMOVED_TAGS_PREFIX${URLEncoder.encode(removedTagNames.toList().toJson(), "UTF-8")}")
             .setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 WorkRequest.MIN_BACKOFF_MILLIS,
@@ -115,10 +120,17 @@ class SyncWorksImpl(
                 val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
 
                 if (shouldRequeue(operationType, workInfo.state, rowExists = bookmark != null) && bookmark != null) {
-                    scheduleSyncWork(operationType, bookmark)
+                    scheduleSyncWork(operationType, bookmark, removedTagNames = workInfo.getRemovedTagNames())
                 }
             }
         }
+    }
+
+    override suspend fun pendingTagRemovals(bookmarkId: Int): Set<String> = withContext(Dispatchers.IO) {
+        workManager.getWorkInfosForUniqueWork("sync_bookmark_${SyncOperationType.UPDATE.name}_$bookmarkId").get()
+            .filter { it.state.isShownAsPending() }
+            .flatMap { it.getRemovedTagNames() }
+            .toSet()
     }
 
     override suspend fun bookmarkIdsWithPendingChanges(): Set<Int> = withContext(Dispatchers.IO) {
@@ -143,6 +155,13 @@ class SyncWorksImpl(
             ?.toIntOrNull()
             .also { Log.d("SyncManager", "BookmarkId: $it") }
     }
+
+    fun WorkInfo.getRemovedTagNames(): Set<String> =
+        tags.firstOrNull { it.startsWith(REMOVED_TAGS_PREFIX) }
+            ?.substringAfter(REMOVED_TAGS_PREFIX)
+            ?.let { URLDecoder.decode(it, "UTF-8") }
+            ?.let { removedTagNamesFromJson(it) }
+            .orEmpty()
 
     fun WorkInfo.getBookmarkTitle(): String? {
         return tags
@@ -184,3 +203,11 @@ internal fun shouldRequeue(operationType: SyncOperationType, state: WorkInfo.Sta
     operationType != SyncOperationType.CACHE &&
         rowExists &&
         state in setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED, WorkInfo.State.FAILED)
+
+private const val REMOVED_TAGS_PREFIX = "removedTags_"
+
+/** The worker's input and the job's tag carry the removed tag names as a JSON array. */
+internal fun removedTagNamesFromJson(json: String?): Set<String> =
+    runCatching { com.google.gson.Gson().fromJson(json, Array<String>::class.java)?.toSet() }
+        .getOrNull()
+        .orEmpty()

@@ -16,6 +16,7 @@ import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.mapper.toEntityModel
 import com.desarrollodroide.data.repository.AuthRepository
 import com.desarrollodroide.data.repository.BookmarksRepository
+import com.desarrollodroide.data.repository.removedTagNamesFromJson
 import com.desarrollodroide.model.Bookmark
 import com.desarrollodroide.model.SyncOperationType
 import kotlinx.coroutines.flow.first
@@ -45,6 +46,7 @@ class SyncWorker(
         val operationType = inputData.getString("operationType")?.let { SyncOperationType.valueOf(it) }
         val bookmarkId = inputData.getInt("bookmarkId", -1)
         val updateCachePayload = inputData.getString("updateCachePayload")?.toBean<UpdateCachePayload>()
+        val removedTagNames = removedTagNamesFromJson(inputData.getString("removedTags"))
 
         Log.v("SyncWorker", "Performing sync operation: $operationType")
         Log.v("SyncWorker", "BookmarkId: $bookmarkId")
@@ -66,6 +68,7 @@ class SyncWorker(
                     operationType = operationType,
                     bookmarkId = bookmarkId,
                     updateCachePayload = updateCachePayload,
+                    removedTagNames = removedTagNames,
                     token = token
                 )
                 Log.v("SyncWorker", "Sync completed successfully")
@@ -82,6 +85,7 @@ class SyncWorker(
                                 operationType = operationType,
                                 bookmarkId = bookmarkId,
                                 updateCachePayload = updateCachePayload,
+                                removedTagNames = removedTagNames,
                                 token = token
                             )
                             Log.v("SyncWorker", "Sync completed successfully after session refresh")
@@ -137,6 +141,7 @@ class SyncWorker(
         operationType: SyncOperationType,
         bookmarkId: Int,
         updateCachePayload: UpdateCachePayload?,
+        removedTagNames: Set<String>,
         token: String
     ) {
         when (operationType) {
@@ -157,7 +162,7 @@ class SyncWorker(
                 if (bookmarkId.isTimestampId()) {
                     Result.success()
                 } else {
-                    syncUpdateBookmark(xSession, serverUrl, bookmarkId)
+                    syncUpdateBookmark(xSession, serverUrl, bookmarkId, removedTagNames)
                 }
             }
             SyncOperationType.DELETE -> syncDeleteBookmark(xSession, serverUrl, bookmarkId)
@@ -191,10 +196,10 @@ class SyncWorker(
         return bookmarksRepository.addBookmark(xSession, serverUrl, bookmark)
     }
 
-    private suspend fun syncUpdateBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {
+    private suspend fun syncUpdateBookmark(xSession: String, serverUrl: String, bookmarkId: Int, removedTagNames: Set<String>) {
         val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
             ?: throw BookmarkNotFoundException(bookmarkId)
-        bookmarksRepository.editBookmark(xSession, serverUrl, bookmark)
+        bookmarksRepository.editBookmark(xSession, serverUrl, bookmark, removedTagNames)
     }
 
     private suspend fun syncDeleteBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {

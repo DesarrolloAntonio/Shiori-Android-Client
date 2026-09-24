@@ -334,20 +334,76 @@ class BookmarksRepositoryTest {
         stubServerCopy(serverKeptIt)
         `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
             .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = serverKeptIt)))
-        `when`(apiService.addTagsToBookmarks(anyString(), anyString(), anyString()))
-            .thenReturn(Response.success(BookmarkResponseDTO(ok = true, message = listOf(serverKeptIt.copy(tags = listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0)))))))
+        `when`(apiService.removeTagFromBookmark(anyString(), anyString(), anyString())).thenReturn(Response.success(Unit))
 
         bookmarksRepository.editBookmark(
             xSession = "session",
             serverUrl = "http://test.com",
             bookmark = serverKeptIt.copy(tags = listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0))).toDomainModel(),
+            removedTagNames = setOf("qa_c"),
         )
 
-        verify(apiService).addTagsToBookmarks(
-            eq("http://test.com/api/v1/bookmarks/bulk/tags"),
+        verify(apiService).removeTagFromBookmark(
+            eq("http://test.com/api/v1/bookmarks/89/tags"),
             eq("Bearer session"),
-            check { assertTrue(it.contains("\"tag_ids\":[9]"), it) },
+            eq("{\"tag_id\":11}"),
         )
+        verify(apiService, never()).removeTagFromBookmark(anyString(), anyString(), eq("{\"tag_id\":9}"))
+    }
+
+    /**
+     * QA 2026-09-24 M-03 (P0): a tag added on the server since this copy was synced — on the web,
+     * or by the app's own "Add tags to selected" — was taken for one the user removed, and the
+     * next edit of the bookmark stripped it without a word. The pair of the test above.
+     */
+    @Test
+    fun `a tag added on the server since the last sync survives an edit that did not remove it`() = runTest {
+        val serverHasMore = BookmarkDTO(
+            89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
+            true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0), TagDTO(id = 10, name = "qa_web", nBookmarks = 0)), true, true
+        )
+        stubServerCopy(serverHasMore)
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = serverHasMore)))
+        `when`(apiService.removeTagFromBookmark(anyString(), anyString(), anyString())).thenReturn(Response.success(Unit))
+
+        bookmarksRepository.editBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = serverHasMore.copy(public = 0, tags = listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0))).toDomainModel(),
+        )
+
+        verify(apiService, never()).removeTagFromBookmark(anyString(), anyString(), anyString())
+        verify(apiService, never()).addTagsToBookmarks(anyString(), anyString(), anyString())
+        verify(bookmarksDao).updateBookmarkWithTags(check { assertEquals(listOf("qa_a", "qa_web"), it.tags.map { tag -> tag.name }) })
+    }
+
+    /**
+     * QA 2026-09-24 M-02 (P1): the removal went through the bulk route, which answers 400 "tag_ids
+     * should not be empty" when no tag is left, so taking off a bookmark's last tag never reached
+     * the server: five retries, then FAILED.
+     */
+    @Test
+    fun `removing a bookmark's last tag is sent as a removal of that tag`() = runTest {
+        val serverCopy = BookmarkDTO(
+            89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "",
+            true, true, true, listOf(TagDTO(id = 9, name = "qa_a", nBookmarks = 0)), true, true
+        )
+        stubServerCopy(serverCopy)
+        `when`(apiService.editBookmark(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(SingleBookmarkResponseDTO(ok = true, message = serverCopy)))
+        `when`(apiService.removeTagFromBookmark(anyString(), anyString(), anyString())).thenReturn(Response.success(Unit))
+
+        bookmarksRepository.editBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = serverCopy.copy(tags = emptyList()).toDomainModel(),
+            removedTagNames = setOf("qa_a"),
+        )
+
+        verify(apiService).removeTagFromBookmark(eq("http://test.com/api/v1/bookmarks/89/tags"), eq("Bearer session"), eq("{\"tag_id\":9}"))
+        verify(apiService, never()).addTagsToBookmarks(anyString(), anyString(), anyString())
+        verify(bookmarksDao).updateBookmarkWithTags(check { assertTrue(it.tags.isEmpty(), "${it.tags}") })
     }
 
     /** The pair (R7): when the server already has exactly the tags asked for, nothing else is sent. */
@@ -364,6 +420,32 @@ class BookmarksRepositoryTest {
         bookmarksRepository.editBookmark(xSession = "session", serverUrl = "http://test.com", bookmark = applied.toDomainModel())
 
         verify(apiService, never()).addTagsToBookmarks(anyString(), anyString(), anyString())
+        verify(apiService, never()).removeTagFromBookmark(anyString(), anyString(), anyString())
+    }
+
+    /**
+     * QA 2026-09-24 M-03: Shiori 1.8.0 answers the bulk route with `"message": null`, so nothing
+     * came back to store, the card never showed the new tag, and the next edit uploaded the old set.
+     */
+    @Test
+    fun `tags added to a selection reach Room when the server sends no bookmarks back`() = runTest {
+        `when`(apiService.addTagsToBookmarks(anyString(), anyString(), anyString()))
+            .thenReturn(Response.success(BookmarkResponseDTO(ok = true, message = null)))
+        `when`(tagDao.getAllTags()).thenReturn(flowOf(listOf(
+            com.desarrollodroide.data.local.room.entity.TagEntity(9, "qa_a", 0),
+            com.desarrollodroide.data.local.room.entity.TagEntity(10, "qa_b", 0),
+        )))
+        `when`(bookmarksDao.getBookmarkById(89)).thenReturn(
+            BookmarkEntity(89, "http://a.com", "A", "", "", 1, "2023-01-01", "2023-01-02", "", true, true, true,
+                listOf(com.desarrollodroide.model.Tag(id = 9, name = "qa_a")), true, true)
+        )
+
+        bookmarksRepository.addTagsToBookmarks(token = "t", serverUrl = "http://test.com", bookmarkIds = listOf(89), tagIds = listOf(9, 10))
+
+        verify(bookmarksDao).updateBookmarkWithTags(check {
+            assertEquals(listOf("qa_a", "qa_b"), it.tags.map { tag -> tag.name })
+            assertEquals(1, it.isPublic)
+        })
     }
 
     /**
