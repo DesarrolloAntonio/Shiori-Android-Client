@@ -8,6 +8,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.desarrollodroide.data.BuildConfig
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.local.room.converters.TagsConverter
@@ -103,10 +104,23 @@ abstract class BookmarksDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7
                 )
-                .setQueryCallback({ sqlQuery, bindArgs ->
-                    Log.d("SQL Query", "SQL Query: $sqlQuery SQL Args: $bindArgs")
-                }, Executors.newSingleThreadExecutor())
+                .logQueriesIf(BuildConfig.DEBUG)
                 .build()
         }
+
+        /**
+         * Logs every query with its values: every bookmark's URL, title, excerpt and readable
+         * HTML ends up in logcat. Debug builds only.
+         */
+        internal fun <T : RoomDatabase> RoomDatabase.Builder<T>.logQueriesIf(
+            enabled: Boolean,
+        ): RoomDatabase.Builder<T> =
+            if (enabled) {
+                setQueryCallback({ sqlQuery, bindArgs ->
+                    Log.d("SQL Query", "SQL Query: $sqlQuery SQL Args: $bindArgs")
+                }, Executors.newSingleThreadExecutor())
+            } else {
+                this
+            }
     }
 }
