@@ -41,11 +41,32 @@ fun isPlausibleBookmarkUrl(input: String): Boolean {
  * The title of a link shared from another app.
  *
  * Only EXTRA_TITLE used to be read, but Firefox for Android sends the page title as EXTRA_SUBJECT
- * and no EXTRA_TITLE at all, so everything shared from it was titled with its url. The url still
- * stands in when a share carries no title, so the feed has something to show; it never reaches the
- * server as a title (see toAddBookmarkDTO).
+ * and no EXTRA_TITLE at all, so everything shared from it was titled with its url. Google News sends
+ * neither, but puts the headline in the shared text next to the link, so that text is the next
+ * choice. The url still stands in when a share carries no title, so the feed has something to show;
+ * it never reaches the server as a title (see toAddBookmarkDTO).
  */
-fun sharedBookmarkTitle(extraTitle: String?, extraSubject: String?, url: String): String =
-    listOf(extraTitle, extraSubject).firstOrNull { !it.isNullOrBlank() } ?: url
+fun sharedBookmarkTitle(
+    extraTitle: String?,
+    extraSubject: String?,
+    url: String,
+    sharedText: String = url,
+): String {
+    val textAroundLink = sharedText.replace(url, " ").replace(WHITESPACE, " ").trim()
+    return listOf(extraTitle, extraSubject, textAroundLink).firstOrNull { !it.isNullOrBlank() } ?: url
+}
+
+/**
+ * The link in a text shared from another app.
+ *
+ * Most apps share the link alone, but Google News shares "headline + link", and the whole string
+ * went to the server as the url (Play review on 1.52.03). The first http(s) link in the text is
+ * taken. Text with no such link is passed through for the form and the server to judge, as before.
+ */
+fun sharedLinkUrl(sharedText: String): String =
+    HTTP_LINK.find(sharedText)?.value ?: sharedText.trim()
+
+private val HTTP_LINK = Regex("""https?://\S+""", RegexOption.IGNORE_CASE)
+private val WHITESPACE = Regex("""\s+""")
 
 private val SCHEME = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
