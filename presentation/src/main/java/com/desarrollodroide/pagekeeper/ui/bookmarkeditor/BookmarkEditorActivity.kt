@@ -57,11 +57,13 @@ class BookmarkEditorActivity : ComponentActivity() {
         var title = ""
         intent?.let { intent ->
             if (intent.action == Intent.ACTION_SEND) {
-                sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+                sharedUrl = sharedLinkUrl(sharedText)
                 title = sharedBookmarkTitle(
                     extraTitle = intent.getStringExtra(Intent.EXTRA_TITLE),
                     extraSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT),
                     url = sharedUrl,
+                    sharedText = sharedText,
                 )
             } else {
                 Toast.makeText(this, "Invalid shared link", Toast.LENGTH_LONG).show()

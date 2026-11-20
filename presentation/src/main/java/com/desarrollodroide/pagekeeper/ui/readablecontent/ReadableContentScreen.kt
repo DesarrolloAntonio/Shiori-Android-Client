@@ -1,6 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.readablecontent
 
 import android.content.Intent
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import android.os.Build
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -267,7 +269,12 @@ private fun ArticleWebView(html: String, isRtl: Boolean, textZoom: Int) {
                         request: WebResourceRequest?
                     ): Boolean {
                         request?.url?.let { url ->
-                            context.startActivity(Intent(Intent.ACTION_VIEW, url))
+                            // From develop (ca02e1b): a link with no app to open it used to crash.
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, url))
+                            } catch (e: ActivityNotFoundException) {
+                                Toast.makeText(context, "No app found to open this link", Toast.LENGTH_SHORT).show()
+                            }
                             return true
                         }
                         return false
