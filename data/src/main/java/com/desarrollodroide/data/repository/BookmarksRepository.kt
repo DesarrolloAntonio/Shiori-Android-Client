@@ -10,6 +10,20 @@ import com.desarrollodroide.model.UpdateCachePayload
 
 interface BookmarksRepository {
 
+  /**
+   * How many bookmarks the feed shows for this filter, kept up to date.
+   *
+   * The feed pages without placeholders, so the paging data never knows the total; this does,
+   * from Room, without a request. Takes the same arguments as the feed, so the library's header
+   * counts what the list is showing rather than everything on the device.
+   */
+  fun countBookmarks(
+    tags: List<Tag>,
+    searchText: String,
+    showOnlyHiddenTag: Boolean,
+    tagToHide: Tag?,
+  ): Flow<Int>
+
   fun getBookmarks(
     xSession: String,
     serverUrl: String

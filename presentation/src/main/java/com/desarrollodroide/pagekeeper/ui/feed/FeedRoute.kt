@@ -1,5 +1,13 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import com.desarrollodroide.pagekeeper.ui.components.DialogDismissButton
+import com.desarrollodroide.pagekeeper.ui.components.DialogConfirmButton
+import com.desarrollodroide.pagekeeper.ui.components.ShioriAlertDialog
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -20,13 +28,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -81,7 +87,10 @@ fun FeedRoute(
     shareEpubFile: (File) -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenReadableContent: (Int) -> Unit,
+    onNavigateToTags: () -> Unit = {},
 ) {
+    // Collapses the large title as the list scrolls; the search row stays put.
+    val topBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val isCategoriesVisible = remember { mutableStateOf(false) }
     val searchQuery by feedViewModel.searchQuery.collectAsState()
     val selectedTags by feedViewModel.selectedTags.collectAsState()
@@ -94,10 +103,12 @@ fun FeedRoute(
     // the second pair identical to each other — and it is a cold flow over a WorkManager
     // LiveData, so each one was another observer and another run of a map that logs per job.
     val pendingJobs by feedViewModel.getPendingWorks().collectAsState(initial = emptyList())
+    val bookmarkCount by feedViewModel.bookmarkCount.collectAsStateWithLifecycle()
     if (showBottomSheet.value) {
         ModalBottomSheet(
             sheetState = bottomSheetState,
-            onDismissRequest = { showBottomSheet.value = false }
+            onDismissRequest = { showBottomSheet.value = false },
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         ) {
             SyncJobsBottomSheetContent(
                 pendingJobs = pendingJobs,
@@ -129,8 +140,11 @@ fun FeedRoute(
 
     if (showDeleteSelectedDialog.value) {
         ConfirmDialog(
-            title = "Delete bookmarks",
-            content = "Delete ${selectedBookmarks.size} selected bookmarks? This action is irreversible.",
+            icon = Icons.Outlined.Delete,
+            tone = DialogTone.Danger,
+            destructive = true,
+            title = "Delete ${selectedBookmarks.size} bookmarks?",
+            content = "They are removed from this device and from the server. This can't be undone.",
             confirmButton = "Delete",
             dismissButton = "Cancel",
             onConfirm = {
@@ -168,34 +182,52 @@ fun FeedRoute(
     // narrow to trigger and too short to do without.
     val editingBookmark = feedViewModel.bookmarkSelected.value
     val editorOpen = editingBookmark != null && feedViewModel.showBookmarkEditorScreen.value
-    val addBookmarkFab: @Composable () -> Unit = {
-        // Not while a selection is open: the app bar has become the selection's own, and adding a
-        // bookmark is not one of the things you can do to the bookmarks you have picked. This
-        // condition replaces a showTopBar flag whose setter was lost when the editor moved out of
-        // the scaffold, leaving the fab wrapped in a visibility that was always true.
-        AnimatedVisibility(selectedBookmarks.isEmpty()) {
-            FloatingActionButton(
-                onClick = onAddManuallyClick,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    val openSyncSheet: () -> Unit = {
+        coroutineScope.launch {
+            showBottomSheet.value = true
+            bottomSheetState.show()
+        }
+    }
+    val libraryToolbar: @Composable () -> Unit = {
+        // One or the other: the library's tools, or while picking, what can be done to the
+        // picked bookmarks. In one box so the slot measures a single child.
+        Box(contentAlignment = Alignment.Center) {
+            AnimatedVisibility(
+                visible = selectedBookmarks.isEmpty(),
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit = fadeOut() + slideOutVertically { it / 2 },
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add bookmark")
+                LibraryToolbar(
+                    onAddClick = onAddManuallyClick,
+                    onTagsClick = onNavigateToTags,
+                    onSyncClick = openSyncSheet,
+                    onSettingsClick = onNavigateToSettings,
+                    pendingJobs = pendingJobs,
+                )
+            }
+            // In its place while picking: what can be done to the picked bookmarks.
+            AnimatedVisibility(
+                visible = selectedBookmarks.isNotEmpty(),
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit = fadeOut() + slideOutVertically { it / 2 },
+            ) {
+                SelectionToolbar(
+                    onAddTags = { showAddTagsDialog.value = true },
+                    onUpdate = { showUpdateSelectedDialog.value = true },
+                    onDelete = { showDeleteSelectedDialog.value = true },
+                )
             }
         }
     }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            // Batch edit takes the app bar over, the way a contextual action bar does, so
-            // the actions apply to the selection rather than to the whole feed.
+            // Picking takes the header over: how many are picked, and the way out. What can be
+            // done to them floats at the bottom, in place of the library's tools.
             if (selectedBookmarks.isNotEmpty()) {
                 SelectionTopBar(
                     selectedCount = selectedBookmarks.size,
                     onClose = { feedViewModel.clearSelection() },
-                    onDelete = { showDeleteSelectedDialog.value = true },
-                    onUpdateCache = { showUpdateSelectedDialog.value = true },
-                    onAddTags = { showAddTagsDialog.value = true },
                 )
             } else {
                 TopBar(
@@ -203,25 +235,32 @@ fun FeedRoute(
                     onSearchQueryChange = feedViewModel::updateSearchQuery,
                     onClearSearch = feedViewModel::clearSearch,
                     onFilterClick = { isCategoriesVisible.value = !isCategoriesVisible.value },
-                    onSettingsClick = { onNavigateToSettings() },
-                    onSyncClick = {
-                        coroutineScope.launch {
-                            showBottomSheet.value = true
-                            bottomSheetState.show()
-                        }
-                    },
-                    selectedTagsCount = selectedTags.size,
+                    selectedTags = selectedTags,
+                    onRemoveTag = { tag -> feedViewModel.removeSelectedTag(tag) },
+                    onClearTags = { feedViewModel.resetTags() },
                     showOnlyHiddenTag = showOnlyHiddenTag,
-                    pendingJobsCount = pendingJobs.size,
-                    pendingJobs = pendingJobs,
+                    bookmarkCount = bookmarkCount,
+                    scrollBehavior = topBarScrollBehavior,
+                    // A landscape phone has no height to spare for a display title.
+                    showTitle = maxHeight >= 560.dp,
                 )
             }
         },
-        floatingActionButton = { if (!twoPanes) addBookmarkFab() }
+        floatingActionButton = { if (!twoPanes) libraryToolbar() },
+        floatingActionButtonPosition = FabPosition.Center,
     ) { paddingValues ->
         Box(
             modifier = Modifier.padding(paddingValues)
         ) {
+          // Handed to the list itself rather than set on the scaffold. On the scaffold it came
+          // after pull to refresh in the scroll chain, so at the top of the list a pull down was
+          // taken as a refresh and the collapsed title never came back.
+          CompositionLocalProvider(
+              LocalLibraryScrollConnection provides topBarScrollBehavior.nestedScrollConnection,
+              // Not during a selection: the bar is about the whole library, and the selection's
+              // own app bar has taken over.
+              LocalSyncBanner provides if (selectedBookmarks.isEmpty()) syncBannerStateOf(pendingJobs, openSyncSheet) else null,
+          ) {
             val feed: @Composable (Modifier) -> Unit = { _ ->
                 FeedScreen(
                     feedViewModel = feedViewModel,
@@ -251,10 +290,10 @@ fun FeedRoute(
                             // sat at the bottom of the window, which is on top of the article.
                             Box(
                                 modifier = Modifier
-                                    .align(Alignment.BottomEnd)
+                                    .align(Alignment.BottomCenter)
                                     .padding(16.dp)
                             ) {
-                                addBookmarkFab()
+                                libraryToolbar()
                             }
                         }
                         VerticalDivider()
@@ -276,6 +315,7 @@ fun FeedRoute(
                     feed(Modifier)
                 }
             }
+          }
         }
     }
     // Over the scaffold, not inside its content. Inside, hiding the feed's app bar
@@ -306,7 +346,7 @@ fun FeedRoute(
                 // takes the top from this same value, and at zero it drew "Edit"
                 // across the clock.
                 windowInsets = WindowInsets.systemBars,
-                pageTitle = "Edit",
+                pageTitle = "Edit bookmark",
                 bookmarkEditorType = BookmarkEditorType.EDIT,
                 bookmark = editingBookmark,
                 onBack = { feedViewModel.showBookmarkEditorScreen.value = false },
@@ -337,9 +377,10 @@ private fun AddTagsToSelectionDialog(
     var text by remember { mutableStateOf("") }
     val names = text.split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
 
-    AlertDialog(
+    ShioriAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add tags") },
+        icon = Icons.Outlined.Sell,
+        title = "Add tags",
         text = {
             Column {
                 Text(
@@ -354,16 +395,14 @@ private fun AddTagsToSelectionDialog(
                     onValueChange = { text = it },
                     label = { Text("Tags") },
                     singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = { onConfirm(names) },
-                enabled = names.isNotEmpty(),
-            ) { Text("Add") }
+            DialogConfirmButton(text = "Add", onClick = { onConfirm(names) }, enabled = names.isNotEmpty())
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { DialogDismissButton(text = "Cancel", onClick = onDismiss) },
     )
 }

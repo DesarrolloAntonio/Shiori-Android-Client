@@ -111,11 +111,11 @@ class FilterAndConfirmMenuTest {
     fun theFilterListsEveryCategoryAndItsControls() {
         setFilter()
 
-        rule.onNodeWithText("Categories").assertIsDisplayed()
+        rule.onNodeWithText("Filter by tag").assertIsDisplayed()
         rule.onNodeWithText("android").assertIsDisplayed()
         rule.onNodeWithText("compose").assertIsDisplayed()
-        rule.onNodeWithText("Reset All").assertIsDisplayed()
-        rule.onNodeWithText("Close").assertIsDisplayed()
+        rule.onNodeWithText("Clear").assertIsDisplayed()
+        rule.onNodeWithText("Done").assertIsDisplayed()
     }
 
     @Test
@@ -149,7 +149,7 @@ class FilterAndConfirmMenuTest {
         val hiddenFilter = mutableListOf<Boolean>()
         setFilter(selectedTags = listOf(android), resets = resets, hiddenFilter = hiddenFilter)
 
-        rule.onNodeWithText("Reset All").performClick()
+        rule.onNodeWithText("Clear").performClick()
 
         assertEquals(1, resets.size)
         assertEquals("reset must also drop the hidden tag filter", listOf(false), hiddenFilter)
@@ -161,7 +161,7 @@ class FilterAndConfirmMenuTest {
         val resets = mutableListOf<Unit>()
         setFilter(dismissals = dismissals, resets = resets)
 
-        rule.onNodeWithText("Close").performClick()
+        rule.onNodeWithText("Done").performClick()
 
         assertEquals(1, dismissals.size)
         assertTrue("close must not reset anything", resets.isEmpty())

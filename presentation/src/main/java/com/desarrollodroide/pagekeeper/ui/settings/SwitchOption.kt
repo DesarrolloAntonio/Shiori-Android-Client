@@ -1,19 +1,18 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.semantics.Role
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -26,7 +25,11 @@ fun SwitchOption(
     subtitle: String = "",
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    ListItem(
+    val accent = LocalSettingsAccent.current ?: SettingsAccents.visual
+    SettingsRow(
+        icon = icon,
+        title = title,
+        subtitle = subtitle,
         // One control: the row is the toggle and the Switch only draws it. With both taking clicks
         // a screen reader stopped twice per setting, and the second stop had no name.
         modifier = modifier.toggleable(
@@ -34,16 +37,26 @@ fun SwitchOption(
             role = Role.Switch,
             onValueChange = onCheckedChange,
         ),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        },
-        headlineContent = { Text(title, style = MaterialTheme.typography.bodyLarge) },
-        supportingContent = if (subtitle.isNotEmpty()) {
-            { Text(subtitle, style = MaterialTheme.typography.bodyMedium) }
-        } else null,
-        trailingContent = {
-            Switch(checked = checked, onCheckedChange = null)
+        trailing = {
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                // On, the thumb takes the group's colour and a check, so it reads at a glance.
+                thumbContent = if (checked) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize),
+                        )
+                    }
+                } else null,
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    checkedThumbColor = accent.container,
+                    checkedIconColor = accent.content,
+                ),
+            )
         },
     )
 }

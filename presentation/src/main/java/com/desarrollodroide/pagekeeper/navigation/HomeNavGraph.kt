@@ -58,6 +58,7 @@ fun HomeNavGraph(
                 onAddManuallyClick = onAddManuallyClick,
                 shareEpubFile = shareEpubFile,
                 onNavigateToSettings = { navController.navigate(NavItem.SettingsNavItem.route) },
+                onNavigateToTags = { navController.navigate(NavItem.TagsNavItem.route) },
                 onOpenReadableContent = { bookmarkId ->
                     navController.navigate(
                         NavItem.ReadableContentNavItem.createRoute(bookmarkId = bookmarkId)
@@ -97,7 +98,12 @@ fun HomeNavGraph(
                 tagsViewModel = koinViewModel(),
                 onBack = {
                     navController.navigateUp()
-                }
+                },
+                onOpenTag = { tag ->
+                    feedViewModel.showOnlyTag(tag)
+                    // To the library even when Tags was opened from Settings.
+                    navController.popBackStack(NavItem.HomeNavItem.route, inclusive = false)
+                },
             )
         }
         composable(NavItem.TermsOfUseNavItem.route) {

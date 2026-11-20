@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.bookmarkeditor
 
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -61,6 +62,7 @@ fun BookmarkEditorScreen(
     if (!bookmarkUiState.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,
+            tone = DialogTone.Danger,
             title = "Error",
             content = bookmarkUiState.error,
             dismissButton = if (bookmarkViewModel.sessionExpired) "Go to login" else "",

@@ -1,5 +1,13 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
@@ -36,9 +44,16 @@ fun LoginButton(
         },
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = MaterialTheme.shapes.large,
+            .height(64.dp),
+        shape = CircleShape,
     ) {
-        Text("Log in", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "Sign in",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
     }
 }

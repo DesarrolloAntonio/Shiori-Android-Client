@@ -1,5 +1,22 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.semantics.selected
@@ -69,22 +86,28 @@ fun BookmarkItem(
                 onLongClick = { actions.onToggleSelection(getBookmark().id) },
             )
             .semantics { selected = isSelected },
-        shape = MaterialTheme.shapes.large,
+        // The full card is a large object with a cover inside it, so it takes the roundest corner;
+        // the compact row keeps the large one, like a list item.
+        shape = when (viewType) {
+            BookmarkViewType.FULL -> MaterialTheme.shapes.extraLarge
+            BookmarkViewType.SMALL -> MaterialTheme.shapes.large
+        },
         border = if (isSelected) {
             BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
         } else {
             null
         },
         colors = CardDefaults.cardColors(
-            // Not secondaryContainer: the tag chips already use it, so on a selected card the
-            // chips lost their pill and read as loose text. The border carries the selection.
+            // A light wash of the brand colour, not a full container: tag chips use the
+            // containers, and on a fully tinted card they lost their pill and read as loose text.
             containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.surfaceContainerHighest
+                lerp(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.colorScheme.primaryContainer, 0.35f)
             } else {
                 MaterialTheme.colorScheme.surfaceContainerLow
             },
         ),
     ) {
+      Box {
         when (viewType) {
             BookmarkViewType.FULL -> FullBookmarkView(
                 getBookmark = getBookmark,
@@ -102,6 +125,45 @@ fun BookmarkItem(
                 xSessionId = xSessionId,
                 token = token,
                 actions = actions
+            )
+        }
+        // While picking, every card carries a check on its picture's corner: filled when picked,
+        // an empty ring when not, so which ones are in is readable down the whole list.
+        // Qualified: inside the card's ColumnScope the bare name resolves to the column overload.
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isSelectionMode,
+            // Inside the card's rounded corner, on the picture, rather than clipped by the corner.
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+            enter = scaleIn() + fadeIn(),
+            exit = scaleOut() + fadeOut(),
+        ) {
+            SelectionCheck(isSelected = isSelected)
+        }
+      }
+    }
+}
+
+@Composable
+private fun SelectionCheck(isSelected: Boolean) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .clip(CircleShape)
+            .background(if (isSelected) scheme.primary else scheme.surfaceContainerLowest)
+            .border(
+                width = if (isSelected) 0.dp else 2.dp,
+                color = if (isSelected) Color.Transparent else scheme.outline,
+                shape = CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = scheme.onPrimary,
+                modifier = Modifier.size(18.dp),
             )
         }
     }

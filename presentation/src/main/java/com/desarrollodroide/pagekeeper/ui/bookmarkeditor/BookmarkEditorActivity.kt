@@ -119,7 +119,7 @@ class BookmarkEditorActivity : ComponentActivity() {
                     val createEbook = bookmarkViewModel.createEbook
                     val createArchive = bookmarkViewModel.createArchive
                     BookmarkEditorScreen(
-                        pageTitle = if (type == BookmarkEditorType.ADD_MANUALLY) "Add Manually" else "Add",
+                        pageTitle = if (type == BookmarkEditorType.ADD_MANUALLY) "Add a link" else "Save to Shiori",
                         bookmarkEditorType = type,
                         bookmark = Bookmark(
                             url = url,

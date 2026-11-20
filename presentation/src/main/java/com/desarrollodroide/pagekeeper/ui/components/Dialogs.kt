@@ -3,12 +3,37 @@ package com.desarrollodroide.pagekeeper.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -19,10 +44,152 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.desarrollodroide.pagekeeper.ui.theme.LocalExtendedColors
+
+/*
+ * Every dialog in the app is drawn by ShioriAlertDialog: a 32dp container, the icon on one of the
+ * redesign's shapes coloured by what the dialog is about, a heavy title, and a filled pill for the
+ * main action. They used to be stock AlertDialogs with two text buttons each, and nothing told a
+ * delete apart from a question.
+ */
+
+/** What a dialog is about. It colours the badge, and [Danger] is the one whose action is red. */
+enum class DialogTone { Brand, Warning, Danger }
+
+@Composable
+fun ShioriAlertDialog(
+    onDismissRequest: () -> Unit,
+    title: String,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    tone: DialogTone = DialogTone.Brand,
+    dismissButton: (@Composable () -> Unit)? = null,
+    properties: DialogProperties = DialogProperties(),
+    text: (@Composable () -> Unit)? = null,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = confirmButton,
+        modifier = modifier,
+        dismissButton = dismissButton,
+        icon = icon?.let { { DialogBadge(icon = it, tone = tone) } },
+        title = if (title.isNotEmpty()) {
+            {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = 26.sp,
+                        lineHeight = 30.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.8).sp,
+                    ),
+                    textAlign = if (icon != null) TextAlign.Center else TextAlign.Start,
+                )
+            }
+        } else null,
+        text = text,
+        shape = RoundedCornerShape(32.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        properties = properties,
+    )
+}
+
+/** The icon a dialog leads with, on a shape: a cookie for the ordinary, a sun for a warning. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun DialogBadge(icon: ImageVector, tone: DialogTone) {
+    val scheme = MaterialTheme.colorScheme
+    val extended = LocalExtendedColors.current
+    val container = when (tone) {
+        DialogTone.Brand -> scheme.primaryContainer
+        DialogTone.Warning -> extended.goldContainer
+        DialogTone.Danger -> scheme.errorContainer
+    }
+    val content = when (tone) {
+        DialogTone.Brand -> scheme.onPrimaryContainer
+        DialogTone.Warning -> extended.onGoldContainer
+        DialogTone.Danger -> scheme.onErrorContainer
+    }
+    val shape: Shape = when (tone) {
+        DialogTone.Brand -> MaterialShapes.Cookie9Sided.toShape()
+        DialogTone.Warning, DialogTone.Danger -> MaterialShapes.Sunny.toShape()
+    }
+    Box(
+        modifier = Modifier
+            .size(64.dp)
+            .clip(shape)
+            .background(container),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = content, modifier = Modifier.size(28.dp))
+    }
+}
+
+/** The main action: filled and fully round, red when it destroys something. */
+@Composable
+fun DialogConfirmButton(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    destructive: Boolean = false,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.height(48.dp),
+        shape = CircleShape,
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        colors = if (destructive) {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+            )
+        } else {
+            ButtonDefaults.buttonColors()
+        },
+    ) {
+        Text(text, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun DialogDismissButton(text: String, onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = Modifier.height(48.dp), shape = CircleShape) {
+        Text(text, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** A side remark set apart from the message, like "your unsent changes are kept". */
+@Composable
+fun DialogNote(text: String, icon: ImageVector = Icons.Outlined.Info) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(text = text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        }
+    }
+}
 
 @Composable
 fun SimpleDialog(
@@ -35,59 +202,64 @@ fun SimpleDialog(
     onConfirm: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
+    tone: DialogTone = DialogTone.Brand,
+    destructive: Boolean = false,
+    note: String? = null,
 ) {
     if (openDialog.value) {
-        AlertDialog(
+        ShioriAlertDialog(
             onDismissRequest = {
                 // Dismiss the dialog when the user clicks outside the dialog or on the back
                 // button. If you want to disable that functionality, simply use an empty
                 // onDismissRequest.
                 openDialog.value = false
             },
-            icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
-            title = {
-                if (title.isNotEmpty()) {
-                    Text(text = title)
-                }
-            },
-            text = {
-                if (content.isNotEmpty()) {
-                    Box(
+            title = title,
+            icon = icon,
+            tone = tone,
+            text = if (content.isNotEmpty() || note != null) {
+                {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.Center),
-                            text = content
-                        )
+                        if (content.isNotEmpty()) {
+                            Text(
+                                text = content,
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        if (note != null) {
+                            DialogNote(text = note)
+                        }
                     }
                 }
-            },
+            } else null,
             confirmButton = {
                 if (confirmButtonText.isNotEmpty()) {
-                    TextButton(
+                    DialogConfirmButton(
+                        text = confirmButtonText,
+                        destructive = destructive,
                         onClick = {
                             openDialog.value = false
                             onConfirm?.invoke()
-                        }
-                    ) {
-                        Text(confirmButtonText)
-                    }
+                        },
+                    )
                 }
             },
-            dismissButton = {
-                if (dismissButtonText.isNotEmpty()) {
-                    TextButton(
+            dismissButton = if (dismissButtonText.isNotEmpty()) {
+                {
+                    DialogDismissButton(
+                        text = dismissButtonText,
                         onClick = {
                             openDialog.value = false
                             onDismiss?.invoke()
-                        }
-                    ) {
-                        Text(dismissButtonText)
-                    }
+                        },
+                    )
                 }
-            },
+            } else null,
             properties = properties
         )
     }
@@ -104,6 +276,9 @@ fun ConfirmDialog(
     onDismiss: (() -> Unit)? = null,
     openDialog: MutableState<Boolean>,
     properties: DialogProperties = DialogProperties(),
+    tone: DialogTone = DialogTone.Brand,
+    destructive: Boolean = false,
+    note: String? = null,
 ) {
     SimpleDialog(
         title = title,
@@ -114,7 +289,10 @@ fun ConfirmDialog(
         confirmButtonText = confirmButton,
         dismissButtonText = dismissButton,
         openDialog = openDialog,
-        properties = properties
+        properties = properties,
+        tone = tone,
+        destructive = destructive,
+        note = note,
     )
 }
 
@@ -164,6 +342,7 @@ fun ErrorDialog(
         title = title,
         content = content,
         icon = Icons.Default.Error,
+        tone = DialogTone.Danger,
         confirmButtonText = "Accept",
         openDialog = openDialog,
         onConfirm = onConfirm,
@@ -190,58 +369,39 @@ fun UpdateCacheDialog(
             wasLoading.value = isLoading
         }
 
-        AlertDialog(
+        ShioriAlertDialog(
             onDismissRequest = {
                 showDialog.value = false
             },
-            title = { Text("Update cache for selected bookmark? This action is irreversible.") },
+            icon = Icons.Outlined.Sync,
+            title = "Update cache?",
             text = {
                 Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable(enabled = !isLoading) {
-                                keepOldTitleChecked = !keepOldTitleChecked
-                            }
-                            .padding(8.dp)
-                    ) {
-                        Checkbox(
-                            enabled = !isLoading,
-                            checked = keepOldTitleChecked,
-                            onCheckedChange = null
-                        )
-                        Text("Keep the old title and excerpt", modifier = Modifier.padding(start = 8.dp))
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable(enabled = !isLoading) {
-                                updateArchiveChecked = !updateArchiveChecked
-                            }
-                            .padding(8.dp)
-                    ) {
-                        Checkbox(
-                            enabled = !isLoading,
-                            checked = updateArchiveChecked,
-                            onCheckedChange = null
-                        )
-                        Text("Update archive as well", modifier = Modifier.padding(start = 8.dp))
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable(enabled = !isLoading) {
-                                updateEbookChecked = !updateEbookChecked
-                            }
-                            .padding(8.dp)
-                    ) {
-                        Checkbox(
-                            enabled = !isLoading,
-                            checked = updateEbookChecked,
-                            onCheckedChange = null
-                        )
-                        Text("Update Ebook as well", modifier = Modifier.padding(start = 8.dp))
-                    }
+                    // The title used to be the whole warning in one long question; the warning
+                    // now sits here, and the title stays short enough to set large.
+                    Text(
+                        text = "The saved copy of the page is fetched again. This can't be undone.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    CacheOption(
+                        text = "Keep the old title and excerpt",
+                        checked = keepOldTitleChecked,
+                        enabled = !isLoading,
+                        onCheckedChange = { keepOldTitleChecked = it },
+                    )
+                    CacheOption(
+                        text = "Update archive as well",
+                        checked = updateArchiveChecked,
+                        enabled = !isLoading,
+                        onCheckedChange = { updateArchiveChecked = it },
+                    )
+                    CacheOption(
+                        text = "Update Ebook as well",
+                        checked = updateEbookChecked,
+                        enabled = !isLoading,
+                        onCheckedChange = { updateEbookChecked = it },
+                    )
                 }
             },
             confirmButton = {
@@ -259,14 +419,37 @@ fun UpdateCacheDialog(
                     exit = fadeOut(),
                     visible = !isLoading
                 ){
-                    Button(onClick = {
-                        showDialog.value = false
-                    }) {
-                        Text("Cancel")
-                    }
+                    DialogDismissButton(text = "Cancel", onClick = { showDialog.value = false })
                 }
             },
             properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+        )
+    }
+}
+
+/** One box of the update dialog. The row is the control, so the label is part of the target. */
+@Composable
+private fun CacheOption(
+    text: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .toggleable(value = checked, enabled = enabled, role = Role.Checkbox, onValueChange = onCheckedChange)
+            .padding(horizontal = 4.dp),
+    ) {
+        Checkbox(enabled = enabled, checked = checked, onCheckedChange = null)
+        Text(
+            text = text,
+            modifier = Modifier.padding(start = 12.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -281,48 +464,33 @@ fun EpubOptionsDialog(
     showDialog: MutableState<Boolean>
 ) {
     if (showDialog.value) {
-        AlertDialog(
+        ShioriAlertDialog(
             onDismissRequest = {
                 showDialog.value = false
             },
-            icon = { if (icon != null) Icon(imageVector = icon, contentDescription = null) },
-            title = {
-                if (title.isNotEmpty()) {
-                    Text(text = title)
-                }
-            },
-            text = {
-                if (content.isNotEmpty()) {
-                    Box(
+            icon = icon,
+            title = title,
+            text = if (content.isNotEmpty()) {
+                {
+                    Text(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.Center),
-                            text = content
-                        )
-                    }
+                        text = content,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                    )
                 }
-            },
+            } else null,
             confirmButton = {
-                Row(
-                    modifier = Modifier.padding(all = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    TextButton(onClick = {
-                        showDialog.value = false
-                    }) {
-                        Text("Cancel")
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
+                DialogConfirmButton(
+                    text = "Share",
+                    onClick = {
                         showDialog.value = false
                         onClickOption?.invoke(2)
-                    }) {
-                        Text("Share")
-                    }
-                }
+                    },
+                )
+            },
+            dismissButton = {
+                DialogDismissButton(text = "Cancel", onClick = { showDialog.value = false })
             },
             properties = properties
         )

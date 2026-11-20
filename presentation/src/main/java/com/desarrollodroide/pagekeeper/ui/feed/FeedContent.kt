@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -127,14 +128,23 @@ fun FeedContent(
         // hanging. The alternatives were padding every card out to a common height, which cost
         // 130dp of blank on a bookmark with no excerpt and no tags. Here each card is as tall as
         // its own content and the columns simply pack, so there is no line to be level with.
+        val headerScrollConnection = LocalLibraryScrollConnection.current
+        val syncBanner = LocalSyncBanner.current
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(minSize = 340.dp),
             state = gridState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(headerScrollConnection?.let { Modifier.nestedScroll(it) } ?: Modifier),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            syncBanner?.let { banner ->
+                item(key = "sync-banner", span = StaggeredGridItemSpan.FullLine) {
+                    SyncBanner(state = banner)
+                }
+            }
             items(
                 count = bookmarksPagingItems.itemCount,
                 key = { index ->
@@ -205,7 +215,8 @@ fun FeedContent(
                     }
                 }
             }
-            item(span = StaggeredGridItemSpan.FullLine) { Spacer(modifier = Modifier.height(88.dp)) }
+            // Room for the floating toolbar, so the last card can scroll clear of it.
+            item(span = StaggeredGridItemSpan.FullLine) { Spacer(modifier = Modifier.height(104.dp)) }
         }
 
         // Whether the last movement was towards the top of the list. Kept in state rather than

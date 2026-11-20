@@ -3,21 +3,23 @@ package com.desarrollodroide.pagekeeper.ui.login
 import android.webkit.URLUtil
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -27,8 +29,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,13 +79,14 @@ fun ServerUrlTextField(
                 Text(
                     text = "Server v$serverVersion",
                     color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
         else -> null
     }
 
-    OutlinedTextField(
+    LoginTextField(
         value = serverUrl.value,
         onValueChange = {
             serverErrorState.value = !URLUtil.isValidUrl(it)
@@ -88,30 +95,32 @@ fun ServerUrlTextField(
                 resetServerAvailabilityState()
             }
         },
-        modifier = modifier
-            .fillMaxWidth()
-            .onFocusChanged { focusState ->
-                if (isFocused && !focusState.isFocused && URLUtil.isValidUrl(serverUrl.value)) {
-                    onClick()
-                }
-                isFocused = focusState.isFocused
-            },
-        shape = MaterialTheme.shapes.medium,
-        leadingIcon = { Icon(imageVector = Icons.Filled.Link, contentDescription = null) },
-        trailingIcon = {
-            when {
-                isTestingServer -> LoadingIndicator(modifier = Modifier.size(24.dp))
-                serverUrlAvailable -> Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Server reachable",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+        modifier = modifier.onFocusChanged { focusState ->
+            if (isFocused && !focusState.isFocused && URLUtil.isValidUrl(serverUrl.value)) {
+                onClick()
             }
+            isFocused = focusState.isFocused
         },
-        label = { Text(text = "Server url") },
+        label = "Server",
+        placeholder = "https://shiori.example.com",
+        leadingIcon = Icons.Outlined.Dns,
+        trailingIcon = when {
+            isTestingServer -> {
+                { LoadingIndicator(modifier = Modifier.size(24.dp)) }
+            }
+            serverUrlAvailable -> {
+                {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Server reachable",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            else -> null
+        },
         isError = serverErrorState.value || !availabilityError.isNullOrEmpty(),
         supportingText = supporting,
-        singleLine = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Uri,
             imeAction = ImeAction.Next,
@@ -125,26 +134,20 @@ fun UserTextField(
     userErrorState: MutableState<Boolean>,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedTextField(
+    LoginTextField(
         value = user.value,
         onValueChange = {
             if (userErrorState.value) userErrorState.value = false
             user.value = it
         },
-        modifier = modifier
-            .semantics { contentType = ContentType.Username }
-            .fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = null) },
-        label = { Text(text = "Username") },
+        modifier = modifier.semantics { contentType = ContentType.Username },
+        label = "Username",
+        leadingIcon = Icons.Outlined.Person,
         isError = userErrorState.value,
-        // supportingText is the M3 slot for validation messages: it reserves its own line so the
-        // form doesn't jump when an error appears, and it inherits the error colour from isError
-        // instead of a hardcoded Color.Red that ignores the theme.
         supportingText = if (userErrorState.value) {
-            { Text("Invalid username") }
+            // The only check is that it is not empty (LoginButton), so that is what it says.
+            { Text("Required") }
         } else null,
-        singleLine = true,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.None,
             imeAction = ImeAction.Next,
@@ -160,17 +163,15 @@ fun PasswordTextField(
 ) {
     var passwordHidden by remember { mutableStateOf(true) }
 
-    OutlinedTextField(
+    LoginTextField(
         value = password.value,
         onValueChange = {
             if (passwordErrorState.value) passwordErrorState.value = false
             password.value = it
         },
-        modifier = modifier
-            .semantics { contentType = ContentType.Password }
-            .fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        leadingIcon = { Icon(imageVector = Icons.Filled.Lock, contentDescription = null) },
+        modifier = modifier.semantics { contentType = ContentType.Password },
+        label = "Password",
+        leadingIcon = Icons.Outlined.Lock,
         trailingIcon = {
             IconButton(onClick = { passwordHidden = !passwordHidden }) {
                 Icon(
@@ -179,16 +180,64 @@ fun PasswordTextField(
                 )
             }
         },
-        label = { Text(text = "Password") },
         isError = passwordErrorState.value,
         supportingText = if (passwordErrorState.value) {
             { Text("Required") }
         } else null,
         visualTransformation = if (passwordHidden) PasswordVisualTransformation() else VisualTransformation.None,
-        singleLine = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done,
+        ),
+    )
+}
+
+/**
+ * A filled field with no underline: a rounded tonal block, the way the rest of the redesign draws
+ * inputs. Focus tints it towards the brand colour and an error towards the error colour, which is
+ * what the underline used to say.
+ *
+ * supportingText is the M3 slot for validation messages: it inherits the error colour from isError
+ * instead of a hardcoded red that ignores the theme.
+ */
+@Composable
+private fun LoginTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    leadingIcon: ImageVector,
+    isError: Boolean,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    supportingText: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val resting = scheme.surfaceContainerHigh
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = placeholder?.let { { Text(it) } },
+        leadingIcon = { Icon(imageVector = leadingIcon, contentDescription = null) },
+        trailingIcon = trailingIcon,
+        isError = isError,
+        supportingText = supportingText,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = resting,
+            focusedContainerColor = lerp(resting, scheme.primaryContainer, 0.55f),
+            errorContainerColor = lerp(resting, scheme.errorContainer, 0.6f),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
         ),
     )
 }

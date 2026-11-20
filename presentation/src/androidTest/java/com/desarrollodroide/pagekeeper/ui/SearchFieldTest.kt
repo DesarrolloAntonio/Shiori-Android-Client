@@ -43,12 +43,10 @@ class SearchFieldTest {
                     onSearchQueryChange = { query = it },
                     onClearSearch = { query = "" },
                     onFilterClick = { },
-                    onSettingsClick = { },
-                    onSyncClick = { },
-                    selectedTagsCount = 0,
+                    selectedTags = emptyList(),
+                    onRemoveTag = { },
+                    onClearTags = { },
                     showOnlyHiddenTag = false,
-                    pendingJobsCount = 0,
-                    pendingJobs = emptyList(),
                 )
             }
         }
@@ -73,12 +71,10 @@ class SearchFieldTest {
                     onSearchQueryChange = { query = it },
                     onClearSearch = { query = "" },
                     onFilterClick = { },
-                    onSettingsClick = { },
-                    onSyncClick = { },
-                    selectedTagsCount = 0,
+                    selectedTags = emptyList(),
+                    onRemoveTag = { },
+                    onClearTags = { },
                     showOnlyHiddenTag = false,
-                    pendingJobsCount = 0,
-                    pendingJobs = emptyList(),
                 )
             }
         }
@@ -106,12 +102,10 @@ class SearchFieldTest {
                     onSearchQueryChange = { query = it },
                     onClearSearch = { cleared = true; query = "" },
                     onFilterClick = { },
-                    onSettingsClick = { },
-                    onSyncClick = { },
-                    selectedTagsCount = 0,
+                    selectedTags = emptyList(),
+                    onRemoveTag = { },
+                    onClearTags = { },
                     showOnlyHiddenTag = false,
-                    pendingJobsCount = 0,
-                    pendingJobs = emptyList(),
                 )
             }
         }

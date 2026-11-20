@@ -323,4 +323,37 @@ class BookmarksDaoTest {
         assertEquals(bookmark, retrievedBookmark)
     }
 
+    /**
+     * The library's header count has to agree with the list. These are the feed's rules: the
+     * hidden tag is left out of the plain library, kept under a tag filter, and is all there is in
+     * the hidden tag view.
+     */
+    @Test
+    fun countShownCountsWhatTheFeedShows() = runBlocking {
+        val android = Tag(id = 1, name = "android")
+        val hidden = Tag(id = 2, name = "hidden")
+        bookmarksDao.insertAllWithTags(
+            listOf(
+                bookmark.copy(id = 1, title = "Compose tips", tags = listOf(android)),
+                bookmark.copy(id = 2, title = "Kotlin", tags = listOf(android, hidden)),
+                bookmark.copy(id = 3, title = "Recipes", tags = listOf(hidden)),
+                bookmark.copy(id = 4, title = "Untagged", tags = emptyList()),
+            )
+        )
+
+        suspend fun count(
+            tagIds: List<Int> = emptyList(),
+            search: String = "",
+            onlyHidden: Boolean = false,
+            hiddenId: Int? = hidden.id,
+        ) = bookmarksDao.countShown(search, tagIds, tagIds.isNotEmpty(), onlyHidden, hiddenId).first()
+
+        assertEquals("library without the hidden tag", 2, count())
+        assertEquals("no hidden tag set", 4, count(hiddenId = null))
+        assertEquals("a tag filter keeps hidden-tagged bookmarks", 2, count(tagIds = listOf(android.id)))
+        assertEquals("hidden tag view", 2, count(onlyHidden = true))
+        assertEquals("hidden tag view with no hidden tag", 0, count(onlyHidden = true, hiddenId = null))
+        assertEquals("search", 1, count(search = "compose"))
+        assertEquals("search and tag", 1, count(tagIds = listOf(android.id), search = "kotlin"))
+    }
 }

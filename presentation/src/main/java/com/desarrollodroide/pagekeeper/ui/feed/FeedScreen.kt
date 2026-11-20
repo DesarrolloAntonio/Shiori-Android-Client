@@ -1,8 +1,14 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Delete
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import android.media.MediaScannerConnection
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -66,6 +72,10 @@ fun FeedScreen(
     val tagsState by feedViewModel.tagsState.collectAsState()
     val tagToHide by feedViewModel.tagToHide.collectAsState()
     val showOnlyHiddenTag by feedViewModel.showOnlyHiddenTag.collectAsState()
+    val searchQuery by feedViewModel.searchQuery.collectAsState()
+    val selectedTags by feedViewModel.selectedTags.collectAsState()
+    // An empty list under a search or a filter means nothing matched, not that there is nothing.
+    val isFiltered = searchQuery.isNotBlank() || selectedTags.isNotEmpty() || showOnlyHiddenTag
 
     LaunchedEffect(feedViewModel) {
         feedViewModel.initializeIfNeeded()
@@ -149,12 +159,17 @@ fun FeedScreen(
         refreshingIds = refreshingIds,
         settledIds = settledIds,
         tagToHide = tagToHide,
-        showOnlyHiddenTag = showOnlyHiddenTag
+        showOnlyHiddenTag = showOnlyHiddenTag,
+        isFiltered = isFiltered,
+        onClearFilters = feedViewModel::clearFilters,
     )
     if (feedViewModel.showDeleteConfirmationDialog.value && feedViewModel.bookmarkToDelete.value != null) {
         ConfirmDialog(
-            title = "Confirmation",
-            content = "Are you sure you want to delete this bookmark?",
+            icon = Icons.Outlined.Delete,
+            tone = DialogTone.Danger,
+            destructive = true,
+            title = "Delete bookmark?",
+            content = "It is removed from this device and from the server. This can't be undone.",
             confirmButton = "Delete",
             dismissButton = "Cancel",
             onConfirm = {
@@ -196,7 +211,8 @@ fun FeedScreen(
     if (!downloadUiState.value.error.isNullOrEmpty()) {
         ConfirmDialog(
             icon = Icons.Default.Error,
-            title = "Download Error",
+            tone = DialogTone.Danger,
+            title = "Download failed",
             content = downloadUiState.value.error?:"Unknown error",
             openDialog = remember { mutableStateOf(true) },
             onConfirm = { },
@@ -214,9 +230,10 @@ fun FeedScreen(
             null
         ) { path, uri -> }
         EpubOptionsDialog(
-            icon = Icons.Default.Error,
-            title = "Success",
-            content = "Epub file downloaded, would you like to share it?",
+            // It was the error icon, on a dialog that says the download worked.
+            icon = Icons.Outlined.MenuBook,
+            title = "Epub ready",
+            content = "The epub file is downloaded. Would you like to share it?",
             onClickOption = { index ->
                 when (index) {
                     2 -> {
@@ -287,6 +304,8 @@ internal fun FeedView(
     selectedIds: Set<Int> = emptySet(),
     refreshingIds: Set<Int> = emptySet(),
     settledIds: Set<Int> = emptySet(),
+    isFiltered: Boolean = false,
+    onClearFilters: () -> Unit = {},
 ) {
     // itemCount alone is not enough to decide the screen is empty. On a cold start the pager has
     // not emitted yet, so the count is 0 while the first load is still running, and the feed used
@@ -320,21 +339,27 @@ internal fun FeedView(
             ContainedLoadingIndicator(modifier = Modifier.align(Alignment.Center))
         }
     } else {
-        EmptyView(actions)
+        EmptyView(actions = actions, isFiltered = isFiltered, onClearFilters = onClearFilters)
     }
 }
 
 @Composable
-private fun EmptyView(actions: FeedActions) {
-    Box(
-        modifier = Modifier.fillMaxSize()
+private fun EmptyView(actions: FeedActions, isFiltered: Boolean, onClearFilters: () -> Unit) {
+    // Centred in what is left under the header and above the floating toolbar, and scrollable for
+    // when that is not much: a phone on its side, or the keyboard up during a search.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 16.dp, bottom = 96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        NoContentView(
-            modifier = Modifier
-                .padding(top = 100.dp)
-                .align(Alignment.Center),
-            onRefresh = actions.onRefreshFeed
-        )
+        if (isFiltered) {
+            NoMatchesView(onClearFilters = onClearFilters)
+        } else {
+            NoContentView(onRefresh = actions.onRefreshFeed)
+        }
     }
 }
 

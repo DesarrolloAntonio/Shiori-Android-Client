@@ -63,9 +63,30 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.unit.sp
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
+import com.desarrollodroide.pagekeeper.ui.feed.item.BookmarkThumbnailPlaceholder
+import com.desarrollodroide.pagekeeper.ui.feed.item.hostOf
+import com.desarrollodroide.pagekeeper.ui.settings.SettingsAccents
+import com.desarrollodroide.pagekeeper.ui.settings.SettingsRows
 import com.desarrollodroide.pagekeeper.ui.settings.SwitchOption
+import com.desarrollodroide.pagekeeper.ui.theme.keyedColors
 
 enum class BookmarkEditorType { ADD, ADD_MANUALLY, EDIT }
 
@@ -126,17 +147,10 @@ fun BookmarkEditorView(
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = windowInsets,
         topBar = {
-            TopAppBar(
-                windowInsets = windowInsets.only(WindowInsetsSides.Top),
-                title = { Text(title) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
+            EditorHeader(
+                title = title,
+                onBackClick = onBackClick,
+                windowInsets = windowInsets,
             )
         },
         bottomBar = {
@@ -163,11 +177,18 @@ fun BookmarkEditorView(
                             .widthIn(max = ContentMaxWidth)
                             .fillMaxWidth()
                             .height(ActionButtonHeight),
-                        shape = MaterialTheme.shapes.large,
+                        shape = CircleShape,
                     ) {
+                        Icon(
+                            imageVector = Icons.Outlined.BookmarkAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(modifier = Modifier.size(10.dp))
                         Text(
                             text = if (isEdit) "Save" else "Add bookmark",
-                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
                         )
                     }
                 }
@@ -176,7 +197,7 @@ fun BookmarkEditorView(
     ) { innerPadding ->
         // Declared once, laid out two ways below.
         val linkSection: @Composable () -> Unit = {
-            Section(title = "Link") {
+            Section(title = "Link", color = MaterialTheme.colorScheme.primary) {
                 if (isManual) {
                     FilledField(
                         value = url,
@@ -184,6 +205,9 @@ fun BookmarkEditorView(
                         placeholder = "example.com",
                         leadingIcon = Icons.Outlined.Link,
                         isError = url.isNotBlank() && !canSave,
+                        // A check once the link looks fetchable, so the field confirms as well as
+                        // complains.
+                        trailingIcon = if (url.isNotBlank() && canSave) Icons.Filled.CheckCircle else null,
                         supportingText = if (url.isNotBlank() && !canSave) {
                             "That does not look like a link"
                         } else {
@@ -199,73 +223,72 @@ fun BookmarkEditorView(
                         ),
                     )
                 } else {
-                    // The shared url cannot be edited here, so it reads as the link it is
-                    // rather than pretending to be a field.
+                    // The shared url cannot be edited here, so it reads as the link it is rather
+                    // than pretending to be a field: the site's monogram and name, then the url.
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = MaterialTheme.shapes.large,
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Link,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = url,
-                                style = MaterialTheme.typography.bodyLarge,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            BookmarkThumbnailPlaceholder(url = url, size = 56.dp)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = hostOf(url).ifEmpty { "Link" },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = url,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
         val optionsSection: @Composable () -> Unit = {
-            Section(title = "Options") {
-                // One surface around all of them, so they read as a group rather than as loose
-                // rows floating on the page.
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        if (!isEdit) {
-                            SwitchOption(
-                                title = "Create archive",
-                                subtitle = "Keep an offline copy of the page",
-                                icon = Icons.Outlined.Archive,
-                                checked = createArchive,
-                                onCheckedChange = onCreateArchiveChanged,
-                            )
-                            SwitchOption(
-                                title = "Create ebook",
-                                subtitle = "Also save it as an epub",
-                                icon = Icons.Outlined.MenuBook,
-                                checked = createEbook,
-                                onCheckedChange = onCreateEbookChanged,
-                            )
-                        }
+            Section(title = "Options", color = MaterialTheme.colorScheme.secondary) {
+                // Connected rows, the way Settings draws its groups, in this section's indigo.
+                SettingsRows(accent = SettingsAccents.visual) {
+                    if (!isEdit) {
                         SwitchOption(
-                            title = "Public",
-                            subtitle = "Anyone with the link can read it",
-                            icon = Icons.Outlined.Public,
-                            checked = makeArchivePublic,
-                            onCheckedChange = onMakeArchivePublicChanged,
+                            title = "Create archive",
+                            subtitle = "Keep an offline copy of the page",
+                            icon = Icons.Outlined.Archive,
+                            checked = createArchive,
+                            onCheckedChange = onCreateArchiveChanged,
+                        )
+                        SwitchOption(
+                            title = "Create ebook",
+                            subtitle = "Also save it as an epub",
+                            icon = Icons.Outlined.MenuBook,
+                            checked = createEbook,
+                            onCheckedChange = onCreateEbookChanged,
                         )
                     }
+                    SwitchOption(
+                        title = "Public",
+                        subtitle = "Anyone with the link can read it",
+                        icon = Icons.Outlined.Public,
+                        checked = makeArchivePublic,
+                        onCheckedChange = onMakeArchivePublicChanged,
+                    )
                 }
             }
         }
         val tagsSection: @Composable () -> Unit = {
-            Section(title = "Tags") {
+            Section(title = "Tags", color = MaterialTheme.colorScheme.tertiary) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Top,
@@ -386,17 +409,74 @@ fun BookmarkEditorView(
     }
 }
 
-/** A heading and the thing it describes. */
+/**
+ * The screen's header: back in a tonal circle, the title set large, and a coral shape bleeding off
+ * the top corner, the same way the library and the other Expressive screens open.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun EditorHeader(
+    title: String,
+    onBackClick: () -> Unit,
+    windowInsets: WindowInsets,
+) {
+    val decoration = MaterialShapes.Flower.toShape()
+    val decorationColor = MaterialTheme.colorScheme.tertiaryContainer
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clipToBounds()
+                .drawBehind {
+                    val side = 260.dp.toPx()
+                    val outline = decoration.createOutline(Size(side, side), layoutDirection, this)
+                    translate(left = size.width - side + 100.dp.toPx(), top = -side / 2f) {
+                        drawOutline(outline, decorationColor)
+                    }
+                }
+                .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top)),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FilledTonalIconButton(
+                    onClick = onBackClick,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-1).sp,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+            )
+        }
+    }
+}
+
+/** A heading, in its section's colour, and the thing it describes. */
 @Composable
 private fun Section(
     title: String,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     content: @Composable () -> Unit,
 ) {
     Column {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.ExtraBold,
+            color = color,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
         content()
@@ -415,6 +495,7 @@ private fun FilledField(
     isError: Boolean = false,
     supportingText: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    trailingIcon: ImageVector? = null,
 ) {
     TextField(
         value = value,
@@ -422,10 +503,13 @@ private fun FilledField(
         modifier = modifier.fillMaxWidth(),
         placeholder = { Text(placeholder) },
         leadingIcon = { Icon(leadingIcon, contentDescription = null) },
+        trailingIcon = trailingIcon?.let {
+            { Icon(it, contentDescription = "Valid link", tint = MaterialTheme.colorScheme.primary) }
+        },
         supportingText = supportingText?.let { { Text(it) } },
         isError = isError,
         singleLine = true,
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.large,
         keyboardOptions = keyboardOptions,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -450,10 +534,12 @@ private fun RemovableTagsView(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         tags.forEach { tag ->
+            // Each tag in the colour it has everywhere else.
+            val colors = keyedColors(tag.name)
             InputChip(
                 selected = true,
                 onClick = { onRemove(tag) },
-                label = { Text(tag.name) },
+                label = { Text(tag.name, fontWeight = FontWeight.Bold) },
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Close,
@@ -461,6 +547,13 @@ private fun RemovableTagsView(
                         modifier = Modifier.height(18.dp),
                     )
                 },
+                shape = MaterialTheme.shapes.small,
+                colors = InputChipDefaults.inputChipColors(
+                    selectedContainerColor = colors.container,
+                    selectedLabelColor = colors.content,
+                    selectedTrailingIconColor = colors.content,
+                ),
+                border = null,
             )
         }
     }
@@ -495,7 +588,7 @@ private fun TagsSelectorView(
 
 /** Tall enough to sit level with a filled field, and to read as a target rather than a label. */
 private val FieldHeight = 56.dp
-private val ActionButtonHeight = 52.dp
+private val ActionButtonHeight = 60.dp
 
 @Preview(showBackground = true)
 @Composable

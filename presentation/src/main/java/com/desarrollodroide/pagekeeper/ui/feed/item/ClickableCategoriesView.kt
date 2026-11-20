@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import com.desarrollodroide.pagekeeper.ui.theme.keyedColors
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
 
@@ -32,13 +34,15 @@ fun ClickableCategoriesView(
         maxLines = 1,
     ) {
         uniqueCategories.forEach { category ->
+            // Each tag in its own colour, the same one it has everywhere else in the app.
+            val colors = keyedColors(category.name)
             AssistChip(
                 onClick = { onClickCategory(category) },
-                label = { Text(category.name) },
+                label = { Text(category.name, fontWeight = FontWeight.Bold) },
                 shape = MaterialTheme.shapes.small,
                 colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = colors.container,
+                    labelColor = colors.content,
                 ),
                 border = null,
             )

@@ -2,26 +2,22 @@ package com.desarrollodroide.pagekeeper.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 
 /**
- * A settings row.
+ * A settings row that does something when tapped.
  *
- * Built on M3 [ListItem] rather than a hand-assembled [androidx.compose.foundation.layout.Row]:
- * that gives the spec's leading-icon spacing, minimum touch height and text roles for free. The
- * container is transparent so the enclosing [SettingsGroup] card provides the surface.
+ * [trailingIcon] says what kind of thing: a chevron for another screen (the default), an arrow out
+ * of the app for a page in the browser, nothing for an action that happens right here.
  */
 @Composable
 fun ClickableOption(
@@ -29,18 +25,23 @@ fun ClickableOption(
     icon: ImageVector,
     subtitle: String = "",
     modifier: Modifier = Modifier,
+    trailingIcon: ImageVector? = Icons.AutoMirrored.Filled.KeyboardArrowRight,
     onClick: () -> Unit,
 ) {
-    ListItem(
+    SettingsRow(
+        icon = icon,
+        title = title,
+        subtitle = subtitle,
         modifier = modifier.clickable(onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        trailing = trailingIcon?.let { trailing ->
+            {
+                Icon(
+                    imageVector = trailing,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         },
-        headlineContent = { Text(title, style = MaterialTheme.typography.bodyLarge) },
-        supportingContent = if (subtitle.isNotEmpty()) {
-            { Text(subtitle, style = MaterialTheme.typography.bodyMedium) }
-        } else null,
     )
 }
 
