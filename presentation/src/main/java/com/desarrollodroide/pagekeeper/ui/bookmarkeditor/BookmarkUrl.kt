@@ -37,4 +37,15 @@ fun isPlausibleBookmarkUrl(input: String): Boolean {
     return host.isNotEmpty() && host.contains('.') && !host.startsWith('.') && !host.endsWith('.')
 }
 
+/**
+ * The title of a link shared from another app.
+ *
+ * Only EXTRA_TITLE used to be read, but Firefox for Android sends the page title as EXTRA_SUBJECT
+ * and no EXTRA_TITLE at all, so everything shared from it was titled with its url. The url still
+ * stands in when a share carries no title, so the feed has something to show; it never reaches the
+ * server as a title (see toAddBookmarkDTO).
+ */
+fun sharedBookmarkTitle(extraTitle: String?, extraSubject: String?, url: String): String =
+    listOf(extraTitle, extraSubject).firstOrNull { !it.isNullOrBlank() } ?: url
+
 private val SCHEME = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")

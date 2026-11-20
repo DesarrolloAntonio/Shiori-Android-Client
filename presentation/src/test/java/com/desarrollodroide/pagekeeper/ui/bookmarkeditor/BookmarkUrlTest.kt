@@ -75,4 +75,30 @@ class BookmarkUrlTest {
         assertFalse(isPlausibleBookmarkUrl("example."))
         assertFalse(isPlausibleBookmarkUrl("2026-08-25 09:45:23 D SyncManager: BookmarkId 1787"))
     }
+
+    @Test
+    fun `a shared title is taken from the title extra first`() {
+        assertEquals("The title", sharedBookmarkTitle("The title", "The subject", URL))
+    }
+
+    /** Firefox for Android sends the page title as the subject and no title extra at all. */
+    @Test
+    fun `a shared title falls back to the subject`() {
+        assertEquals("The subject", sharedBookmarkTitle(null, "The subject", URL))
+    }
+
+    @Test
+    fun `a blank title extra does not hide the subject`() {
+        assertEquals("The subject", sharedBookmarkTitle("  ", "The subject", URL))
+    }
+
+    @Test
+    fun `the url stands in when a share has no title`() {
+        assertEquals(URL, sharedBookmarkTitle(null, null, URL))
+        assertEquals(URL, sharedBookmarkTitle("", " ", URL))
+    }
+
+    private companion object {
+        const val URL = "https://example.com/article"
+    }
 }

@@ -196,7 +196,11 @@ fun ReadableMessageDto.toDomainModel() = ReadableMessage(
 fun Bookmark.toAddBookmarkDTO() = BookmarkDTO(
     id = null,
     url = url,
-    title = title,
+    // Shiori takes any title it receives as typed by the user and never replaces it with the
+    // page's own. The url only stands in for a title on this device, so sending it would keep it
+    // as the title for good. Done here rather than at share time so creates already queued
+    // when this shipped are covered too.
+    title = title.takeUnless { it.trim() == url.trim() }.orEmpty(),
     excerpt = excerpt,
     author = null,
     public = public,

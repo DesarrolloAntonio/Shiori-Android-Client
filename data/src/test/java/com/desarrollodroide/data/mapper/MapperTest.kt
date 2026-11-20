@@ -706,6 +706,24 @@ class MapperTest {
         assertTrue(dto.createEbook == true)
     }
 
+    /**
+     * Shiori takes any title it receives as typed by the user and never replaces it with the
+     * page's own, so sending the url here left the url as the title for good.
+     */
+    @Test
+    fun `toAddBookmarkDTO sends no title when the title is only the url`() {
+        val bookmark = Bookmark(
+            url = "https://example.com/article",
+            tags = emptyList(),
+            public = 0,
+            createArchive = false,
+            createEbook = false,
+            title = "https://example.com/article"
+        )
+
+        assertEquals("", bookmark.toAddBookmarkDTO().title)
+    }
+
     @Test
     fun `toEditBookmarkDTO should map all fields correctly`() {
         // Given
