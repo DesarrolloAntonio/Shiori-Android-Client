@@ -9,11 +9,12 @@
         reworked, the password). With it on, adb backup or a Google Drive backup copies those
         off the device.
 
-        usesCleartextTraffic stays on deliberately. Shiori is self hosted and most users point the
-        app at http://192.168.x.x or a .local name. Android's network security config can only
-        name individual hosts, not address ranges, so there is no way to permit LAN cleartext
-        while blocking it everywhere else at build time. Restricting this properly needs a runtime
-        decision per server, not a manifest change.
+        Cleartext stays on deliberately, in network_security_config.xml. Shiori is self hosted
+        and most users point the app at http://192.168.x.x or a .local name. Android's network
+        security config can only name individual hosts, not address ranges, so there is no way
+        to permit LAN cleartext while blocking it everywhere else at build time. Restricting this
+        properly needs a runtime decision per server, not a manifest change. The same file also
+        trusts user installed CAs, for servers signed by the user's own certificate authority.
     -->
     <application
         android:allowBackup="false"
