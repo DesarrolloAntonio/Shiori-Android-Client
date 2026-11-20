@@ -1,11 +1,22 @@
-Entdecken Sie mit <b>Pagekeeper</b> eine neue Möglichkeit, Ihre Lieblingswebseiten zu speichern, zu organisieren und darauf zuzugreifen. Unsere App basiert auf der renommierten <b>Shiori</b>-Plattform und bringt die Lesezeichenverwaltung auf die nächste Ebene.
+Ein Android-Client für <b>Shiori</b>, den selbst gehosteten Lesezeichen-Manager. Die App spricht mit einem Server, den Sie selbst betreiben: Es gibt kein Konto zum Registrieren und keinen Dienst hinter der App, nur Ihren eigenen.
 
-Shiori ist eine innovative Anwendung zur Verwaltung von Lesezeichen, die die Art und Weise revolutioniert, wie Benutzer ihre Lieblingswebseiten speichern, organisieren und darauf zugreifen. Basierend auf der robusten Shiori-Plattform bietet Shiori ein nahtloses Erlebnis auf allen Geräten.
+Ihre gesamte Bibliothek liegt auf dem Gerät, sodass die Liste, die Tags und jeder gespeicherte Artikel auch ohne Verbindung verfügbar sind. Was Sie offline ändern (hinzufügen, bearbeiten, löschen, eine neue Kopie einer Seite anfordern), wird gesammelt und gesendet, sobald Ihr Server wieder erreichbar ist.
 
-<b>Hauptmerkmale von Pagekeeper:</b>
+<b>Funktionen</b>
 
-* <b>Seiten einfach speichern</b>: Erfassen Sie Webseiten, die Sie sofort entdecken, und greifen Sie jederzeit darauf zu, auch offline.
-* <b>Überlegene Organisation</b>: Sortieren Sie Ihre Lesezeichen mit benutzerdefinierten Beschriftungen, Beschreibungen und Miniaturansichten zum schnellen Abrufen.
-* <b>Cloud-Synchronisierung</b>: Halten Sie Ihre Lesezeichen auf allen Ihren Geräten synchronisiert, damit Sie nie eine wichtige Seite verlieren.
-* <b>Intuitive Benutzeroberfläche</b>: Navigieren Sie durch Ihre Lesezeichen mit einer übersichtlichen und benutzerfreundlichen Oberfläche, die für ein nahtloses Benutzererlebnis konzipiert ist.
-* <b>Teilen und Entdecken</b>: Teilen Sie Ihre Lieblingsseiten mit Freunden und entdecken Sie neue Seiten über die Pagekeeper-Community.
+• <b>Aus jeder App speichern</b>: Teilen Sie eine Seite aus dem Browser, und sie landet in Ihrer Bibliothek, ohne die App zu öffnen.
+• <b>Offline lesen</b>: Artikel werden als sauberer, lesbarer Text gespeichert, ohne die Website drumherum.
+• <b>Offline arbeiten, später synchronisieren</b>: Änderungen ohne Verbindung werden gesendet, sobald der Server wieder antwortet.
+• <b>Suche</b> in Titeln, Auszügen und URLs direkt auf dem Gerät, also auch offline.
+• <b>Tags</b>: Liste nach Tag filtern, Tags umbenennen oder löschen oder einen Tag aus der Liste ausblenden.
+• <b>Mehrfachauswahl</b>: mehrere Lesezeichen auf einmal taggen, neu zwischenspeichern oder löschen.
+• <b>EPUB</b>: das E-Book, das Ihr Server aus einer Seite erstellt hat, herunterladen und in Ihrer Lese-App öffnen.
+• <b>Smartphones, Tablets und Foldables</b>: Die Liste nutzt so viele Spalten, wie der Bildschirm fasst, und auf großen Bildschirmen kann der Artikel daneben geöffnet werden.
+• <b>Material 3</b>, hell und dunkel.
+
+<b>Voraussetzungen</b>
+
+• Ein erreichbarer Shiori-Server, Version 1.7 oder neuer.
+• Android 8.0 oder neuer.
+
+Dies ist eine unabhängige App und stammt nicht vom Shiori-Projekt. Sie ist Open Source unter der Apache-2.0-Lizenz: https://github.com/DesarrolloAntonio/Shiori-Android-Client
