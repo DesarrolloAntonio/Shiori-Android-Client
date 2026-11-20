@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
+import androidx.compose.material3.MenuDefaults
 import com.desarrollodroide.pagekeeper.extensions.asLocalBookmarkDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.CloudUpload
@@ -43,6 +45,9 @@ import com.desarrollodroide.pagekeeper.extensions.isRTLText
 
 private val ThumbnailSize = 72.dp
 
+/** A step rounder than the cards' medium corner, so a photo thumbnail reads as a tile. */
+private val ThumbnailShape = RoundedCornerShape(20.dp)
+
 @Composable
 fun SmallBookmarkView(
     getBookmark: GetBookmark,
@@ -69,6 +74,8 @@ fun SmallBookmarkView(
                 .padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Always a thumbnail, so titles line up down the list. Without an image it is the
+            // site's monogram on an Expressive shape, the same one the full card uses.
             if (bookmark.imageURL.isNotEmpty()) {
                 BookmarkImageView(
                     imageUrl = imageUrl,
@@ -76,12 +83,14 @@ fun SmallBookmarkView(
                     token = token,
                     modifier = Modifier
                         .size(ThumbnailSize)
-                        .clip(MaterialTheme.shapes.medium),
+                        .clip(ThumbnailShape),
                     contentScale = ContentScale.Crop,
                     loadAsThumbnail = true
                 )
-                Spacer(modifier = Modifier.size(12.dp))
+            } else {
+                BookmarkThumbnailPlaceholder(url = bookmark.url, size = ThumbnailSize)
             }
+            Spacer(modifier = Modifier.size(14.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -97,11 +106,12 @@ fun SmallBookmarkView(
                         maxLines = 2
                     )
                     Text(
-                        // The server's UTC time as a date in the device's zone, as the web shows it.
-                        text = bookmark.modified.asLocalBookmarkDate(),
+                        // The site, and the server's UTC time as a date in the device's zone.
+                        text = bookmarkMeta(bookmark.url, bookmark.modified.asLocalBookmarkDate()),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -145,14 +155,6 @@ private fun BookmarkOverflowMenu(
                 },
                 leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) }
             )
-            DropdownMenuItem(
-                text = { Text("Delete") },
-                onClick = {
-                    expanded.value = false
-                    actions.onClickDelete(getBookmark)
-                },
-                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) }
-            )
             if (hasEbook) {
                 DropdownMenuItem(
                     text = { Text("Epub") },
@@ -183,6 +185,19 @@ private fun BookmarkOverflowMenu(
                     leadingIcon = { Icon(Icons.Outlined.CloudUpload, contentDescription = null) }
                 )
             }
+            // Last and in the error colour, as on the full card: the one item that can't be undone.
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    expanded.value = false
+                    actions.onClickDelete(getBookmark)
+                },
+                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                colors = MenuDefaults.itemColors(
+                    textColor = MaterialTheme.colorScheme.error,
+                    leadingIconColor = MaterialTheme.colorScheme.error,
+                ),
+            )
         }
     }
 }

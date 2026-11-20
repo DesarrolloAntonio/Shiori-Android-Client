@@ -1,1 +1,1 @@
-Lesezeichen-Manager
+Client für selbst gehostete Shiori-Lesezeichen, auch offline lesbar.

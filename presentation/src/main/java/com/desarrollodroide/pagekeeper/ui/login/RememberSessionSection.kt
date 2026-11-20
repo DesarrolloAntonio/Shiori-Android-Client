@@ -1,5 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.login
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,17 +27,18 @@ fun RememberSessionSection(
         // right role and state.
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .toggleable(
                 value = checked.value,
                 onValueChange = onCheckedChange,
                 role = Role.Checkbox,
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Checkbox(checked = checked.value, onCheckedChange = null)
         Text(
-            text = "Remember me",
+            text = "Keep me signed in",
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier,
         )

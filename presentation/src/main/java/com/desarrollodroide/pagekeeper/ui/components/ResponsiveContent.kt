@@ -44,14 +44,13 @@ val FormMaxWidth: Dp = 460.dp
 /**
  * Whether the login form should sit beside its branding rather than underneath it.
  *
- * Stacked, the screen wants about 680dp of height: logo, heading and subtitle come to roughly
- * 200dp before the card starts, and the card itself is another 330dp. A landscape tablet has
- * 540dp to 600dp, so the Log in button lands under the gesture bar — and on a 1080p tablet only
- * the top edge of it is on screen at all. It does scroll, but nothing on screen says so, which is
- * the worst version of not fitting.
+ * Stacked, the form needs about 370dp under the hero to show the Sign in button, and the hero
+ * shrinks from 360dp to 200dp to make room, so stacked fits from roughly 570dp of height. Below
+ * 640dp it fits only with the hero squeezed, and a landscape tablet (540dp to 600dp) looks better
+ * with the hero as a panel beside the form than as a strip above it.
  *
- * Beside, the tallest column is the card, and the window pays for it out of the width it already
- * had going spare: at 960dp wide the form is capped at 460dp and the rest of the row is empty.
+ * Beside, the tallest column is the form, and the window pays for it out of the width it already
+ * had going spare: at 960dp wide the form is capped at 460dp and the rest of the row is the hero.
  *
  * Takes measurements rather than a window size class so the decision follows the space this
  * composable actually got, and so a test can make it without a window.

@@ -1,7 +1,36 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
+import androidx.compose.ui.text.style.TextAlign
+import com.desarrollodroide.pagekeeper.ui.components.DialogDismissButton
+import com.desarrollodroide.pagekeeper.ui.components.DialogConfirmButton
+import com.desarrollodroide.pagekeeper.ui.components.ShioriAlertDialog
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +46,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.DialogProperties
@@ -99,22 +127,7 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                )
-            )
+            SettingsHeader(onBack = onBack, scrollBehavior = scrollBehavior)
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
@@ -240,13 +253,15 @@ fun SettingsContent(
         modifier = Modifier
             .widthIn(max = ContentMaxWidth)
             .fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp),
     ) {
+        // The account first: which server this is, and the way out. Then the app's own settings,
+        // most used first, and the small print last.
         item {
-            VisualSection(
-                themeMode = themeMode,
-                dynamicColors = useDynamicColors
+            AccountSection(
+                serverUrl = serverUrl,
+                onLogout = onLogout,
             )
         }
         item {
@@ -260,6 +275,12 @@ fun SettingsContent(
                 onClickHideDialogOption = onClickHideDialogOption,
                 hideTag = hideTag,
                 onNavigateToTags = onNavigateToTags
+            )
+        }
+        item {
+            VisualSection(
+                themeMode = themeMode,
+                dynamicColors = useDynamicColors
             )
         }
         item {
@@ -289,9 +310,7 @@ fun SettingsContent(
             }
         }
         item {
-            AccountSection(
-                serverUrl = serverUrl,
-                onLogout = onLogout,
+            AboutSection(
                 onNavigateToTermsOfUse = onNavigateToTermsOfUse,
                 onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
                 onNavigateToSeverSettings = {
@@ -320,80 +339,181 @@ private fun LogoutConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    ShioriAlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
-        title = { Text("Log out?") },
+        icon = Icons.AutoMirrored.Filled.Logout,
+        tone = DialogTone.Danger,
+        title = "Log out?",
         text = {
             Text(
-                if (pendingChanges > 0) {
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
+                text = if (pendingChanges > 0) {
                     val changes = if (pendingChanges == 1) "1 change has" else "$pendingChanges changes have"
                     "$changes not reached the server yet and will be lost. Bookmarks on the server are not affected."
                 } else {
                     "Bookmarks stored on this device will be removed. Bookmarks on the server are not affected."
-                }
+                },
             )
         },
         // Log out is the destructive one: it empties this device's copy.
         confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Log out") }
+            DialogConfirmButton(text = "Log out", onClick = onConfirm, destructive = true)
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { DialogDismissButton(text = "Cancel", onClick = onDismiss) },
     )
 }
 
-/** Server + app version, shown once at the bottom of the settings list. */
+/** App and server version, once, at the bottom of the list. */
 @Composable
 private fun VersionFooter(serverVersion: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
-        if (serverVersion.isNotEmpty()) {
-            VersionLabel(
-                icon = Icons.Default.Storage,
-                text = "Server v$serverVersion",
-                contentDescription = "Server version",
-            )
-        } else {
-            Spacer(modifier = Modifier.width(0.dp))
-        }
-        VersionLabel(
+        VersionPill(
             icon = Icons.Default.Smartphone,
             text = "App v${BuildConfig.VERSION_NAME}",
             contentDescription = "App version",
         )
+        if (serverVersion.isNotEmpty()) {
+            VersionPill(
+                icon = Icons.Default.Storage,
+                text = "Server v$serverVersion",
+                contentDescription = "Server version",
+            )
+        }
     }
 }
 
 @Composable
-private fun VersionLabel(
+private fun VersionPill(
     icon: ImageVector,
     text: String,
     contentDescription: String,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            modifier = Modifier
+                .height(32.dp)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(16.dp),
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
+
+/**
+ * "Settings" set large over a coral flower, collapsing as the list scrolls the way the library and
+ * Tags headers do: the big word shrinks away and a small one takes its place beside Back.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SettingsHeader(
+    onBack: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+) {
+    val state = scrollBehavior.state
+    val density = LocalDensity.current
+    val expandedHeightPx = with(density) { SettingsTitleHeight.toPx() }
+    SideEffect {
+        if (state.heightOffsetLimit != -expandedHeightPx) {
+            state.heightOffsetLimit = -expandedHeightPx
+        }
+    }
+    val collapsedFraction = state.collapsedFraction
+    val titleHeight = with(density) { (expandedHeightPx + state.heightOffset).coerceAtLeast(0f).toDp() }
+    val statusBarTop = WindowInsets.statusBars.getTop(density).toFloat()
+    val flower = MaterialShapes.Flower.toShape()
+    val sun = MaterialShapes.Sunny.toShape()
+    val flowerColor = MaterialTheme.colorScheme.tertiaryContainer
+    val sunColor = MaterialTheme.colorScheme.secondaryContainer
+
+    Surface(color = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainer, collapsedFraction)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clipToBounds()
+                // Drawn rather than laid out, so they take no space, and they fade as it collapses.
+                .drawBehind {
+                    val alpha = 1f - collapsedFraction
+                    val flowerSide = 280.dp.toPx()
+                    translate(left = size.width - flowerSide + 100.dp.toPx(), top = statusBarTop - 110.dp.toPx()) {
+                        drawOutline(flower.createOutline(Size(flowerSide, flowerSide), layoutDirection, this), flowerColor, alpha = alpha)
+                    }
+                    val sunSide = 40.dp.toPx()
+                    translate(left = size.width - sunSide - 30.dp.toPx(), top = statusBarTop + 96.dp.toPx()) {
+                        drawOutline(sun.createOutline(Size(sunSide, sunSide), layoutDirection, this), sunColor, alpha = alpha)
+                    }
+                },
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.statusBars),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                    Text(
+                        text = "Settings",
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .graphicsLayer { alpha = collapsedFraction },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(titleHeight)
+                        .clipToBounds(),
+                ) {
+                    Text(
+                        text = "Settings",
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .wrapContentHeight(align = Alignment.Bottom, unbounded = true)
+                            .padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
+                            .graphicsLayer { alpha = 1f - collapsedFraction }
+                            .semantics { heading() },
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 60.sp,
+                            lineHeight = 64.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-2.5).sp,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val SettingsTitleHeight = 76.dp
 
 data class Item(
     val title: String,

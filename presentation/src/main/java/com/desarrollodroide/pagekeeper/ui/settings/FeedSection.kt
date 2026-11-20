@@ -41,7 +41,7 @@ fun FeedSection(
     // the user had closed. Saveable, so a rotation keeps it the way the user left it.
     var hideTagSheetRequested by rememberSaveable { mutableStateOf(false) }
 
-    SettingsGroup(title = "Bookmark list", modifier = modifier) {
+    SettingsGroup(title = "Bookmark list", modifier = modifier, accent = SettingsAccents.bookmarkList) {
         SwitchOption(
             title = "Compact view",
             icon = Icons.Filled.ViewCompactAlt,

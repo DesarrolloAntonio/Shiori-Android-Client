@@ -16,11 +16,13 @@ fun DataSection(
 ) {
     val currentCacheSize by cacheSize.collectAsStateWithLifecycle()
 
-    SettingsGroup(title = "Data", modifier = modifier) {
+    SettingsGroup(title = "Data", modifier = modifier, accent = SettingsAccents.data) {
         ClickableOption(
             title = "Clear Image Cache",
             icon = Icons.Default.Delete,
             subtitle = "Cache size: $currentCacheSize",
+            // An action, not a place: no chevron.
+            trailingIcon = null,
             onClick = onClearCache
         )
     }

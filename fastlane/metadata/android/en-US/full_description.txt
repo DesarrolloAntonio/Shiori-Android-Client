@@ -1,11 +1,22 @@
-Discover a new way to save, organize, and access your favorite web pages with <b>Pagekeeper</b>. Built on the renowned <b>Shiori</b> platform, our app takes bookmark management to the next level.
+An Android client for <b>Shiori</b>, the self-hosted bookmark manager. It talks to a server you run yourself: there is no account to sign up for and no service behind the app, only your own.
 
-Shiori is an innovative bookmark management application that revolutionizes the way users save, organize, and access their favorite web pages. Built upon the robust Shiori platform, Shiori offers a seamless experience across all devices.
+Your whole library is kept on the device, so the list, the tags and every article you have saved are there with no connection at all. What you change while offline (adding, editing, deleting, asking for a fresh copy of a page) is queued and sent when your server can be reached again.
 
-<b>Pagekeeper Key Features:</b>
+<b>Features</b>
 
-* <b>Save Pages Easily</b>: Capture web pages you discover in an instant and access them anytime, even offline.
-* <b>Superior Organization</b>: Sort your bookmarks with custom labels, descriptions, and thumbnails for quick retrieval.
-* <b>Cloud Synchronization</b>: Keep your bookmarks synced across all your devices, so you never lose an important page.
-* <b>Intuitive Interface</b>: Navigate through your bookmarks with a clean and user-friendly interface, designed for a seamless user experience.
-* <b>Share and Discover</b>: Share your favorite pages with friends and discover new pages through the Pagekeeper community.
+• <b>Save from any app</b>: share a page from your browser and it lands in your library, without opening the app.
+• <b>Read offline</b>: articles are stored as clean, readable text, without the site around them.
+• <b>Works offline, syncs later</b>: changes made without a connection are sent once the server answers again.
+• <b>Search</b> titles, excerpts and URLs on the device, so it also works offline.
+• <b>Tags</b>: filter the list by tag, rename or delete tags, or hide one tag from the list.
+• <b>Batch actions</b>: select several bookmarks to tag, re-cache or delete them in one go.
+• <b>EPUB</b>: download the ebook your server made of a page and open it in your reader app.
+• <b>Phones, tablets and foldables</b>: the list takes as many columns as the screen can hold, and on a large screen the article can open beside it.
+• <b>Material 3</b>, light and dark.
+
+<b>Requirements</b>
+
+• A Shiori server you can reach, version 1.7 or newer.
+• Android 8.0 or newer.
+
+This is an independent app, not made by the Shiori project. It is open source under the Apache 2.0 license: https://github.com/DesarrolloAntonio/Shiori-Android-Client

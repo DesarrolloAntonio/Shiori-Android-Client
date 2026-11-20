@@ -134,6 +134,7 @@ class FeedViewModel(
 
     val compactView: StateFlow<Boolean> = settingsPreferenceDataSource.compactViewFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     val tagToHide: StateFlow<Tag?> = settingsPreferenceDataSource.hideTagFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -144,6 +145,31 @@ class FeedViewModel(
         val allTags = tagsState.data ?: emptyList()
         allTags.filter { it.id.toString() in selectedIds }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * How many bookmarks the list is showing, for the header's large count: the same search, tags
+     * and hidden tag as [bookmarksState], so a filtered library says how much it filtered down to
+     * rather than the total. Null until Room has answered, so the header never flashes a zero on a
+     * full library.
+     *
+     * The repository is only asked once something collects, which keeps view model tests that
+     * never draw the header from needing an answer for it.
+     */
+    val bookmarkCount: StateFlow<Int?> = combine(
+        selectedTags,
+        showOnlyHiddenTag,
+        tagToHide,
+        debouncedSearchQuery(),
+    ) { selectedTags, showOnlyHidden, hiddenTag, query ->
+        CountQuery(selectedTags, showOnlyHidden, hiddenTag, query)
+    }.flatMapLatest { (selectedTags, showOnlyHidden, hiddenTag, query) ->
+        bookmarksRepository.countBookmarks(
+            tags = if (showOnlyHidden) emptyList() else selectedTags,
+            searchText = query,
+            showOnlyHiddenTag = showOnlyHidden,
+            tagToHide = hiddenTag,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * The feed, straight from Room.
@@ -614,6 +640,28 @@ class FeedViewModel(
         }
     }
 
+    /**
+     * The library narrowed to this one tag, whatever was applied before. What tapping a tag in the
+     * Tags screen means.
+     *
+     * Writes the selection outright rather than going through [addSelectedTag]: that one reads
+     * [selectedTags], which is not being collected while the Tags screen is up, and so can be stale.
+     * The hidden-tag view ignores the selection, so it is turned off too.
+     */
+    fun showOnlyTag(tag: Tag) {
+        showOnlyHiddenTag.value = false
+        viewModelScope.launch {
+            settingsPreferenceDataSource.setSelectedCategories(listOf(tag.id.toString()))
+        }
+    }
+
+    /** Back to the whole library: no search, no tags, out of the hidden tag view. */
+    fun clearFilters() {
+        clearSearch()
+        showOnlyHiddenTag.value = false
+        resetTags()
+    }
+
     fun resetTags() {
         viewModelScope.launch {
             settingsPreferenceDataSource.setSelectedCategories(emptyList())
@@ -642,6 +690,13 @@ class FeedViewModel(
 }
 
 /** The four things that decide which bookmarks the feed shows. */
+private data class CountQuery(
+    val selectedTags: List<Tag>,
+    val showOnlyHiddenTag: Boolean,
+    val tagToHide: Tag?,
+    val query: String,
+)
+
 private data class FeedQuery(
     val selectedTags: List<Tag>,
     val showOnlyHiddenTag: Boolean,

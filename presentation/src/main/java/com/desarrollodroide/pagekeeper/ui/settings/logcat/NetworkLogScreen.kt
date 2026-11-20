@@ -1,5 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.settings.logcat
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.desarrollodroide.pagekeeper.ui.components.LargeTitleTopBar
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -25,7 +27,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,38 +55,29 @@ fun NetworkLogScreen(
         onBack()
     }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Network Logs") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
+            LargeTitleTopBar(
+                title = "Network Logs",
+                onBack = onBack,
+                scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = { onShare.invoke(viewModel.shareLogs()) }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share logs")
+                    }
                     IconButton(onClick = { viewModel.clearLogs() }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Clear logs"
-                        )
-                    }
-                    IconButton(onClick = { onShare.invoke(viewModel.shareLogs()) }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = "Share logs"
+                            contentDescription = "Clear logs",
+                            tint = MaterialTheme.colorScheme.error,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Box(
             modifier = Modifier

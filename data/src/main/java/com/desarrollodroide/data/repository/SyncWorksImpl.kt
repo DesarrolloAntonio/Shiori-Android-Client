@@ -39,7 +39,7 @@ class SyncWorksImpl(
         removedTagNames: Set<String>,
     ) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        val encodedTitle = URLEncoder.encode(bookmark.title, "UTF-8")
+        val encodedTitle = URLEncoder.encode(syncJobLabel(bookmark), "UTF-8")
         val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setInputData(workDataOf(
                 "operationType" to operationType.name,
@@ -171,6 +171,13 @@ class SyncWorksImpl(
             .also { Log.d("SyncManager", "BookmarkTitle: $it") }
     }
 }
+
+/**
+ * What the sync sheet calls a job: the bookmark's title, or its url while it has none. A link added
+ * by hand has no title until the server reads the page, so its job used to be a blank row in the
+ * sheet and a "?" in the banner, with nothing to tell one queued link from another.
+ */
+internal fun syncJobLabel(bookmark: Bookmark): String = bookmark.title.ifBlank { bookmark.url }
 
 /**
  * Whether the sync sheet (and its badge) lists a job: everything not done yet, and a job that gave

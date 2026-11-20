@@ -1,5 +1,7 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import androidx.compose.material.icons.outlined.Lock
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
@@ -24,10 +26,19 @@ internal fun FeedErrorDialog(
     onSessionExpired: () -> Unit,
 ) {
     if (error.isNullOrEmpty()) return
+    val sessionExpired = error == SESSION_HAS_BEEN_EXPIRED
     ConfirmDialog(
-        icon = Icons.Default.Error,
-        title = "Error",
-        content = error,
+        icon = if (sessionExpired) Icons.Outlined.Lock else Icons.Default.Error,
+        tone = DialogTone.Danger,
+        title = if (sessionExpired) "Session expired" else "Error",
+        content = if (sessionExpired) {
+            "The server no longer accepts this session. Log in again to keep syncing."
+        } else {
+            error
+        },
+        // Set apart, because it is the answer to the question the message raises.
+        note = if (sessionExpired) "Changes waiting to be sent stay on this device." else null,
+        confirmButton = if (sessionExpired) "Log in" else "Accept",
         openDialog = remember { mutableStateOf(true) },
         onConfirm = {
             if (error == SESSION_HAS_BEEN_EXPIRED) onSessionExpired() else onAccept()

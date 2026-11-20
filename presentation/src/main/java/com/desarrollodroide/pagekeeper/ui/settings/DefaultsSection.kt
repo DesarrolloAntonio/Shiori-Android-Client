@@ -20,7 +20,7 @@ fun DefaultsSection(
     onAutoAddBookmarkChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsGroup(title = "Defaults", modifier = modifier) {
+    SettingsGroup(title = "Defaults", modifier = modifier, accent = SettingsAccents.defaults) {
         SwitchOption(
             title = "Make bookmark publicly available",
             icon = Icons.Filled.Public,

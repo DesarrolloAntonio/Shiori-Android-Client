@@ -48,6 +48,20 @@ class BookmarksRepositoryImpl(
 
     private val TAG = "BookmarksRepository"
 
+    override fun countBookmarks(
+        tags: List<Tag>,
+        searchText: String,
+        showOnlyHiddenTag: Boolean,
+        tagToHide: Tag?,
+    ): Flow<Int> = bookmarksDao.countShown(
+        // Trimmed as getLocalPagingBookmarks trims it, or a trailing space would count nothing.
+        searchText = searchText.trim(),
+        tagIds = tags.map { it.id },
+        filterByTags = tags.isNotEmpty(),
+        onlyHiddenTag = showOnlyHiddenTag,
+        hiddenTagId = tagToHide?.id,
+    )
+
     override fun getBookmarks(
         xSession: String,
         serverUrl: String

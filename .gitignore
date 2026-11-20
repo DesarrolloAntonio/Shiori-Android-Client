@@ -34,8 +34,9 @@ cambios.patch
 # Upstream Shiori checkout, kept locally for API reference only
 /shiori-upstream
 
-# QA campaign (qa-campaign skill): local config, secrets, screenshots, throwaway server
+# QA campaign (qa-campaign skill): local config, secrets, screenshots, throwaway server, test scripts
 qa.config.json
 qa.credentials.json
 qa-shots/
 qa-server/
+scripts/qa/

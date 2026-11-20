@@ -1,5 +1,14 @@
 package com.desarrollodroide.pagekeeper.ui.tags
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.desarrollodroide.pagekeeper.ui.components.DialogDismissButton
+import com.desarrollodroide.pagekeeper.ui.components.DialogConfirmButton
+import com.desarrollodroide.pagekeeper.ui.components.ShioriAlertDialog
+import com.desarrollodroide.pagekeeper.ui.components.DialogTone
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -34,6 +43,8 @@ fun TagNameDialog(
     existingNames: List<String>,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
+    icon: ImageVector = Icons.Outlined.Edit,
+    tone: DialogTone = DialogTone.Warning,
 ) {
     var name by rememberSaveable(initialName) { mutableStateOf(initialName) }
     val trimmed = name.trim()
@@ -42,15 +53,17 @@ fun TagNameDialog(
     }
     val canConfirm = trimmed.isNotEmpty() && !isDuplicate
 
-    AlertDialog(
+    ShioriAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        icon = icon,
+        tone = tone,
+        title = title,
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(16.dp),
                 label = { Text("Name") },
                 singleLine = true,
                 isError = isDuplicate,
@@ -60,15 +73,10 @@ fun TagNameDialog(
             )
         },
         confirmButton = {
-            TextButton(
-                onClick = { onConfirm(trimmed) },
-                enabled = canConfirm,
-            ) {
-                Text(confirmLabel)
-            }
+            DialogConfirmButton(text = confirmLabel, onClick = { onConfirm(trimmed) }, enabled = canConfirm)
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            DialogDismissButton(text = "Cancel", onClick = onDismiss)
         },
     )
 }
@@ -79,12 +87,16 @@ fun DeleteTagDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
+    ShioriAlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-        title = { Text("Delete \"${tag.name}\"?") },
+        icon = Icons.Outlined.Delete,
+        tone = DialogTone.Danger,
+        title = "Delete \"${tag.name}\"?",
         text = {
             Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
                 text = if (tag.nBookmarks > 0) {
                     "It will be removed from ${tag.nBookmarks} bookmark" +
                         (if (tag.nBookmarks == 1) "." else "s.") +
@@ -95,10 +107,10 @@ fun DeleteTagDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text("Delete") }
+            DialogConfirmButton(text = "Delete", onClick = onConfirm, destructive = true)
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            DialogDismissButton(text = "Cancel", onClick = onDismiss)
         },
     )
 }

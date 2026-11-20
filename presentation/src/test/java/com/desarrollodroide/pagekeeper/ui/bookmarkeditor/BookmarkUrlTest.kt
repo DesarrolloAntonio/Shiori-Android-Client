@@ -75,4 +75,72 @@ class BookmarkUrlTest {
         assertFalse(isPlausibleBookmarkUrl("example."))
         assertFalse(isPlausibleBookmarkUrl("2026-08-25 09:45:23 D SyncManager: BookmarkId 1787"))
     }
+
+    @Test
+    fun `a shared title is taken from the title extra first`() {
+        assertEquals("The title", sharedBookmarkTitle("The title", "The subject", URL))
+    }
+
+    /** Firefox for Android sends the page title as the subject and no title extra at all. */
+    @Test
+    fun `a shared title falls back to the subject`() {
+        assertEquals("The subject", sharedBookmarkTitle(null, "The subject", URL))
+    }
+
+    @Test
+    fun `a blank title extra does not hide the subject`() {
+        assertEquals("The subject", sharedBookmarkTitle("  ", "The subject", URL))
+    }
+
+    @Test
+    fun `the url stands in when a share has no title`() {
+        assertEquals(URL, sharedBookmarkTitle(null, null, URL))
+        assertEquals(URL, sharedBookmarkTitle("", " ", URL))
+    }
+
+    /**
+     * Google News shares "headline + link" as the text, and the whole string used to be sent to the
+     * server as the url (Play review, 1.52.03, 2026-10-24). Opera shares the link alone, and that
+     * worked.
+     */
+    @Test
+    fun `a link shared together with its headline is pulled out of the text`() {
+        assertEquals(URL, sharedLinkUrl("Headline of the article $URL"))
+    }
+
+    @Test
+    fun `a link on its own line after the headline is pulled out of the text`() {
+        assertEquals(URL, sharedLinkUrl("Headline of the article\n\n$URL"))
+    }
+
+    @Test
+    fun `a share that is only a link keeps the link`() {
+        assertEquals(URL, sharedLinkUrl("  $URL  "))
+    }
+
+    /** No link in it: leave it for the form and the server to judge, as before. */
+    @Test
+    fun `a share with no http link is passed through`() {
+        assertEquals("example.com", sharedLinkUrl("example.com"))
+    }
+
+    @Test
+    fun `the headline around a shared link becomes the title when no extra has one`() {
+        assertEquals(
+            "Headline of the article",
+            sharedBookmarkTitle(null, null, URL, sharedText = "Headline of the article\n$URL"),
+        )
+    }
+
+    @Test
+    fun `a title extra still wins over the headline in the text`() {
+        assertEquals(
+            "The title",
+            sharedBookmarkTitle("The title", null, URL, sharedText = "Headline of the article $URL"),
+        )
+    }
+
+    private companion object {
+        const val URL = "https://example.com/article"
+    }
 }

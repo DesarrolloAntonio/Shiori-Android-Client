@@ -12,7 +12,7 @@ fun DebugSection(
     onViewLastCrash: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsGroup(title = "Debug", modifier = modifier) {
+    SettingsGroup(title = "Debug", modifier = modifier, accent = SettingsAccents.debug) {
         ClickableOption(
             title = "View network logs",
             icon = Icons.Default.Code,

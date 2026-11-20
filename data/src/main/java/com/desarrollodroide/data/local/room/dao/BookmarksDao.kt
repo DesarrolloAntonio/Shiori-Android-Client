@@ -65,6 +65,48 @@ interface BookmarksDao {
   @Query("SELECT (SELECT COUNT(*) FROM bookmarks) == 0")
   suspend fun isEmpty(): Boolean
 
+  /**
+   * How many bookmarks the feed is showing, as it changes. The library's header shows it.
+   *
+   * Paging has no total, so this repeats the feed's rules in one query: the search and the tag
+   * filter of the paging queries below, plus the hidden tag rule GetLocalPagingBookmarksUseCase
+   * applies on top of them. Change one and the other has to follow, or the header and the list
+   * disagree.
+   *
+   * - [onlyHiddenTag]: only bookmarks carrying the hidden tag (none if there is no hidden tag).
+   * - [filterByTags]: bookmarks carrying any of [tagIds]. The hidden tag is not excluded here,
+   *   the same as in the feed.
+   * - neither: everything except bookmarks carrying the hidden tag.
+   */
+  @Query("""
+        SELECT COUNT(*) FROM bookmarks
+        WHERE (:searchText = ''
+            OR title LIKE '%' || :searchText || '%'
+            OR excerpt LIKE '%' || :searchText || '%'
+            OR url LIKE '%' || :searchText || '%')
+        AND CASE
+            WHEN :onlyHiddenTag THEN EXISTS (
+                SELECT 1 FROM bookmark_tag_cross_ref
+                WHERE bookmark_tag_cross_ref.bookmarkId = bookmarks.id
+                AND bookmark_tag_cross_ref.tagId = :hiddenTagId)
+            WHEN :filterByTags THEN EXISTS (
+                SELECT 1 FROM bookmark_tag_cross_ref
+                WHERE bookmark_tag_cross_ref.bookmarkId = bookmarks.id
+                AND bookmark_tag_cross_ref.tagId IN (:tagIds))
+            ELSE NOT EXISTS (
+                SELECT 1 FROM bookmark_tag_cross_ref
+                WHERE bookmark_tag_cross_ref.bookmarkId = bookmarks.id
+                AND bookmark_tag_cross_ref.tagId = :hiddenTagId)
+        END
+    """)
+  fun countShown(
+    searchText: String,
+    tagIds: List<Int>,
+    filterByTags: Boolean,
+    onlyHiddenTag: Boolean,
+    hiddenTagId: Int?,
+  ): Flow<Int>
+
   // Paging operations
 
   /**

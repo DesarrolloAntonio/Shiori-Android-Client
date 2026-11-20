@@ -1,34 +1,54 @@
 package com.desarrollodroide.pagekeeper.ui.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import com.desarrollodroide.pagekeeper.ui.components.TagSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.desarrollodroide.model.Tag
-import com.desarrollodroide.pagekeeper.ui.components.Categories
-import com.desarrollodroide.pagekeeper.ui.components.CategoriesType
+import com.desarrollodroide.pagekeeper.ui.components.TagSaver
+import com.desarrollodroide.pagekeeper.ui.feed.TagFilterChip
+import com.desarrollodroide.pagekeeper.ui.theme.ShioriTheme
 
+/**
+ * Settings › Hide tag: one tag whose bookmarks are kept out of the library.
+ *
+ * Drawn like the filter sheet it sits beside in the app — a heavy title, the same tag chips (the
+ * chosen one filled, with a check), and a bottom bar where the main action is the filled one. It
+ * used to be a centred title over outlined chips, with "None" and "Apply" as two identical filled
+ * buttons, so nothing said which one saved the choice.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HideCategoryOptionView(
     onApply: (Tag?) -> Unit,
@@ -40,69 +60,102 @@ fun HideCategoryOptionView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 20.dp),
     ) {
-        Text("Select category to hide", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.tertiaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.VisibilityOff,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            Text(
+                text = "Select category to hide",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Text(
+            text = "Bookmarks with this tag are kept out of the library.",
+            modifier = Modifier.padding(top = 10.dp, bottom = 16.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         if (uniqueCategories.isEmpty()) {
             Row(
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(vertical = 16.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.padding(vertical = 16.dp),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Sell,
-                    contentDescription = "No categories available",
-                    modifier = Modifier.size(24.dp)
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
                 )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "No categories available",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Text("No categories available", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
-            Categories(
-                categoriesType = CategoriesType.SELECTABLES,
-                showCategories = true,
-                uniqueCategories = uniqueCategories,
-                selectedTags = listOfNotNull(selectedTag),
-                onCategorySelected = { tag ->
-                    selectedTag = tag
-                },
-                onCategoryDeselected = {
-                    selectedTag = null
-                },
-                singleSelection = true
-            )
+            // Scrolls inside the sheet, so a long list of tags never pushes the buttons off it.
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 320.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                uniqueCategories.forEach { tag ->
+                    val selected = selectedTag?.id == tag.id
+                    TagFilterChip(
+                        tag = tag,
+                        selected = selected,
+                        onClick = { selectedTag = if (selected) null else tag },
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.height(24.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, bottom = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Clears the hidden tag outright, so it is the quieter of the two.
+            TextButton(
                 onClick = {
                     selectedTag = null
                     onApply(null)
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.height(56.dp),
+                shape = CircleShape,
             ) {
-                Text("None")
+                Text("None", fontWeight = FontWeight.SemiBold)
             }
-            Spacer(Modifier.width(8.dp))
             Button(
-                onClick = {
-                    onApply(selectedTag)
-                },
-                modifier = Modifier.weight(1f),
-                enabled = uniqueCategories.isNotEmpty()
+                onClick = { onApply(selectedTag) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                shape = CircleShape,
+                enabled = uniqueCategories.isNotEmpty(),
             ) {
-                Text("Apply")
+                Text("Apply", fontWeight = FontWeight.Bold)
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
@@ -116,11 +169,11 @@ private fun HideCategoryOptionViewPreview() {
                 Tag(id = 5, name = "Central Europe"), Tag(id = 6, name = "Eastern Europe")
             )
 
-    MaterialTheme {
+    ShioriTheme {
         HideCategoryOptionView(
             onApply = {},
             uniqueCategories = regionOptions,
-            hideTag = null
+            hideTag = regionOptions[1]
         )
     }
 }

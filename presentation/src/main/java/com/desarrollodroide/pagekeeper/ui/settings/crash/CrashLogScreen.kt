@@ -1,6 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.settings.crash
 
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.desarrollodroide.pagekeeper.ui.components.LargeTitleTopBar
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +21,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,38 +44,29 @@ fun CrashLogScreen(
         onBack()
     }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Last Crash Log") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
+            LargeTitleTopBar(
+                title = "Last Crash Log",
+                onBack = onBack,
+                scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = { onShare.invoke(viewModel.shareCrashLog()) }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share crash log")
+                    }
                     IconButton(onClick = { viewModel.clearCrashLog() }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Clear crash log"
-                        )
-                    }
-                    IconButton(onClick = { onShare.invoke(viewModel.shareCrashLog()) }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = "Share crash log"
+                            contentDescription = "Clear crash log",
+                            tint = MaterialTheme.colorScheme.error,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Box(
             modifier = Modifier
