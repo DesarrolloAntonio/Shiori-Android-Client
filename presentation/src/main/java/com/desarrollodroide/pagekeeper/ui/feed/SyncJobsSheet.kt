@@ -149,7 +149,8 @@ private fun SyncJobRow(job: PendingJob) {
                 color = scheme.onSurfaceVariant,
             )
             Text(
-                text = job.bookmarkTitle,
+                // Jobs queued before titles fell back to the url can still arrive blank.
+                text = job.bookmarkTitle.ifBlank { "Untitled bookmark" },
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = scheme.onSurface,

@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed.item
 
+import androidx.compose.material3.MenuDefaults
 import com.desarrollodroide.pagekeeper.extensions.asLocalBookmarkDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -154,14 +155,6 @@ private fun BookmarkOverflowMenu(
                 },
                 leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) }
             )
-            DropdownMenuItem(
-                text = { Text("Delete") },
-                onClick = {
-                    expanded.value = false
-                    actions.onClickDelete(getBookmark)
-                },
-                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) }
-            )
             if (hasEbook) {
                 DropdownMenuItem(
                     text = { Text("Epub") },
@@ -192,6 +185,19 @@ private fun BookmarkOverflowMenu(
                     leadingIcon = { Icon(Icons.Outlined.CloudUpload, contentDescription = null) }
                 )
             }
+            // Last and in the error colour, as on the full card: the one item that can't be undone.
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    expanded.value = false
+                    actions.onClickDelete(getBookmark)
+                },
+                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                colors = MenuDefaults.itemColors(
+                    textColor = MaterialTheme.colorScheme.error,
+                    leadingIconColor = MaterialTheme.colorScheme.error,
+                ),
+            )
         }
     }
 }

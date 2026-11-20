@@ -303,7 +303,7 @@ internal fun TagSearchField(
 }
 
 @Composable
-private fun TagFilterChip(
+internal fun TagFilterChip(
     tag: Tag,
     selected: Boolean,
     onClick: () -> Unit,

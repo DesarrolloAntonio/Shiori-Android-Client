@@ -127,7 +127,7 @@ private fun EmptyLibraryMessage(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun EmptyIllustration(icon: ImageVector) {
+internal fun EmptyIllustration(icon: ImageVector) {
     val scheme = MaterialTheme.colorScheme
     val gold = LocalExtendedColors.current.goldContainer
     Box(modifier = Modifier.size(width = 260.dp, height = 220.dp)) {

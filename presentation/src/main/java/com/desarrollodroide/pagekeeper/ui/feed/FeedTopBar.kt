@@ -550,45 +550,6 @@ internal fun SelectionTopBar(
     }
 }
 
-/** Icon button that carries a count badge, animated in and out. */
-@Composable
-internal fun BadgedIconButton(
-    onClick: () -> Unit,
-    badgeCount: Int,
-    description: String,
-    icon: @Composable () -> Unit,
-) {
-    BadgedBox(
-        badge = {
-            AnimatedVisibility(
-                visible = badgeCount > 0,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                ) {
-                    Text(
-                        text = badgeCount.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        }
-    ) {
-        // The description goes on the button, not the glyph, so TalkBack announces the action once
-        // rather than describing the icon inside a separately labelled clickable.
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.semantics { this.contentDescription = description },
-        ) {
-            icon()
-        }
-    }
-}
-
 /**
  * The header's scroll connection, for the list to attach to itself.
  *

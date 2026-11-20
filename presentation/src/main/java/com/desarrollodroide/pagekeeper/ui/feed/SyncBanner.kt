@@ -1,5 +1,6 @@
 package com.desarrollodroide.pagekeeper.ui.feed
 
+import com.desarrollodroide.pagekeeper.ui.feed.item.hostOf
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -82,7 +83,9 @@ fun SyncBanner(state: SyncBannerState, modifier: Modifier = Modifier) {
             // A small stack of the queued bookmarks' monograms, so the bar reads as "these".
             Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
                 state.titles.take(3).forEachIndexed { index, title ->
-                    val colors = keyedColors(title)
+                    // A job named by its url (no title yet) is shown by its site, like its card.
+                    val key = hostOf(title)
+                    val colors = keyedColors(key)
                     Box(
                         modifier = Modifier
                             .size(30.dp)
@@ -91,7 +94,7 @@ fun SyncBanner(state: SyncBannerState, modifier: Modifier = Modifier) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = title.trim().take(1).ifEmpty { "?" },
+                            text = key.take(1).ifEmpty { "?" },
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Black,
                             color = colors.content,

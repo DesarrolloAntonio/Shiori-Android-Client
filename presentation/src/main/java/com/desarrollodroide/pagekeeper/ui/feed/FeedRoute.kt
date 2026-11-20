@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,7 +33,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ModalBottomSheet
@@ -52,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkEditorScreen
@@ -77,7 +83,7 @@ import kotlinx.coroutines.launch
  * Navigation arrives as two callbacks rather than a NavController, so the feed does not need to
  * know the graph it is mounted in, and can be previewed and tested without one.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FeedRoute(
     feedViewModel: FeedViewModel,
@@ -188,33 +194,52 @@ fun FeedRoute(
             bottomSheetState.show()
         }
     }
-    val libraryToolbar: @Composable () -> Unit = {
-        // One or the other: the library's tools, or while picking, what can be done to the
-        // picked bookmarks. In one box so the slot measures a single child.
-        Box(contentAlignment = Alignment.Center) {
-            AnimatedVisibility(
-                visible = selectedBookmarks.isEmpty(),
-                enter = fadeIn() + slideInVertically { it / 2 },
-                exit = fadeOut() + slideOutVertically { it / 2 },
-            ) {
+    // Scrolling down slides the library's tools away; scrolling up brings them back.
+    val toolbarBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
+        exitDirection = FloatingToolbarExitDirection.Bottom,
+    )
+    // Picking replaces the bar with the selection's own, which does not move. Coming back from it,
+    // the library's bar shows again even if the list had pushed it away before.
+    val picking = selectedBookmarks.isNotEmpty()
+    LaunchedEffect(picking) {
+        if (!picking) toolbarBehavior.state.offset = 0f
+    }
+    // One or the other: the library's tools, or while picking, what can be done to the picked
+    // bookmarks, lifted [lift] off the bottom. The bar hides by the distance from where it sits to
+    // the bottom of its parent, so each gets the whole area as its parent and the lift is an
+    // offset on the bar itself. In the scaffold's button slot, or under a padding, it hid only its
+    // own height and stayed half visible.
+    val libraryToolbar: @Composable (lift: Dp) -> Unit = { lift ->
+        AnimatedVisibility(
+            visible = selectedBookmarks.isEmpty(),
+            enter = fadeIn() + slideInVertically { it / 10 },
+            exit = fadeOut() + slideOutVertically { it / 10 },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 LibraryToolbar(
                     onAddClick = onAddManuallyClick,
                     onTagsClick = onNavigateToTags,
                     onSyncClick = openSyncSheet,
                     onSettingsClick = onNavigateToSettings,
                     pendingJobs = pendingJobs,
+                    modifier = Modifier.offset(y = -lift),
+                    scrollBehavior = toolbarBehavior,
                 )
             }
-            // In its place while picking: what can be done to the picked bookmarks.
-            AnimatedVisibility(
-                visible = selectedBookmarks.isNotEmpty(),
-                enter = fadeIn() + slideInVertically { it / 2 },
-                exit = fadeOut() + slideOutVertically { it / 2 },
-            ) {
+        }
+        AnimatedVisibility(
+            visible = selectedBookmarks.isNotEmpty(),
+            enter = fadeIn() + slideInVertically { it / 10 },
+            exit = fadeOut() + slideOutVertically { it / 10 },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 SelectionToolbar(
                     onAddTags = { showAddTagsDialog.value = true },
                     onUpdate = { showUpdateSelectedDialog.value = true },
                     onDelete = { showDeleteSelectedDialog.value = true },
+                    modifier = Modifier.offset(y = -lift),
                 )
             }
         }
@@ -246,8 +271,6 @@ fun FeedRoute(
                 )
             }
         },
-        floatingActionButton = { if (!twoPanes) libraryToolbar() },
-        floatingActionButtonPosition = FabPosition.Center,
     ) { paddingValues ->
         Box(
             modifier = Modifier.padding(paddingValues)
@@ -257,6 +280,7 @@ fun FeedRoute(
           // taken as a refresh and the collapsed title never came back.
           CompositionLocalProvider(
               LocalLibraryScrollConnection provides topBarScrollBehavior.nestedScrollConnection,
+              LocalToolbarScrollConnection provides toolbarBehavior,
               // Not during a selection: the bar is about the whole library, and the selection's
               // own app bar has taken over.
               LocalSyncBanner provides if (selectedBookmarks.isEmpty()) syncBannerStateOf(pendingJobs, openSyncSheet) else null,
@@ -288,13 +312,7 @@ fun FeedRoute(
                             // Both floating buttons belong to the feed, so in two panes they
                             // move into the list with it. Left in the scaffold, the add button
                             // sat at the bottom of the window, which is on top of the article.
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(16.dp)
-                            ) {
-                                libraryToolbar()
-                            }
+                            libraryToolbar(16.dp)
                         }
                         VerticalDivider()
                         Box(modifier = Modifier.weight(1f)) {
@@ -317,6 +335,11 @@ fun FeedRoute(
             }
           }
         }
+    }
+    // Over the scaffold rather than in its button slot, which is only as big as the bar: see
+    // libraryToolbar. Under the editor, which covers the feed and its tools alike.
+    if (!twoPanes) {
+        libraryToolbar(WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp)
     }
     // Over the scaffold, not inside its content. Inside, hiding the feed's app bar
     // animated the content padding away underneath the editor: it slid up to the status

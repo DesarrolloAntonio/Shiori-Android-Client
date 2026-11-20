@@ -1,5 +1,8 @@
 package com.desarrollodroide.pagekeeper.ui.components
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import com.desarrollodroide.pagekeeper.ui.feed.EmptyIllustration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -56,7 +58,10 @@ val LocalFeedInListPane = staticCompositionLocalOf { false }
 fun shouldUseTwoPanes(preferenceEnabled: Boolean, availableWidth: Dp): Boolean =
     preferenceEnabled && availableWidth >= TwoPaneMinWidth
 
-/** What the detail pane shows until the reader has something to read. */
+/**
+ * What the detail pane shows until the reader has something to read: the same heap of shapes as
+ * the empty library, around an article, so the two empty states look like one app.
+ */
 @Composable
 fun TwoPaneEmptyDetail(modifier: Modifier = Modifier) {
     Column(
@@ -64,28 +69,21 @@ fun TwoPaneEmptyDetail(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-        ) {
-            Icon(
-                modifier = Modifier.padding(28.dp).size(72.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                imageVector = Icons.Outlined.Article,
-                contentDescription = null,
-            )
-        }
+        EmptyIllustration(icon = Icons.Outlined.Article)
         Text(
-            modifier = Modifier.padding(top = 24.dp),
+            modifier = Modifier.padding(top = 28.dp),
             text = "Nothing open",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.headlineMedium,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = (-0.8).sp,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Text(
             modifier = Modifier.padding(top = 8.dp),
             text = "Pick a bookmark on the left to read it here.",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

@@ -129,13 +129,26 @@ fun FeedContent(
         // 130dp of blank on a bookmark with no excerpt and no tags. Here each card is as tall as
         // its own content and the columns simply pack, so there is no line to be level with.
         val headerScrollConnection = LocalLibraryScrollConnection.current
+        val toolbarScrollConnection = LocalToolbarScrollConnection.current
         val syncBanner = LocalSyncBanner.current
+        // The banner is inserted as the first row, and the grid keeps the card that was at the top
+        // where it was, so a banner that appeared while the list sat at its start landed just
+        // above the screen: queue a delete or an edit offline and the bar that says so was out of
+        // sight. Only an add showed it, because a growing list scrolls to the top anyway. Index 1
+        // is that first card once the banner is in.
+        val bannerShown = syncBanner != null
+        LaunchedEffect(bannerShown) {
+            if (bannerShown && gridState.firstVisibleItemIndex <= 1) {
+                gridState.animateScrollToItem(0)
+            }
+        }
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(minSize = 340.dp),
             state = gridState,
             modifier = Modifier
                 .fillMaxSize()
-                .then(headerScrollConnection?.let { Modifier.nestedScroll(it) } ?: Modifier),
+                .then(headerScrollConnection?.let { Modifier.nestedScroll(it) } ?: Modifier)
+                .then(toolbarScrollConnection?.let { Modifier.nestedScroll(it) } ?: Modifier),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             verticalItemSpacing = 12.dp,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
