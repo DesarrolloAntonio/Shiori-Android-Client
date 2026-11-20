@@ -24,10 +24,17 @@ internal fun FeedErrorDialog(
     onSessionExpired: () -> Unit,
 ) {
     if (error.isNullOrEmpty()) return
+    val sessionExpired = error == SESSION_HAS_BEEN_EXPIRED
     ConfirmDialog(
         icon = Icons.Default.Error,
-        title = "Error",
-        content = error,
+        title = if (sessionExpired) "Session expired" else "Error",
+        content = if (sessionExpired) {
+            "The server no longer accepts this session. Log in again to keep syncing. " +
+                "Changes waiting to be sent stay on this device."
+        } else {
+            error
+        },
+        confirmButton = if (sessionExpired) "Log in" else "Accept",
         openDialog = remember { mutableStateOf(true) },
         onConfirm = {
             if (error == SESSION_HAS_BEEN_EXPIRED) onSessionExpired() else onAccept()

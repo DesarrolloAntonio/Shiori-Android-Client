@@ -14,6 +14,8 @@ import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.mapper.toEntityModel
+import com.desarrollodroide.data.mapper.toProtoEntity
+import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.data.repository.AuthRepository
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.removedTagNamesFromJson
@@ -96,6 +98,7 @@ class SyncWorker(
                         }
                     } else {
                         Log.e("SyncWorker", "Failed to refresh session")
+                        forgetRefusedSession(refused = xSession)
                         retryOrGiveUp()
                     }
                 } else if (e is BookmarkNotFoundException) {
@@ -112,6 +115,26 @@ class SyncWorker(
         }
     }
 
+
+    /**
+     * The server refused this session and there is no way to get a new one from here.
+     *
+     * The app used to go on looking signed in: a share said "Bookmark saved" and queued a job that
+     * could never run, and nobody found out unless they opened the app. Dropping the session makes
+     * the next share and the next start ask for a login.
+     *
+     * Only the session goes. Unlike a logout, bookmarks and queued changes stay. So does the server
+     * url, so the jobs still waiting get the same refusal rather than failing on an empty url. A
+     * session saved since this job started is someone logging back in, and is left alone.
+     */
+    private suspend fun forgetRefusedSession(refused: String) {
+        if (settingsPreferenceDataSource.getSession() != refused) return
+        settingsPreferenceDataSource.saveUser(
+            password = "",
+            session = SessionDTO(null, null, null).toProtoEntity(),
+            serverUrl = settingsPreferenceDataSource.getUrl(),
+        )
+    }
 
     private suspend fun refreshSession(): Boolean {
         val serverUrl = settingsPreferenceDataSource.getUrl()

@@ -1,6 +1,7 @@
 package com.desarrollodroide.network.di
 
 import com.desarrollodroide.network.BuildConfig
+import com.desarrollodroide.network.retrofit.ExpiredSessionInterceptor
 import com.desarrollodroide.network.retrofit.NetworkLoggerInterceptor
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import okhttp3.OkHttpClient
@@ -32,6 +33,9 @@ fun networkingModule() = module {
                     chain.proceed(request)
                 }
             }
+            // After the header conversion above, so it can put the same token to the server, and
+            // before the logger, so the debug screen shows that check as well.
+            .addInterceptor(ExpiredSessionInterceptor())
             .addInterceptor(get<NetworkLoggerInterceptor>())
             .addInterceptor(HttpLoggingInterceptor().apply {
                 // BODY prints the full request body, and the login request body is the username
