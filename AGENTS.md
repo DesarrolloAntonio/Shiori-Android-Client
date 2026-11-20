@@ -22,15 +22,17 @@ Clean Architecture with 6 modules:
 
 ## Key Tech Stack
 
+Library versions live in `gradle/libs.versions.toml`; SDK levels in `gradle.properties`.
+
 - **UI:** Jetpack Compose + Material3 + Navigation Compose
-- **DI:** Koin 3.3.3
-- **Network:** Retrofit 2.9.0 + OkHttp + Gson + ScalarsConverterFactory
-- **DB:** Room 2.6.1 with KSP
+- **DI:** Koin
+- **Network:** Retrofit + OkHttp + Gson + ScalarsConverterFactory
+- **DB:** Room with KSP
 - **Async:** Kotlin Coroutines + Flow + Paging 3
 - **Background:** WorkManager (SyncWorker for offline-first sync)
-- **Images:** Coil 2.7.0
+- **Images:** Coil 3
 - **Preferences:** DataStore (Preferences + Proto)
-- **SDK:** minSdk 26, targetSdk 35, JDK 21
+- **JDK:** 21
 
 ## Module Details
 
@@ -55,10 +57,12 @@ Clean Architecture with 6 modules:
 - `SendLogoutUseCase` performs full cleanup (cancel workers, reset prefs, delete data)
 
 ### :presentation
-- ViewModels: `FeedViewModel`, `BookmarkViewModel`, `LoginViewModel`, `SettingsViewModel`, `SearchViewModel`, `ReadableContentViewModel`
+- ViewModels: `FeedViewModel`, `BookmarkViewModel`, `LoginViewModel`, `SettingsViewModel`, `TagsViewModel`, `ReadableContentViewModel`, `NetworkLogViewModel`, `CrashLogViewModel`
 - Navigation: Single-activity with `NavHost` in `Navigation.kt`
 - DI: `AppModule.kt` registers all Koin modules
-- Flavors: `production` (signed release) and `staging` (debug)
+- Flavors: `production` and `staging` (applicationId suffix `.staging`, app name "Shiori-dev")
+- Build types: `debug`, `release` (R8 minify + resource shrinking), and `minified` (release's R8
+  config signed with the debug key, so the shrunk app can run on a device — release keys only exist in CI)
 
 ### :model
 - Pure data classes: `Bookmark`, `Tag`, `User`, `Account`, etc.
@@ -77,11 +81,11 @@ Clean Architecture with 6 modules:
 - OkHttp interceptor converts `X-Session-Id` → `Authorization: Bearer` for legacy endpoints
 - ScalarsConverterFactory sends String @Body as `text/plain` — need explicit `@Headers("Content-Type: application/json")`
 - V1 login endpoint: `POST /api/v1/auth/login`; refresh with `POST /api/v1/auth/refresh`
-- Bookmark list/create/update/delete are still the **legacy** `/api/bookmarks` routes.
+- Bookmark list/create/update/delete use the **legacy** `/api/bookmarks` routes.
   There is no `GET`/`POST /api/v1/bookmarks` — verified against the upstream route table
   (`internal/http/server.go`). The v1 bookmark routes are only `{id}/readable`, `{id}/tags`,
   `bulk/tags` and `cache`.
-- The legacy `/api/accounts` family and `/api/login`, `/api/logout` were removed upstream
+- The server has no `/api/accounts` family and no `/api/login` or `/api/logout` — don't call them
 
 ## Branching & Workflow
 
