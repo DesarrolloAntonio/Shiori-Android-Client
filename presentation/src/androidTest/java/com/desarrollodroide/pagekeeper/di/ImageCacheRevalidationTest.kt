@@ -7,6 +7,7 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.bitmapConfig
+import coil3.request.ErrorResult
 import coil3.request.SuccessResult
 import coil3.toBitmap
 import kotlinx.coroutines.runBlocking
@@ -20,6 +21,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -160,6 +162,43 @@ class ImageCacheRevalidationTest {
             "an updated thumbnail must reach the screen, not sit behind a year long cache entry",
             bluePixel.hashCode() != redPixel.hashCode(),
             redPixelColor != afterColor
+        )
+    }
+
+    /**
+     * An expired session. Shiori answers a thumbnail with a redirect to its login page, OkHttp
+     * follows it, and what comes back is a 200 of HTML with no caching headers. That got the year
+     * long fallback lifetime and was stored under the thumbnail's key, so after logging back in
+     * the card kept loading the login page from disk and stayed blank: the first cards of a
+     * library, the ones on screen while the session was dead, lost their pictures for good.
+     */
+    @Test
+    fun aLoginPageServedInPlaceOfAThumbnailIsNotKept() = runBlocking {
+        var sessionValid = false
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when {
+                request.path == "/login" -> MockResponse()
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", "text/html; charset=utf-8")
+                    .setBody("<!DOCTYPE html><html><body>Log in</body></html>")
+                !sessionValid -> MockResponse()
+                    .setResponseCode(302)
+                    .setHeader("Location", "/login")
+                else -> thumbnailResponse("w/thumb/1-2026-01-01", redPixel)
+            }
+        }
+        val url = server.url("/bookmark/1/thumb").toString()
+        val loader = loader()
+
+        val whileExpired = load(loader, url)
+        assertTrue("a login page is not a picture", whileExpired is ErrorResult)
+
+        sessionValid = true
+        val afterLogin = load(loader, url)
+
+        assertTrue(
+            "after logging back in the thumbnail must load, not the login page kept from before",
+            afterLogin is SuccessResult
         )
     }
 
