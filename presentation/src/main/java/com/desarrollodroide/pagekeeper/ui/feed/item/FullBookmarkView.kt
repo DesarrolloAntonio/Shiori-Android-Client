@@ -19,9 +19,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,13 +41,13 @@ fun FullBookmarkView(
     isRefreshing: Boolean = false,
     hasSettledEmpty: Boolean = false,
 ) {
-    val bookmark by remember { derivedStateOf(getBookmark) }
-    val isRtl by remember {
-        derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() }
-    }
-    val imageUrl by remember {
-        derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" }
-    }
+    // Read on every recomposition, not remembered. The feed keys a card on id and modified, and
+    // Check brings back the scraped copy under the same id and the same modified (Shiori does not
+    // touch it when it scrapes), so the card is recomposed rather than recreated. A remembered
+    // derivedStateOf held the first bookmark it saw: Room had the title, the card kept the url.
+    val bookmark = getBookmark()
+    val isRtl = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
+    val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
 
     Column {
         // hasSettledEmpty: the server has already been asked and had nothing. Saying it is

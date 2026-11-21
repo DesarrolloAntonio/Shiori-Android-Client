@@ -24,8 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,13 +54,10 @@ fun SmallBookmarkView(
     token: String,
     actions: BookmarkActions
 ) {
-    val bookmark by remember { derivedStateOf(getBookmark) }
-    val imageUrl by remember {
-        derivedStateOf { "${serverURL.removeTrailingSlash()}${bookmark.imageURL}" }
-    }
-    val isRtl by remember {
-        derivedStateOf { bookmark.title.isRTLText() || bookmark.excerpt.isRTLText() }
-    }
+    // Read on every recomposition, not remembered; see FullBookmarkView.
+    val bookmark = getBookmark()
+    val imageUrl = "${serverURL.removeTrailingSlash()}${bookmark.imageURL}"
+    val isRtl = bookmark.title.isRTLText() || bookmark.excerpt.isRTLText()
 
     Column {
         if (bookmark.isPendingServerProcessing) {

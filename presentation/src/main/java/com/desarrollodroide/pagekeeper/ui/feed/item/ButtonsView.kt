@@ -16,9 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +42,8 @@ fun ButtonsView(
     actions: BookmarkActions,
     modifier: Modifier = Modifier,
 ) {
-    val bookmark by remember { derivedStateOf(getBookmark) }
+    // Read on every recomposition, not remembered; see FullBookmarkView.
+    val bookmark = getBookmark()
 
     val items = buildList {
         add(CardAction("Edit", rememberVectorPainter(Icons.Outlined.Edit)) { actions.onClickEdit(getBookmark) })
