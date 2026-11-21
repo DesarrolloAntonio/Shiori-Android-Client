@@ -4,6 +4,10 @@ import android.content.Context
 import android.util.Log
 import coil3.ImageLoader
 import coil3.disk.DiskCache
+import coil3.request.Options
+import coil3.network.CacheStrategy
+import coil3.network.NetworkRequest
+import coil3.network.NetworkResponse
 import coil3.network.cachecontrol.CacheControlCacheStrategy
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import okhttp3.OkHttpClient
@@ -36,7 +40,8 @@ fun buildImageLoader(
             // Shiori answers a matching If-None-Match on thumbnails with a 304, and its ETag
             // carries the bookmark's modified date, so this is what lets an updated thumbnail
             // appear at all.
-            cacheStrategy = { CacheControlCacheStrategy() },
+            // Wrapped so only pictures are kept: see ImagesOnlyCacheStrategy.
+            cacheStrategy = { ImagesOnlyCacheStrategy(CacheControlCacheStrategy()) },
             callFactory = {
             OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
@@ -80,5 +85,48 @@ internal fun applyFallbackCacheControl(response: Response): Response {
         response
     } else {
         response.newBuilder().header("Cache-Control", FALLBACK_CACHE_CONTROL).build()
+    }
+}
+
+/**
+ * Keeps anything that is not a picture out of the disk cache, and looks past it if it is there.
+ *
+ * When the session has expired Shiori answers a thumbnail with a redirect to its login page.
+ * OkHttp follows it, and what reaches the cache is a 200 of HTML with no caching headers, which
+ * [applyFallbackCacheControl] then gave a year. It was stored under the thumbnail's key, so after
+ * logging back in the card kept reading the login page from disk and stayed blank.
+ *
+ * Writing such a response is skipped, and one already cached by an earlier version is ignored, so
+ * the thumbnail is fetched again and replaces it. A response with no content type is given the
+ * benefit of the doubt, as it always was.
+ */
+internal class ImagesOnlyCacheStrategy(private val delegate: CacheStrategy) : CacheStrategy {
+
+    override suspend fun read(
+        cacheResponse: NetworkResponse,
+        networkRequest: NetworkRequest,
+        options: Options,
+    ): CacheStrategy.ReadResult =
+        if (cacheResponse.isPicture()) {
+            delegate.read(cacheResponse, networkRequest, options)
+        } else {
+            CacheStrategy.ReadResult(networkRequest)
+        }
+
+    override suspend fun write(
+        cacheResponse: NetworkResponse?,
+        networkRequest: NetworkRequest,
+        networkResponse: NetworkResponse,
+        options: Options,
+    ): CacheStrategy.WriteResult =
+        if (networkResponse.isPicture()) {
+            delegate.write(cacheResponse, networkRequest, networkResponse, options)
+        } else {
+            CacheStrategy.WriteResult.DISABLED
+        }
+
+    private fun NetworkResponse.isPicture(): Boolean {
+        val type = headers["Content-Type"]?.trim() ?: return true
+        return type.startsWith("image/", ignoreCase = true)
     }
 }
