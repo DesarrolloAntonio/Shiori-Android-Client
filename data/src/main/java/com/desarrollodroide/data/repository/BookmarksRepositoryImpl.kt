@@ -263,7 +263,7 @@ class BookmarksRepositoryImpl(
         xSession: String,
         serverUrl: String,
         bookmark: Bookmark
-    ): Bookmark? {
+    ): BookmarkRefresh {
         val response = apiService.getPagingBookmarks(
             xSessionId = xSession,
             url = "${serverUrl.removeTrailingSlash()}/api/bookmarks" +
@@ -275,14 +275,21 @@ class BookmarksRepositoryImpl(
         // keyword is a substring match, so the response can hold more than the one asked for.
         val match = response.body()?.resolvedBookmarks()
             ?.firstOrNull { it.url == bookmark.url }
-            ?: return null
+            ?: return BookmarkRefresh.NotOnServer
 
         val entity = match.toEntityModel()
+        // The same rule as syncAllBookmarks, and read after the answer arrives for the same reason.
+        // A bookmark with nothing scraped still offers Check after its tags are edited offline, and
+        // its upload sends the row as stored: writing the server's copy here undid the edit.
+        val waiting = syncWorks.bookmarkIdsWithPendingChanges()
+        if (bookmark.id in waiting || entity.id in waiting) {
+            return BookmarkRefresh.WaitingForUpload
+        }
         if (entity.id != bookmark.id) {
             bookmarksDao.deleteBookmarkById(bookmark.id)
         }
         bookmarksDao.insertPageWithTags(listOf(entity))
-        return entity.toDomainModel()
+        return BookmarkRefresh.Stored(entity.toDomainModel())
     }
 
     /**

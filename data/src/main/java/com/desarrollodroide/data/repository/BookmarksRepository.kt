@@ -41,14 +41,12 @@ interface BookmarksRepository {
    *
    * The list endpoint takes a keyword, so asking for the bookmark's own url costs a single
    * request. A full sync for one card meant a request per thirty bookmarks in the library.
-   *
-   * Returns null when the server does not know that url.
    */
   suspend fun refreshBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark
-  ): Bookmark?
+  ): BookmarkRefresh
 
   suspend fun deleteBookmark(
     xSession: String,
@@ -106,4 +104,20 @@ interface BookmarksRepository {
     searchText: String
   ): Flow<PagingData<Bookmark>>
 
+}
+
+/** What asking the server about one bookmark came to. */
+sealed interface BookmarkRefresh {
+
+  /** The server has no bookmark at that url. */
+  data object NotOnServer : BookmarkRefresh
+
+  /** The server's copy is in Room, so the card redraws from it. */
+  data class Stored(val bookmark: Bookmark) : BookmarkRefresh
+
+  /**
+   * Nothing was written: the bookmark has an edit or a delete waiting to upload, and that job
+   * sends the row as it is stored. The upload writes the server's answer to Room when it lands.
+   */
+  data object WaitingForUpload : BookmarkRefresh
 }

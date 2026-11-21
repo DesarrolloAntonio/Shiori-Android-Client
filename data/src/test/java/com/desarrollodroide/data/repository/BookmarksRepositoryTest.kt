@@ -595,7 +595,7 @@ class BookmarksRepositoryTest {
             bookmark = fresh.toDomainModel().copy(id = 1_787_646_812),
         )
 
-        assertEquals(7, result?.id)
+        assertEquals(7, (result as BookmarkRefresh.Stored).bookmark.id)
         // keyword is a substring match, so the response can carry more than the one asked for.
         verify(apiService).getPagingBookmarks(
             anyString(),
@@ -608,7 +608,7 @@ class BookmarksRepositoryTest {
 
     /** A url the server does not know about is not an error, it just has nothing to say. */
     @Test
-    fun `refreshing a bookmark the server does not have returns null`() = runTest {
+    fun `refreshing a bookmark the server does not have says so`() = runTest {
         `when`(apiService.getPagingBookmarks(anyString(), anyString()))
             .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = emptyList())))
 
@@ -621,8 +621,34 @@ class BookmarksRepositoryTest {
             ).toDomainModel(),
         )
 
-        assertNull(result)
+        assertEquals(BookmarkRefresh.NotOnServer, result)
         verify(bookmarksDao, never()).insertPageWithTags(anyList())
+    }
+
+    /**
+     * Check on the pending banner is a refresh too, and must leave a queued edit alone the way a
+     * sync does. A bookmark with nothing scraped still shows the banner after its tags are edited
+     * offline; writing the server's copy over it meant the upload then sent the server's tags back.
+     */
+    @Test
+    fun `refreshing a bookmark whose edit is waiting to upload leaves the row as it is`() = runTest {
+        val serverCopy = BookmarkDTO(
+            97, "https://example.org/QA_held", "Example Domain", "an excerpt", "", 0,
+            "2026-11-21 13:54:00", "2026-11-21 13:54:00", "", false, false, false, listOf(), false, false
+        )
+        `when`(apiService.getPagingBookmarks(anyString(), anyString()))
+            .thenReturn(Response.success(BookmarksDTO(page = 1, maxPage = 1, bookmarks = listOf(serverCopy))))
+        `when`(syncWorks.bookmarkIdsWithPendingChanges()).thenReturn(setOf(97))
+
+        val result = bookmarksRepository.refreshBookmark(
+            xSession = "session",
+            serverUrl = "http://test.com",
+            bookmark = serverCopy.copy(title = serverCopy.url, excerpt = "").toDomainModel(),
+        )
+
+        assertEquals(BookmarkRefresh.WaitingForUpload, result)
+        verify(bookmarksDao, never()).insertPageWithTags(anyList())
+        verify(bookmarksDao, never()).deleteBookmarkById(anyInt())
     }
 
     /**

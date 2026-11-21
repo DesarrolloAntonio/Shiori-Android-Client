@@ -34,6 +34,7 @@ import androidx.paging.PagingData
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
+import com.desarrollodroide.data.repository.BookmarkRefresh
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.data.repository.TagsRepository
@@ -354,9 +355,13 @@ class FeedViewModel(
                         bookmark = bookmark,
                     )
                 }.onSuccess { refreshed ->
-                    when {
-                        refreshed == null ->
+                    when (refreshed) {
+                        BookmarkRefresh.NotOnServer ->
                             _transientMessage.value = "The server does not have this bookmark yet"
+
+                        // Nothing was written over the edit, and the card updates once it uploads.
+                        BookmarkRefresh.WaitingForUpload ->
+                            _transientMessage.value = "This bookmark has an edit waiting to upload. It updates once that is sent"
 
                         // Asked, and the server has it with nothing on it. That is as much as can
                         // ever be learned: it may be mid scrape or it may be a page it can never
@@ -364,7 +369,7 @@ class FeedViewModel(
                         // ask again, so the banner cannot sit there for ever the way it did on
                         // https://aaaa.pd. A sync that later brings real metadata clears the card
                         // on its own.
-                        refreshed.isPendingServerProcessing -> {
+                        is BookmarkRefresh.Stored -> if (refreshed.bookmark.isPendingServerProcessing) {
                             _settledEmptyBookmarks.update { it + bookmark.id }
                             _transientMessage.value = "The server has nothing for this one"
                         }
