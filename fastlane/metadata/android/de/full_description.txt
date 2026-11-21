@@ -1,4 +1,4 @@
-Ein Android-Client für <b>Shiori</b>, den selbst gehosteten Lesezeichen-Manager. Die App spricht mit einem Server, den Sie selbst betreiben: Es gibt kein Konto zum Registrieren und keinen Dienst hinter der App, nur Ihren eigenen.
+<b>Vor der Installation: Diese App benötigt einen Shiori-Server.</b> Sie ist ein Client für Shiori, den Open-Source-Lesezeichen-Manager, den Sie selbst hosten (auf einem Computer, einem NAS oder einem VPS). Allein funktioniert sie nicht, und es gibt kein Konto zum Registrieren: Sie melden sich an Ihrem eigenen Server an, ab Version 1.7. So richten Sie einen ein: https://github.com/go-shiori/shiori/blob/master/docs/Installation.md
 
 Ihre gesamte Bibliothek liegt auf dem Gerät, sodass die Liste, die Tags und jeder gespeicherte Artikel auch ohne Verbindung verfügbar sind. Was Sie offline ändern (hinzufügen, bearbeiten, löschen, eine neue Kopie einer Seite anfordern), wird gesammelt und gesendet, sobald Ihr Server wieder erreichbar ist.
 

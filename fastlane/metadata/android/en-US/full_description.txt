@@ -1,4 +1,4 @@
-An Android client for <b>Shiori</b>, the self-hosted bookmark manager. It talks to a server you run yourself: there is no account to sign up for and no service behind the app, only your own.
+<b>Before you install: this app needs a Shiori server.</b> It is a client for Shiori, the open source bookmark manager you host yourself (on a computer, a NAS or a VPS). It does not work on its own, and there is no account to sign up for: you log in to your own server, version 1.7 or newer. How to set one up: https://github.com/go-shiori/shiori/blob/master/docs/Installation.md
 
 Your whole library is kept on the device, so the list, the tags and every article you have saved are there with no connection at all. What you change while offline (adding, editing, deleting, asking for a fresh copy of a page) is queued and sent when your server can be reached again.
 

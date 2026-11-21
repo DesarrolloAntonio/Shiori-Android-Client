@@ -1,1 +1,1 @@
-Client for your self-hosted Shiori bookmarks. Save from any app, read offline.
+Requires your own Shiori server. Save links from any app and read offline.

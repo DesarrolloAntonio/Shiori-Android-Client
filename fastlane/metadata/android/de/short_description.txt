@@ -1,1 +1,1 @@
-Client für selbst gehostete Shiori-Lesezeichen, auch offline lesbar.
+Benötigt einen eigenen Shiori-Server. Aus jeder App speichern, offline lesen.
