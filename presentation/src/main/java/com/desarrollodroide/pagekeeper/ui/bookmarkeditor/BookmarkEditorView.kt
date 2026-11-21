@@ -24,11 +24,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -122,6 +124,14 @@ fun BookmarkEditorView(
     createEbook: Boolean,
     onCreateEbookChanged: (Boolean) -> Unit,
     onUrlChange: (String) -> Unit = {},
+    // Edited only, never added: a new bookmark gets its title and excerpt from the page.
+    bookmarkTitle: String = "",
+    onBookmarkTitleChange: (String) -> Unit = {},
+    excerpt: String = "",
+    onExcerptChange: (String) -> Unit = {},
+    // False for a link added by hand that the server hasn't read yet: it has no title to keep, and
+    // requiring one would stop the user from even changing its tags.
+    titleRequired: Boolean = true,
     // The activity draws edge to edge and needs the bars accounted for. Opened from inside the
     // feed it sits in a container the host scaffold has already padded, and applying them again
     // left a status bar's worth of empty space above the title.
@@ -131,7 +141,13 @@ fun BookmarkEditorView(
     val isEdit = bookmarkEditorType == BookmarkEditorType.EDIT
     // Not just "not blank". Sending something unfetchable gets a 502 with an empty body, which
     // surfaced as a bookmark stuck pending in the feed and nothing on screen to explain it.
-    val canSave = !isManual || isPlausibleBookmarkUrl(url)
+    // Shiori refuses an edit with an empty title, so emptying one would fail on every retry. A title
+    // that was blank and stays blank is not an edit, and the upload leaves it to the server.
+    val titleMissing = isEdit && titleRequired && bookmarkTitle.isBlank()
+    val canSave = when {
+        isManual -> isPlausibleBookmarkUrl(url)
+        else -> !titleMissing
+    }
 
     fun addTypedTag() {
         val normalizedName = newTag.value.lowercase().trim()
@@ -197,7 +213,8 @@ fun BookmarkEditorView(
     ) { innerPadding ->
         // Declared once, laid out two ways below.
         val linkSection: @Composable () -> Unit = {
-            Section(title = "Link", color = MaterialTheme.colorScheme.primary) {
+            // Editing, it holds the title and excerpt as well as the link.
+            Section(title = if (isEdit) "Details" else "Link", color = MaterialTheme.colorScheme.primary) {
                 if (isManual) {
                     FilledField(
                         value = url,
@@ -254,6 +271,36 @@ fun BookmarkEditorView(
                             }
                         }
                     }
+                }
+                if (isEdit) {
+                    // Labelled rather than placeholder only: both open already filled in, and a
+                    // placeholder disappears the moment there is text, leaving two unnamed boxes.
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FilledField(
+                        value = bookmarkTitle,
+                        onValueChange = onBookmarkTitleChange,
+                        label = "Title",
+                        placeholder = "Title",
+                        leadingIcon = Icons.Outlined.Title,
+                        isError = titleMissing,
+                        supportingText = if (titleMissing) "A bookmark needs a title" else null,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Next,
+                        ),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FilledField(
+                        value = excerpt,
+                        onValueChange = onExcerptChange,
+                        label = "Excerpt",
+                        placeholder = "A line or two about the page",
+                        leadingIcon = Icons.AutoMirrored.Outlined.Notes,
+                        singleLine = false,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                        ),
+                    )
                 }
             }
         }
@@ -496,11 +543,14 @@ private fun FilledField(
     supportingText: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: ImageVector? = null,
+    label: String? = null,
+    singleLine: Boolean = true,
 ) {
     TextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
+        label = label?.let { { Text(it) } },
         placeholder = { Text(placeholder) },
         leadingIcon = { Icon(leadingIcon, contentDescription = null) },
         trailingIcon = trailingIcon?.let {
@@ -508,7 +558,9 @@ private fun FilledField(
         },
         supportingText = supportingText?.let { { Text(it) } },
         isError = isError,
-        singleLine = true,
+        singleLine = singleLine,
+        // Grows with the text up to a point, then scrolls inside the field.
+        maxLines = if (singleLine) 1 else 6,
         shape = MaterialTheme.shapes.large,
         keyboardOptions = keyboardOptions,
         colors = TextFieldDefaults.colors(
@@ -613,5 +665,29 @@ private fun BookmarkEditorPreview() {
         onMakeArchivePublicChanged = {},
         onCreateEbookChanged = {},
         onCreateArchiveChanged = {}
+    )
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+private fun BookmarkEditorEditPreview() {
+    val tag1 = Tag(id = 1, name = "android", selected = true, nBookmarks = 0)
+    BookmarkEditorView(
+        title = "Edit bookmark",
+        url = "https://developer.android.com/jetpack/compose",
+        bookmarkEditorType = BookmarkEditorType.EDIT,
+        assignedTags = remember { mutableStateOf(listOf(tag1)) },
+        saveBookmark = {},
+        availableTags = remember { mutableStateOf(listOf(tag1)) },
+        newTag = remember { mutableStateOf("") },
+        onBackClick = {},
+        makeArchivePublic = false,
+        createArchive = false,
+        createEbook = false,
+        onMakeArchivePublicChanged = {},
+        onCreateEbookChanged = {},
+        onCreateArchiveChanged = {},
+        bookmarkTitle = "Jetpack Compose UI App Development Toolkit",
+        excerpt = "Jetpack Compose is Android's recommended modern toolkit for building native UI.",
     )
 }

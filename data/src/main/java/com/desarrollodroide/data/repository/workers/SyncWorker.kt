@@ -18,8 +18,10 @@ import com.desarrollodroide.data.mapper.toProtoEntity
 import com.desarrollodroide.network.model.SessionDTO
 import com.desarrollodroide.data.repository.AuthRepository
 import com.desarrollodroide.data.repository.BookmarksRepository
+import com.desarrollodroide.data.repository.editedFieldsFromString
 import com.desarrollodroide.data.repository.removedTagNamesFromJson
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.SyncOperationType
 import kotlinx.coroutines.flow.first
 import org.koin.core.component.inject
@@ -49,6 +51,7 @@ class SyncWorker(
         val bookmarkId = inputData.getInt("bookmarkId", -1)
         val updateCachePayload = inputData.getString("updateCachePayload")?.toBean<UpdateCachePayload>()
         val removedTagNames = removedTagNamesFromJson(inputData.getString("removedTags"))
+        val editedFields = editedFieldsFromString(inputData.getString("editedFields"))
 
         Log.v("SyncWorker", "Performing sync operation: $operationType")
         Log.v("SyncWorker", "BookmarkId: $bookmarkId")
@@ -71,6 +74,7 @@ class SyncWorker(
                     bookmarkId = bookmarkId,
                     updateCachePayload = updateCachePayload,
                     removedTagNames = removedTagNames,
+                    editedFields = editedFields,
                     token = token
                 )
                 Log.v("SyncWorker", "Sync completed successfully")
@@ -88,6 +92,7 @@ class SyncWorker(
                                 bookmarkId = bookmarkId,
                                 updateCachePayload = updateCachePayload,
                                 removedTagNames = removedTagNames,
+                                editedFields = editedFields,
                                 token = token
                             )
                             Log.v("SyncWorker", "Sync completed successfully after session refresh")
@@ -165,6 +170,7 @@ class SyncWorker(
         bookmarkId: Int,
         updateCachePayload: UpdateCachePayload?,
         removedTagNames: Set<String>,
+        editedFields: Set<EditedField>,
         token: String
     ) {
         when (operationType) {
@@ -185,7 +191,7 @@ class SyncWorker(
                 if (bookmarkId.isTimestampId()) {
                     Result.success()
                 } else {
-                    syncUpdateBookmark(xSession, serverUrl, bookmarkId, removedTagNames)
+                    syncUpdateBookmark(xSession, serverUrl, bookmarkId, removedTagNames, editedFields)
                 }
             }
             SyncOperationType.DELETE -> syncDeleteBookmark(xSession, serverUrl, bookmarkId)
@@ -219,10 +225,16 @@ class SyncWorker(
         return bookmarksRepository.addBookmark(xSession, serverUrl, bookmark)
     }
 
-    private suspend fun syncUpdateBookmark(xSession: String, serverUrl: String, bookmarkId: Int, removedTagNames: Set<String>) {
+    private suspend fun syncUpdateBookmark(
+        xSession: String,
+        serverUrl: String,
+        bookmarkId: Int,
+        removedTagNames: Set<String>,
+        editedFields: Set<EditedField>,
+    ) {
         val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
             ?: throw BookmarkNotFoundException(bookmarkId)
-        bookmarksRepository.editBookmark(xSession, serverUrl, bookmark, removedTagNames)
+        bookmarksRepository.editBookmark(xSession, serverUrl, bookmark, removedTagNames, editedFields)
     }
 
     private suspend fun syncDeleteBookmark(xSession: String, serverUrl: String, bookmarkId: Int) {

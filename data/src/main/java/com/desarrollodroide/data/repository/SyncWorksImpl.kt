@@ -16,6 +16,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarksDao
 import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.repository.workers.SyncWorker
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.PendingJob
 import com.desarrollodroide.model.SyncOperationType
 import com.desarrollodroide.model.UpdateCachePayload
@@ -37,6 +38,7 @@ class SyncWorksImpl(
         bookmark: Bookmark,
         updateCachePayload: UpdateCachePayload?,
         removedTagNames: Set<String>,
+        editedFields: Set<EditedField>,
     ) {
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         val encodedTitle = URLEncoder.encode(syncJobLabel(bookmark), "UTF-8")
@@ -46,6 +48,7 @@ class SyncWorksImpl(
                 "bookmarkId" to bookmark.id,
                 "updateCachePayload" to updateCachePayload?.toJson(),
                 "removedTags" to removedTagNames.toList().toJson(),
+                "editedFields" to editedFieldsToString(editedFields),
             ))
             .addTag("worker_${SyncWorker::class.java.name}")
             .addTag("operationType_${operationType.name}")
@@ -54,6 +57,8 @@ class SyncWorksImpl(
             // Kept as a tag too, because WorkInfo doesn't expose input data: it is how the next
             // edit and "Retry all" find out what this job was still going to remove.
             .addTag("$REMOVED_TAGS_PREFIX${URLEncoder.encode(removedTagNames.toList().toJson(), "UTF-8")}")
+            // Same reason: the next edit and "Retry all" must keep the user's title and excerpt.
+            .addTag("$EDITED_FIELDS_PREFIX${editedFieldsToString(editedFields)}")
             .setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 WorkRequest.MIN_BACKOFF_MILLIS,
@@ -120,7 +125,12 @@ class SyncWorksImpl(
                 val bookmark = bookmarksDao.getBookmarkById(bookmarkId)?.toDomainModel()
 
                 if (shouldRequeue(operationType, workInfo.state, rowExists = bookmark != null) && bookmark != null) {
-                    scheduleSyncWork(operationType, bookmark, removedTagNames = workInfo.getRemovedTagNames())
+                    scheduleSyncWork(
+                        operationType,
+                        bookmark,
+                        removedTagNames = workInfo.getRemovedTagNames(),
+                        editedFields = workInfo.getEditedFields(),
+                    )
                 }
             }
         }
@@ -130,6 +140,13 @@ class SyncWorksImpl(
         workManager.getWorkInfosForUniqueWork("sync_bookmark_${SyncOperationType.UPDATE.name}_$bookmarkId").get()
             .filter { it.state.isShownAsPending() }
             .flatMap { it.getRemovedTagNames() }
+            .toSet()
+    }
+
+    override suspend fun pendingEditedFields(bookmarkId: Int): Set<EditedField> = withContext(Dispatchers.IO) {
+        workManager.getWorkInfosForUniqueWork("sync_bookmark_${SyncOperationType.UPDATE.name}_$bookmarkId").get()
+            .filter { it.state.isShownAsPending() }
+            .flatMap { it.getEditedFields() }
             .toSet()
     }
 
@@ -162,6 +179,9 @@ class SyncWorksImpl(
             ?.let { URLDecoder.decode(it, "UTF-8") }
             ?.let { removedTagNamesFromJson(it) }
             .orEmpty()
+
+    fun WorkInfo.getEditedFields(): Set<EditedField> =
+        editedFieldsFromString(tags.firstOrNull { it.startsWith(EDITED_FIELDS_PREFIX) }?.substringAfter(EDITED_FIELDS_PREFIX))
 
     fun WorkInfo.getBookmarkTitle(): String? {
         return tags
@@ -218,3 +238,14 @@ internal fun removedTagNamesFromJson(json: String?): Set<String> =
     runCatching { com.google.gson.Gson().fromJson(json, Array<String>::class.java)?.toSet() }
         .getOrNull()
         .orEmpty()
+
+private const val EDITED_FIELDS_PREFIX = "editedFields_"
+
+/** How a job's input and tag carry [EditedField]s: their names, comma separated. */
+internal fun editedFieldsToString(fields: Set<EditedField>): String = fields.joinToString(",") { it.name }
+
+/** Unknown names are dropped, and a job made before edited fields existed edited none. */
+internal fun editedFieldsFromString(value: String?): Set<EditedField> =
+    value.orEmpty().split(',')
+        .mapNotNull { name -> EditedField.entries.firstOrNull { it.name == name } }
+        .toSet()

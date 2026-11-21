@@ -9,6 +9,7 @@ import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.domain.usecase.AddBookmarkUseCase
 import com.desarrollodroide.domain.usecase.EditBookmarkUseCase
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -103,10 +104,11 @@ class BookmarkViewModel(
         )
     }
 
-    fun editBookmark(bookmark: Bookmark) = viewModelScope.launch {
+    fun editBookmark(bookmark: Bookmark, editedFields: Set<EditedField>) = viewModelScope.launch {
         viewModelScope.launch {
             editBookmarkUseCase.invoke(
-                bookmark = bookmark
+                bookmark = bookmark,
+                editedFields = editedFields,
             )
         }
     }

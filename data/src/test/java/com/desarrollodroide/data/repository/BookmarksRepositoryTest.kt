@@ -29,6 +29,7 @@ import com.desarrollodroide.data.mapper.toDomainModel
 import com.desarrollodroide.data.mapper.toEditBookmarkDTO
 import com.desarrollodroide.data.helpers.SESSION_HAS_BEEN_EXPIRED
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.network.model.BookmarkDTO
 import com.desarrollodroide.network.model.BookmarkResponseDTO
 import com.desarrollodroide.network.model.TagDTO
@@ -480,6 +481,46 @@ class BookmarksRepositoryTest {
             val sent = com.google.gson.JsonParser.parseString(json).asJsonObject
             assertEquals(1, sent.get("public").asInt)
             assertEquals(listOf("qa_c1"), sent.getAsJsonArray("tags").map { it.asJsonObject.get("name").asString })
+        })
+    }
+
+    /**
+     * Issue #3: the editor now changes the title and excerpt. A field the user changed is sent as
+     * typed; one they left alone still comes from the server's copy, so a change made on the web
+     * meanwhile survives an edit that only fixed the title here.
+     */
+    @Test
+    fun `an edited title is sent as typed and the untouched excerpt as the server has it`() = runTest {
+        stubServerCopy(serverSideCopy)
+        stubEditAnswer()
+
+        bookmarksRepository.editBookmark(
+            xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit,
+            editedFields = setOf(EditedField.TITLE),
+        )
+
+        verify(apiService).editBookmark(anyString(), anyString(), check { json ->
+            val sent = com.google.gson.JsonParser.parseString(json).asJsonObject
+            assertEquals("QA_Off01", sent.get("title").asString)
+            assertEquals("QA server-side edit", sent.get("excerpt").asString)
+        })
+    }
+
+    /** Emptied on purpose is still edited: the server's excerpt must not come back. */
+    @Test
+    fun `an excerpt the user cleared is sent empty`() = runTest {
+        stubServerCopy(serverSideCopy)
+        stubEditAnswer()
+
+        bookmarksRepository.editBookmark(
+            xSession = "session", serverUrl = "http://test.com", bookmark = offlineEdit.copy(excerpt = ""),
+            editedFields = setOf(EditedField.EXCERPT),
+        )
+
+        verify(apiService).editBookmark(anyString(), anyString(), check { json ->
+            val sent = com.google.gson.JsonParser.parseString(json).asJsonObject
+            assertEquals("", sent.get("excerpt").asString)
+            assertEquals("QA_Off01 renamed on the web", sent.get("title").asString)
         })
     }
 

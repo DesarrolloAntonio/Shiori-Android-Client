@@ -16,6 +16,7 @@ import com.desarrollodroide.data.local.room.dao.BookmarkHtmlDao
 import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.mapper.*
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
 import com.desarrollodroide.model.UpdateCachePayload
@@ -330,17 +331,19 @@ class BookmarksRepositoryImpl(
         serverUrl: String,
         bookmark: Bookmark,
         removedTagNames: Set<String>,
+        editedFields: Set<EditedField>,
     ): Bookmark {
         // The PUT overwrites url, title and excerpt with whatever it is sent, and an edit can wait
         // offline for days. Sent as this device last saw it, the row undid anything another
-        // client had changed meanwhile. The editor only changes tags and Public, so the rest is
-        // taken from the server's current copy.
+        // client had changed meanwhile. So each of those comes from the server's current copy,
+        // except a title or excerpt the user changed in the editor: that one is theirs, even
+        // when they emptied it.
         val serverCopy = findOnServer(xSession, serverUrl, bookmark)
             ?: throw IllegalStateException("Bookmark ${bookmark.id} is no longer on the server at ${bookmark.url}")
         val merged = bookmark.copy(
             url = serverCopy.url ?: bookmark.url,
-            title = serverCopy.title ?: bookmark.title,
-            excerpt = serverCopy.excerpt ?: bookmark.excerpt,
+            title = if (EditedField.TITLE in editedFields) bookmark.title else serverCopy.title ?: bookmark.title,
+            excerpt = if (EditedField.EXCERPT in editedFields) bookmark.excerpt else serverCopy.excerpt ?: bookmark.excerpt,
         )
         val response = apiService.editBookmark(
             url = "${serverUrl.removeTrailingSlash()}/api/bookmarks",

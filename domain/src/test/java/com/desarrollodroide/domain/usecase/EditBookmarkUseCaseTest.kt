@@ -5,10 +5,12 @@ import com.desarrollodroide.data.local.room.dao.TagDao
 import com.desarrollodroide.data.local.room.entity.BookmarkEntity
 import com.desarrollodroide.data.repository.SyncWorks
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.SyncOperationType
 import com.desarrollodroide.model.Tag
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
@@ -41,10 +43,21 @@ class EditBookmarkUseCaseTest {
         createArchive = false, createEbook = false,
     )
 
+    @BeforeEach
+    fun noEditWaiting() = runTest {
+        whenever(syncManager.pendingEditedFields(any())).thenReturn(emptySet())
+    }
+
     private suspend fun scheduledRemovals(): Set<String> {
         val removed = argumentCaptor<Set<String>>()
-        verify(syncManager).scheduleSyncWork(eq(SyncOperationType.UPDATE), any(), anyOrNull(), removed.capture())
+        verify(syncManager).scheduleSyncWork(eq(SyncOperationType.UPDATE), any(), anyOrNull(), removed.capture(), any())
         return removed.firstValue
+    }
+
+    private suspend fun scheduledEditedFields(): Set<EditedField> {
+        val edited = argumentCaptor<Set<EditedField>>()
+        verify(syncManager).scheduleSyncWork(eq(SyncOperationType.UPDATE), any(), anyOrNull(), any(), edited.capture())
+        return edited.firstValue
     }
 
     @Test
@@ -66,5 +79,31 @@ class EditBookmarkUseCaseTest {
         useCase(edited("qa_a", "qa_old"))
 
         assertEquals(emptySet<String>(), scheduledRemovals())
+    }
+
+    /**
+     * Issue #3: the editor changes the title and excerpt too. The job has to say so, and keep what
+     * a waiting edit had changed, because this job replaces that one.
+     */
+    @Test
+    fun `the job names the fields this edit and a waiting edit changed`() = runTest {
+        whenever(bookmarksDao.getBookmarkById(89)).thenReturn(stored())
+        whenever(syncManager.pendingTagRemovals(89)).thenReturn(emptySet())
+        whenever(syncManager.pendingEditedFields(89)).thenReturn(setOf(EditedField.EXCERPT))
+
+        useCase(edited().copy(title = "Renamed"), editedFields = setOf(EditedField.TITLE))
+
+        assertEquals(setOf(EditedField.TITLE, EditedField.EXCERPT), scheduledEditedFields())
+    }
+
+    /** The pair (R7): an edit that only touched tags names no field, so the server keeps its title. */
+    @Test
+    fun `an edit that only touched tags names no field`() = runTest {
+        whenever(bookmarksDao.getBookmarkById(89)).thenReturn(stored("qa_a"))
+        whenever(syncManager.pendingTagRemovals(89)).thenReturn(emptySet())
+
+        useCase(edited("qa_a", "qa_b"))
+
+        assertEquals(emptySet<EditedField>(), scheduledEditedFields())
     }
 }

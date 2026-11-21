@@ -18,6 +18,7 @@ import com.desarrollodroide.pagekeeper.ui.components.ConfirmDialog
 import com.desarrollodroide.pagekeeper.ui.components.InfiniteProgressDialog
 import com.desarrollodroide.pagekeeper.ui.components.TagListSaver
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.model.Tag
 import org.koin.androidx.compose.koinViewModel
 
@@ -39,6 +40,10 @@ fun BookmarkEditorScreen(
     val availableTags = bookmarkViewModel.availableTags.collectAsState()
     val bookmarkUiState = bookmarkViewModel.bookmarkUiState.collectAsState().value
     var currentUrl by rememberSaveable { mutableStateOf(bookmark.url) }
+    // Only shown when editing. Compared with what the screen opened with, not with the stored row,
+    // to tell which of them the user changed: see EditBookmarkUseCase.
+    var currentTitle by rememberSaveable { mutableStateOf(bookmark.title) }
+    var currentExcerpt by rememberSaveable { mutableStateOf(bookmark.excerpt) }
 
     // No need to update values in settings
     var localCreateEbook by rememberSaveable { mutableStateOf(bookmarkViewModel.createEbook) }
@@ -99,13 +104,20 @@ fun BookmarkEditorScreen(
                     )
                 }
                 BookmarkEditorType.EDIT -> {
+                    val editedFields = buildSet {
+                        if (currentTitle != bookmark.title) add(EditedField.TITLE)
+                        if (currentExcerpt != bookmark.excerpt) add(EditedField.EXCERPT)
+                    }
                     bookmarkViewModel.editBookmark(
                         bookmark = bookmark.copy(
+                            title = currentTitle.trim(),
+                            excerpt = currentExcerpt.trim(),
                             tags = assignedTags.value,
                             createEbook = bookmark.hasEbook,
                             createArchive = bookmark.hasArchive,
                             public = if (localMakeArchivePublic) 1 else 0,
-                        )
+                        ),
+                        editedFields = editedFields,
                     )
                 }
             }
@@ -118,7 +130,12 @@ fun BookmarkEditorScreen(
         createEbook = localCreateEbook,
         onCreateEbookChanged = { localCreateEbook = it },
         onCreateArchiveChanged = { localCreateArchive = it },
-        onUrlChange = { currentUrl = it }
+        onUrlChange = { currentUrl = it },
+        bookmarkTitle = currentTitle,
+        onBookmarkTitleChange = { currentTitle = it },
+        excerpt = currentExcerpt,
+        onExcerptChange = { currentExcerpt = it },
+        titleRequired = bookmark.title.isNotBlank(),
     )
 }
 

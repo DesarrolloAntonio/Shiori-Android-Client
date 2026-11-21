@@ -3,6 +3,7 @@ package com.desarrollodroide.data.repository
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import com.desarrollodroide.model.Bookmark
+import com.desarrollodroide.model.EditedField
 import com.desarrollodroide.common.result.Result
 import com.desarrollodroide.model.ReadableContent
 import com.desarrollodroide.model.Tag
@@ -58,12 +59,15 @@ interface BookmarksRepository {
   /**
    * Uploads [bookmark] as it is in Room. [removedTagNames] are the tags the user took off it:
    * only those are removed on the server, so a tag added elsewhere since the last sync survives.
+   * The url, title and excerpt are sent as the server has them now, except the [editedFields],
+   * which are sent as the user left them.
    */
   suspend fun editBookmark(
     xSession: String,
     serverUrl: String,
     bookmark: Bookmark,
     removedTagNames: Set<String> = emptySet(),
+    editedFields: Set<EditedField> = emptySet(),
   ): Bookmark
 
   suspend fun deleteAllLocalBookmarks()
