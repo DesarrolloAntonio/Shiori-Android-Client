@@ -75,8 +75,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # The APK goes on the GitHub release. Play only takes a bundle, signed with the same upload
+      # key, so it is built here too instead of by hand in Android Studio.
       - name: Build app
-        run: ./gradlew assembleProductionRelease
+        run: ./gradlew assembleProductionRelease bundleProductionRelease
         env:
           KEYSTORE_PATH: ${{ github.workspace }}/key_store.jks
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -85,6 +87,16 @@ jobs:
 
       - name: Retrieve Version
         run: echo "APP_VERSION_NAME=$(grep '^versionName=' gradle.properties | cut -d'=' -f2)" >> $GITHUB_ENV
+
+      # A workflow artifact rather than a release file: the bundle is for Play, not for people
+      # downloading from the release page.
+      - name: Keep the Play bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-bundle-${{ env.APP_VERSION_NAME }}
+          path: presentation/build/outputs/bundle/productionRelease/*.aab
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Create Release on GitHub
         uses: softprops/action-gh-release@v2
