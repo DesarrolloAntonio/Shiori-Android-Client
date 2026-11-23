@@ -17,6 +17,7 @@ import com.desarrollodroide.pagekeeper.ui.settings.TermsOfUseScreen
 import java.io.File
 import com.desarrollodroide.pagekeeper.extensions.isRTLText
 import com.desarrollodroide.pagekeeper.ui.readablecontent.ReadableContentScreen
+import com.desarrollodroide.pagekeeper.ui.archive.ArchiveScreen
 import com.desarrollodroide.pagekeeper.ui.settings.crash.CrashLogScreen
 import com.desarrollodroide.pagekeeper.ui.settings.logcat.NetworkLogScreen
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +64,9 @@ fun HomeNavGraph(
                     navController.navigate(
                         NavItem.ReadableContentNavItem.createRoute(bookmarkId = bookmarkId)
                     )
+                },
+                onOpenArchive = { bookmarkId ->
+                    navController.navigate(NavItem.ArchiveNavItem.createRoute(bookmarkId = bookmarkId))
                 },
             )
         }
@@ -160,9 +164,28 @@ fun HomeNavGraph(
                     openUrlInBrowser = openUrlInBrowser,
                     bookmarkDate = it.modified,
                     bookmarkTitle = it.title,
-                    isRtl = it.title.isRTLText() || it.excerpt.isRTLText()
+                    isRtl = it.title.isRTLText() || it.excerpt.isRTLText(),
+                    hasArchive = it.hasArchive,
+                    onOpenArchive = {
+                        navController.navigate(NavItem.ArchiveNavItem.createRoute(bookmarkId = bookmarkId))
+                    },
                 )
             }
+        }
+        composable(
+            route = NavItem.ArchiveNavItem.route,
+            arguments = listOf(navArgument("bookmarkId") { type = NavType.IntType }),
+        ) { backStackEntry ->
+            val bookmarkId = backStackEntry.arguments?.getInt("bookmarkId") ?: 0
+            val bookmark by feedViewModel.currentBookmark.collectAsState()
+            LaunchedEffect(bookmarkId) {
+                if (bookmark?.id != bookmarkId) feedViewModel.loadBookmarkById(bookmarkId)
+            }
+            ArchiveScreen(
+                bookmarkId = bookmarkId,
+                bookmarkTitle = bookmark?.takeIf { it.id == bookmarkId }?.title.orEmpty(),
+                onBack = { navController.navigateUp() },
+            )
         }
     }
 }

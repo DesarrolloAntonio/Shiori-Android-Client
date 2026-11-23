@@ -1,6 +1,7 @@
 package com.desarrollodroide.pagekeeper.di
 
 import com.desarrollodroide.pagekeeper.ui.feed.FeedViewModel
+import com.desarrollodroide.pagekeeper.ui.archive.ArchiveViewModel
 import com.desarrollodroide.pagekeeper.ui.tags.TagsViewModel
 import com.desarrollodroide.pagekeeper.ui.login.LoginViewModel
 import com.desarrollodroide.pagekeeper.ui.bookmarkeditor.BookmarkViewModel
@@ -63,6 +64,10 @@ fun presenterModule() = module {
             changeServerUrlUseCase = get(),
             savedStateHandle = get(),
         )
+    }
+
+    viewModel {
+        ArchiveViewModel(settings = get())
     }
 
     viewModel {

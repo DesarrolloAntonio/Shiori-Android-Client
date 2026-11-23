@@ -93,6 +93,7 @@ fun FeedRoute(
     shareEpubFile: (File) -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenReadableContent: (Int) -> Unit,
+    onOpenArchive: (Int) -> Unit,
     onNavigateToTags: () -> Unit = {},
 ) {
     // Collapses the large title as the list scrolls; the search row stays put.
@@ -320,6 +321,7 @@ fun FeedRoute(
                                 bookmarkId = openBookmarkId,
                                 feedViewModel = feedViewModel,
                                 openUrlInBrowser = openUrlInBrowser,
+                                onOpenArchive = onOpenArchive,
                                 onClose = { openBookmarkId = null },
                             )
                         }

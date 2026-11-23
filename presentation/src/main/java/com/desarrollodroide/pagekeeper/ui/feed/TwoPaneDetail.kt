@@ -24,6 +24,7 @@ internal fun TwoPaneDetail(
     bookmarkId: Int?,
     feedViewModel: FeedViewModel,
     openUrlInBrowser: (String) -> Unit,
+    onOpenArchive: (Int) -> Unit,
     onClose: () -> Unit,
 ) {
     if (bookmarkId == null) {
@@ -46,6 +47,8 @@ internal fun TwoPaneDetail(
                 bookmarkDate = it.modified,
                 bookmarkTitle = it.title,
                 isRtl = it.title.isRTLText() || it.excerpt.isRTLText(),
+                hasArchive = it.hasArchive,
+                onOpenArchive = { onOpenArchive(bookmarkId) },
                 embeddedInPane = true,
             )
         }

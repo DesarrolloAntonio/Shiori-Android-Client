@@ -84,6 +84,7 @@ import com.desarrollodroide.pagekeeper.ui.components.UiState
 import com.desarrollodroide.pagekeeper.ui.components.ContentMaxWidth
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.desarrollodroide.pagekeeper.BuildConfig
+import com.desarrollodroide.pagekeeper.ui.archive.ArchiveWebData
 import com.desarrollodroide.pagekeeper.extensions.sendFeedbackEmail
 import kotlinx.coroutines.flow.StateFlow
 
@@ -249,6 +250,13 @@ fun SettingsContent(
     onChangeServer: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    // The archive viewer's session cookie and cached pages go with the session, whichever way the
+    // logout ended (see ArchiveWebData).
+    LaunchedEffect(logoutUiState.data, logoutUiState.error) {
+        if (logoutUiState.data != null || !logoutUiState.error.isNullOrEmpty()) {
+            ArchiveWebData.clearAll(context)
+        }
+    }
     // The only operation this state tracks is the logout. Null data is the resting state, not an
     // absent screen: it means nobody has pressed Log out yet. Data means the server said goodbye,
     // so the session is gone and there is nothing left here to show.

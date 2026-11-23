@@ -18,6 +18,9 @@ sealed class NavItem(
             return "readable_content/$bookmarkId"
         }
     }
+    data object ArchiveNavItem : NavItem("archive/{bookmarkId}") {
+        fun createRoute(bookmarkId: Int): String = "archive/$bookmarkId"
+    }
     data object NetworkLoggerNavItem : NavItem("networkLogger")
     data object LastCrashNavItem: NavItem("lastCrash")
 

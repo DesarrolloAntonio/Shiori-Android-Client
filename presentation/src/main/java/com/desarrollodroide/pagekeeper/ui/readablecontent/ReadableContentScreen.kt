@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,6 +76,9 @@ fun ReadableContentScreen(
     bookmarkDate: String,
     bookmarkTitle: String,
     isRtl: Boolean,
+    /** Whether the server keeps an archived copy, which [onOpenArchive] shows (issue #66). */
+    hasArchive: Boolean,
+    onOpenArchive: () -> Unit,
     /**
      * True when this is the detail pane of the two pane feed rather than a whole screen.
      *
@@ -152,6 +156,7 @@ fun ReadableContentScreen(
                 textSizeDescription = "Text size, ${TextZoomSteps[textSizeStep]} percent",
                 onShare = { context.shareText(bookmarkUrl) },
                 onOpenOriginal = { openUrlInBrowser(bookmarkUrl) },
+                onOpenArchive = if (hasArchive) onOpenArchive else null,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp),
@@ -214,6 +219,7 @@ private fun ReaderToolbar(
     textSizeDescription: String,
     onShare: () -> Unit,
     onOpenOriginal: () -> Unit,
+    onOpenArchive: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     HorizontalFloatingToolbar(
@@ -232,6 +238,12 @@ private fun ReaderToolbar(
         }
         IconButton(onClick = onOpenOriginal) {
             Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = "Open original")
+        }
+        // Beside the original, as the web UI has it: the page as it was when it was saved.
+        onOpenArchive?.let {
+            IconButton(onClick = it) {
+                Icon(Icons.Outlined.Archive, contentDescription = "Open archived copy")
+            }
         }
     }
 }
