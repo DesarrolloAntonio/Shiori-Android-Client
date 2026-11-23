@@ -23,6 +23,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.check
 import com.desarrollodroide.common.result.Result
+import com.desarrollodroide.network.model.AccountDTO
+import com.desarrollodroide.network.model.AccountResponseDTO
 import com.desarrollodroide.network.model.LoginResponseDTO
 import com.desarrollodroide.network.model.LoginResponseMessageDTO
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -264,5 +266,70 @@ class AuthRepositoryImplTest {
 
         assertTrue(results.last() is Result.Success)
         verify(settingsPreferenceDataSource).saveUser(check { assertFalse(it.owner) }, eq("http://test.com"), eq("pw"))
+    }
+
+    // Issue #64: a new address is only taken once it accepts the stored session as the same user.
+
+    private suspend fun meAnswers(response: Response<AccountResponseDTO>) {
+        `when`(apiService.getMe(anyString(), anyString())).thenReturn(response)
+    }
+
+    private fun account(userName: String?) =
+        AccountResponseDTO(ok = true, message = AccountDTO(id = 1, userName = userName, isOwner = true))
+
+    @Test
+    fun `a server that knows the session as this user accepts it`() = runTest {
+        meAnswers(Response.success(account("shiori")))
+
+        assertEquals(SessionCheck.Accepted, authRepository.checkSession("http://192.168.1.68:18080/", "tok", "shiori"))
+        verify(apiService).getMe(eq("http://192.168.1.68:18080/api/v1/auth/me"), eq("Bearer tok"))
+    }
+
+    /** The pair (R7): the same token answered as someone else is not this account's server. */
+    @Test
+    fun `a server that knows the session as someone else refuses it`() = runTest {
+        meAnswers(Response.success(account("other")))
+
+        assertEquals(SessionCheck.Refused, authRepository.checkSession("http://x", "tok", "shiori"))
+    }
+
+    @Test
+    fun `a server that rejects the token refuses it`() = runTest {
+        meAnswers(Response.error(401, "Authentication required".toResponseBody("text/plain".toMediaTypeOrNull())))
+
+        assertEquals(SessionCheck.Refused, authRepository.checkSession("http://x", "tok", "shiori"))
+    }
+
+    /** A captive portal or another app answering 200 is not a yes. */
+    @Test
+    fun `an answer without an account is not Shiori`() = runTest {
+        meAnswers(Response.success(AccountResponseDTO(ok = null, message = null)))
+
+        assertEquals(SessionCheck.NotShiori, authRepository.checkSession("http://x", "tok", "shiori"))
+    }
+
+    /** Another web server, or a Shiori too old for v1, has no such route. */
+    @Test
+    fun `an address without the session route is not Shiori`() = runTest {
+        meAnswers(Response.error(404, "not found".toResponseBody("text/plain".toMediaTypeOrNull())))
+
+        assertEquals(SessionCheck.NotShiori, authRepository.checkSession("http://x", "tok", "shiori"))
+    }
+
+    /** A page that isn't JSON fails in the converter with an IOException, which is not "unreachable". */
+    @Test
+    fun `an html page is not Shiori`() = runTest {
+        `when`(apiService.getMe(anyString(), anyString())).thenAnswer {
+            throw com.google.gson.stream.MalformedJsonException("Use JsonReader.setLenient(true) to accept malformed JSON")
+        }
+
+        assertEquals(SessionCheck.NotShiori, authRepository.checkSession("http://x", "tok", "shiori"))
+    }
+
+    @Test
+    fun `an address that cannot be reached says so`() = runTest {
+        `when`(apiService.getMe(anyString(), anyString())).thenAnswer { throw IOException("Unable to resolve host") }
+
+        assertTrue(authRepository.checkSession("http://x", "tok", "shiori") is SessionCheck.Unreachable)
     }
 }

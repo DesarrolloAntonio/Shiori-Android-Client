@@ -13,6 +13,8 @@ import com.desarrollodroide.domain.usecase.GetAllRemoteBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetLocalPagingBookmarksUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.UpdateBookmarkCacheUseCase
+import com.desarrollodroide.model.Account
+import com.desarrollodroide.model.User
 import androidx.paging.PagingData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +60,12 @@ class FeedSyncTest {
         onBlocking { getUrl() } doReturn "http://test.com"
         onBlocking { getToken() } doReturn "token"
         onBlocking { getSession() } doReturn "session"
+        on { getUser() } doReturn flowOf(
+            User(
+                session = "session", token = "token",
+                account = Account(userName = "qa", password = "", owner = false, serverUrl = "http://test.com"),
+            )
+        )
         on { useTwoPaneLayoutFlow } doReturn flowOf(false)
         on { compactViewFlow } doReturn flowOf(false)
         on { hideTagFlow } doReturn flowOf(null)

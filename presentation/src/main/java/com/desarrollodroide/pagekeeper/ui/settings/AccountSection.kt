@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Security
@@ -29,6 +32,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,12 +46,13 @@ import androidx.compose.ui.unit.dp
  * Which server this device is signed in to, and the way out of it. A card of its own at the top,
  * in the brand colour: it is the one setting that is about the account rather than the app.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountSection(
     serverUrl: String,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
+    onChangeServer: () -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
     Surface(
@@ -95,10 +100,29 @@ fun AccountSection(
                     )
                 }
             }
-            Row(
+            // Flows: on a narrow phone with large text the two did not fit on one line, and Log out
+            // was squeezed to its icon alone.
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                // Before Log out, and quieter: a server that moved used to leave logging out as
+                // the only way to point the app at it, losing whatever had not been sent (#64).
+                TextButton(
+                    onClick = onChangeServer,
+                    modifier = Modifier.height(40.dp),
+                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = scheme.onPrimaryContainer),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Change address", fontWeight = FontWeight.Bold)
+                }
                 Button(
                     onClick = onLogout,
                     modifier = Modifier.height(40.dp),

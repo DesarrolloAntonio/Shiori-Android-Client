@@ -67,6 +67,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -119,6 +121,26 @@ fun SettingsScreen(
             pendingChanges = pendingChanges,
             onConfirm = settingsViewModel::confirmLogout,
             onDismiss = settingsViewModel::cancelLogout,
+        )
+    }
+
+    val serverChange by settingsViewModel.serverChange.collectAsStateWithLifecycle()
+    var changingServer by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(serverChange) {
+        if (serverChange is ServerChange.Done) {
+            changingServer = false
+            settingsViewModel.resetServerChange()
+        }
+    }
+    if (changingServer) {
+        ChangeServerDialog(
+            currentUrl = serverUrl,
+            state = serverChange,
+            onSave = settingsViewModel::changeServerUrl,
+            onDismiss = {
+                changingServer = false
+                settingsViewModel.resetServerChange()
+            },
         )
     }
 
@@ -184,7 +206,8 @@ fun SettingsScreen(
                 cacheSize = settingsViewModel.cacheSize,
                 onClearCache = settingsViewModel::clearImageCache,
                 serverVersion = serverVersion,
-                serverUrl = serverUrl
+                serverUrl = serverUrl,
+                onChangeServer = { changingServer = true },
             )
         }
     }
@@ -223,6 +246,7 @@ fun SettingsContent(
     onClearCache: () -> Unit,
     serverVersion: String,
     serverUrl: String,
+    onChangeServer: () -> Unit = {},
 ) {
     val context = LocalContext.current
     // The only operation this state tracks is the logout. Null data is the resting state, not an
@@ -262,6 +286,7 @@ fun SettingsContent(
             AccountSection(
                 serverUrl = serverUrl,
                 onLogout = onLogout,
+                onChangeServer = onChangeServer,
             )
         }
         item {

@@ -6,6 +6,7 @@ import com.desarrollodroide.pagekeeper.helpers.ThemeManagerImpl
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.BookmarksRepositoryImpl
 import com.desarrollodroide.domain.usecase.AddBookmarkUseCase
+import com.desarrollodroide.domain.usecase.ChangeServerUrlUseCase
 import com.desarrollodroide.domain.usecase.DeleteBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DeleteLocalBookmarkUseCase
 import com.desarrollodroide.domain.usecase.DownloadFileUseCase
@@ -90,6 +91,14 @@ fun appModule() = module {
             bookmarksDao = get(),
             tagsDao = get(),
             syncManager = get()
+        )
+    }
+
+    single {
+        ChangeServerUrlUseCase(
+            authRepository = get(),
+            settings = get(),
+            syncWorks = get(),
         )
     }
 

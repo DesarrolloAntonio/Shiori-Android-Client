@@ -12,6 +12,9 @@ import com.desarrollodroide.network.retrofit.NetworkBoundResource
 import com.desarrollodroide.network.retrofit.NetworkNoCacheResource
 import com.desarrollodroide.network.retrofit.RetrofitNetwork
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.google.gson.stream.MalformedJsonException
+import java.io.IOException
 import retrofit2.Response
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -119,7 +122,40 @@ class AuthRepositoryImpl(
 
     }.asFlow().flowOn(Dispatchers.IO)
 
+    override suspend fun checkSession(
+        serverUrl: String,
+        token: String,
+        userName: String,
+    ): SessionCheck = withContext(Dispatchers.IO) {
+        val response = try {
+            apiService.getMe(
+                url = "${serverUrl.trim().removeTrailingSlash()}/api/v1/auth/me",
+                authorization = "Bearer $token",
+            )
+        } catch (e: MalformedJsonException) {
+            // A body that isn't JSON (a login page, another app) fails in the converter. This one
+            // is an IOException, so it has to be caught before the network failures.
+            return@withContext SessionCheck.NotShiori
+        } catch (e: IOException) {
+            return@withContext SessionCheck.Unreachable(e.message ?: e.javaClass.simpleName)
+        } catch (e: RuntimeException) {
+            return@withContext SessionCheck.NotShiori
+        }
+        val account = response.body()?.message
+        when {
+            response.code() == HTTP_UNAUTHORIZED || response.code() == HTTP_FORBIDDEN -> SessionCheck.Refused
+            // No session route at all: another web server, or a Shiori too old for this app.
+            response.code() == HTTP_NOT_FOUND -> SessionCheck.NotShiori
+            !response.isSuccessful -> SessionCheck.Unreachable("the server answered HTTP ${response.code()}")
+            account?.userName.isNullOrEmpty() -> SessionCheck.NotShiori
+            account?.userName.equals(userName, ignoreCase = true) -> SessionCheck.Accepted
+            else -> SessionCheck.Refused
+        }
+    }
+
     private companion object {
         const val HTTP_NOT_FOUND = 404
+        const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_FORBIDDEN = 403
     }
 }

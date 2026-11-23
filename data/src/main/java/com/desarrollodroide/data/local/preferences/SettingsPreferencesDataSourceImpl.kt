@@ -158,6 +158,20 @@ class SettingsPreferencesDataSourceImpl(
         }
     }
 
+    override suspend fun updateServerUrl(url: String) {
+        val oldUrl = getUrl()
+        protoDataStore.updateData { protoSession ->
+            protoSession.copy { this.url = url }
+        }
+        rememberUserProtoDataStore.updateData { remembered ->
+            if (remembered.url.isNotEmpty() && remembered.url.trimEnd('/') == oldUrl.trimEnd('/')) {
+                remembered.copy { this.url = url }
+            } else {
+                remembered
+            }
+        }
+    }
+
     override suspend fun resetData() {
         saveUser(
             password = "",

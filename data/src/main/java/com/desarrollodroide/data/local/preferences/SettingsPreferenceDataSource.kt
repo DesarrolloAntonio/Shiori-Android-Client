@@ -36,6 +36,12 @@ interface SettingsPreferenceDataSource {
     suspend fun getUrl(): String
     suspend fun getSession(): String
     suspend fun updateAuthToken(token: String)
+
+    /**
+     * Points the signed-in session at [url], keeping token, user and password. A remembered login
+     * for the old address follows it, so the next sign-in doesn't offer the dead one.
+     */
+    suspend fun updateServerUrl(url: String)
     suspend fun getToken(): String
     suspend fun resetData()
     suspend fun resetRememberUser()

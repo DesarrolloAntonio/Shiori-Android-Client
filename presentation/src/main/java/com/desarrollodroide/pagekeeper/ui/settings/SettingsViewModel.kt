@@ -17,6 +17,8 @@ import com.desarrollodroide.data.helpers.ThemeMode
 import com.desarrollodroide.data.local.preferences.SettingsPreferenceDataSource
 import com.desarrollodroide.data.repository.BookmarksRepository
 import com.desarrollodroide.data.repository.SyncWorks
+import com.desarrollodroide.data.repository.SessionCheck
+import com.desarrollodroide.domain.usecase.ChangeServerUrlUseCase
 import com.desarrollodroide.domain.usecase.GetTagsUseCase
 import com.desarrollodroide.domain.usecase.SendLogoutUseCase
 import com.desarrollodroide.model.Tag
@@ -41,6 +43,7 @@ class SettingsViewModel(
     private val imageLoader: ImageLoader,
     private val syncWorks: SyncWorks,
     private val networkLogger: NetworkLoggerInterceptor,
+    private val changeServerUrlUseCase: ChangeServerUrlUseCase,
     private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
     ) : ViewModel() {
 
@@ -280,6 +283,32 @@ class SettingsViewModel(
         }
     }
 
+    private val _serverChange = MutableStateFlow<ServerChange>(ServerChange.Idle)
+    val serverChange: StateFlow<ServerChange> = _serverChange.asStateFlow()
+
+    /** Issue #64: a new address for the same server, without logging out and losing the queue. */
+    fun changeServerUrl(url: String) {
+        viewModelScope.launch {
+            _serverChange.value = ServerChange.Checking
+            _serverChange.value = when (val check = changeServerUrlUseCase(url)) {
+                SessionCheck.Accepted -> {
+                    _serverUrl.value = settingsPreferenceDataSource.getUrl()
+                    ServerChange.Done
+                }
+                SessionCheck.Refused -> ServerChange.Failed(
+                    "That server doesn't accept your session. If it is a different server, or your " +
+                        "session has expired, you need to log out and sign in there."
+                )
+                SessionCheck.NotShiori -> ServerChange.Failed("That address answered, but not like a Shiori server.")
+                is SessionCheck.Unreachable -> ServerChange.Failed("Couldn't check that address: ${check.reason}")
+            }
+        }
+    }
+
+    fun resetServerChange() {
+        _serverChange.value = ServerChange.Idle
+    }
+
     fun getServerUrl(): String = _serverUrl.value
 
     fun getServerVersion(): String = _serverVersion.value
@@ -290,3 +319,11 @@ class SettingsViewModel(
     }
 }
 
+
+/** Where a change of server address stands. */
+sealed interface ServerChange {
+    data object Idle : ServerChange
+    data object Checking : ServerChange
+    data object Done : ServerChange
+    data class Failed(val message: String) : ServerChange
+}

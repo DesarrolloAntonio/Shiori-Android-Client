@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import java.io.File
 import androidx.paging.cachedIn
 import androidx.paging.PagingData
@@ -214,6 +215,15 @@ class FeedViewModel(
     }
 
     init {
+        viewModelScope.launch {
+            // Settings can move the session to a new address of the same server (#64). Read only
+            // once at start, the feed went on asking the old address for every sync and thumbnail
+            // until the app was relaunched. Empty is a logout, which the login screen handles.
+            settingsPreferenceDataSource.getUser()
+                .map { it.account.serverUrl }
+                .distinctUntilChanged()
+                .collect { url -> if (url.isNotEmpty()) _serverUrl.value = url }
+        }
         viewModelScope.launch {
             getTagsUseCase.getLocalTags()
                 .distinctUntilChanged()

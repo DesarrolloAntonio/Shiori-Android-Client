@@ -93,6 +93,7 @@ class SettingsViewModelLogoutTest {
         imageLoader = imageLoader,
         syncWorks = mock(),
         networkLogger = mock(),
+        changeServerUrlUseCase = mock(),
     )
 
     @Test

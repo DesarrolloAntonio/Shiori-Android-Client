@@ -60,6 +60,7 @@ fun presenterModule() = module {
             imageLoader = get(),
             syncWorks = get(),
             networkLogger = get(),
+            changeServerUrlUseCase = get(),
             savedStateHandle = get(),
         )
     }

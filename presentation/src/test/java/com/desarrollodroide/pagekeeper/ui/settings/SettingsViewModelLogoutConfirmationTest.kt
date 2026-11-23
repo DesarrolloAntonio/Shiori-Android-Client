@@ -144,6 +144,7 @@ class SettingsViewModelLogoutConfirmationTest {
         imageLoader = mock<ImageLoader>(),
         syncWorks = syncWorks,
         networkLogger = networkLogger,
+        changeServerUrlUseCase = mock(),
         savedStateHandle = handle,
     )
 
